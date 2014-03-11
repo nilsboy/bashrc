@@ -932,7 +932,7 @@ dpkg --get-selections $package_name
 
 #!/bin/bash
 
-# Backup a file appending a timestamp
+# Archive a file appending a timestamp
 
 set -e
 

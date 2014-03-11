@@ -562,6 +562,8 @@ apt-pop:
     Search for a debian package, sort by ranking, add description
 apt-unhold-package:
     Return a deb package to its default upgrade state
+archive:
+    Backup a file appending a timestamp
 bak:
     Backup a file appending a timestamp
 bash-background-jobs-count:
@@ -661,7 +663,7 @@ man-multi-lookup:
     Lookup help for a command in several places
 man-online:
     Lookup a man page on the internet
-mysql-with-prompt-fix:
+mysql:
     Fix mysql prompt to show real hostname - NEVER localhost
 net-find-free-port:
     Find an unused port
@@ -925,6 +927,24 @@ package_name=${1?package name?}
 dpkg --get-selections $package_name
 echo $package_name install | sudo dpkg --set-selections
 dpkg --get-selections $package_name
+
+### fatpacked app archive ######################################################
+
+#!/bin/bash
+
+# Backup a file appending a timestamp
+
+set -e
+
+source bash-helpers
+
+file=${1?filename not specified}
+file=$(perl -pe 's/\/$//g' <<<$file)
+bak=$REMOTE_HOME/backup/$file"_"$(date +%Y%m%d_%H%M%S)
+
+INFO "Archiving to: $file -> $bak"
+
+mv $file $bak
 
 ### fatpacked app bak ##########################################################
 

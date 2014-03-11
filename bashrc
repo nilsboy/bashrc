@@ -283,10 +283,7 @@ function cdm() {
 
 if [[ $DISPLAY ]] ; then
 
-    # swap caps lock with escape
-    if [[ $(xmodmap -pke | grep -i caps) ]] ; then
-        xmodmap -e "remove lock = Caps_Lock" -e "keysym Caps_Lock = Escape"
-    fi
+    keyboard-disable-caps-lock-xwindows
 
     # make windows blink if prompt appears
     if [[ $(type -p wmctrl) ]] ; then
@@ -596,6 +593,8 @@ csvview:
     Quick way to view a csv file on the command line
 dev-bin-generate-readme:
     Generate README with descriptions for bin scripts
+dev-deploy-fat-bashrc:
+    Generate and deploy fat packed bashrc
 df:
     Cleaned up df version
 dir-diff:
@@ -648,6 +647,12 @@ java-decompile-jar:
     Recursively decompile a jar including contained jars
 json-tidy:
     Tidy a json file and sort hash keys to make the output diffable
+keyboard-disable-caps-lock-console:
+    Map caps lock to escape for consoles
+keyboard-disable-caps-lock-xwindows:
+    Map caps lock to escape for X
+keyboard-reset:
+    Reset keyboard settings
 kill-tree:
     Kill a tree of processes by its root PID
 kill-tree-grep:
@@ -2710,6 +2715,27 @@ else {
 }
 
 
+### fatpacked app keyboard-disable-caps-lock-console ###########################
+
+#!/bin/bash
+
+# Map caps lock to escape for consoles
+
+(
+    echo `dumpkeys | grep -i keymaps` ; \
+    echo keycode 58 = Escape \
+) | sudo loadkeys -
+
+### fatpacked app keyboard-disable-caps-lock-xwindows ##########################
+
+#!/bin/bash
+
+# Map caps lock to escape for X
+
+if [[ $(xmodmap -pke | grep -i caps) ]] ; then
+    xmodmap -e "remove lock = Caps_Lock" -e "keysym Caps_Lock = Escape"
+fi
+
 ### fatpacked app keyboard-reset ###############################################
 
 #!/usr/bin/env perl
@@ -2812,9 +2838,6 @@ fi
     _printifok related man -k $cmd
 
 ) | LESS="-j.5 -inRg" less $arg
-
-
-# This app was created automatically and may be overridden - DONT TOUCH THIS!
 
 ### fatpacked app man-online ###################################################
 

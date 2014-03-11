@@ -847,7 +847,7 @@ app=$1 ; shift
 
 alternative=$(alternative $app)
 
-exec $alternative $@
+exec $alternative "$@"
 
 ### fatpacked app apt-hold-package #############################################
 
@@ -2854,7 +2854,7 @@ cmd=$1
 
 ) | LESS="-j.5 -inRg" less $arg
 
-### fatpacked app mysql-with-prompt-fix ########################################
+### fatpacked app mysql ########################################################
 
 #!/bin/bash
 
@@ -2873,7 +2873,7 @@ fi
 # MYSQL_PS1="\\u@${GREEN}$h${NO_COLOR}:${RED}\\d db${NO_COLOR}> " \
 xtitle "mysql@$h" && \
     MYSQL_PS1="\\u@$h:\\d db> " \
-    command $luit mysql --default-character-set=latin1 \
+    $luit alternative-run $0 --default-character-set=latin1 \
         --show-warnings --pager="less -FX" "$@"
 
 ### fatpacked app net-find-free-port ###########################################

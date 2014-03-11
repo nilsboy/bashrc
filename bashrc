@@ -2064,6 +2064,21 @@ foreach my $app (sort(path(".")->children)) {
     $readme->append("$app:\n$description\n");
 }
 
+### fatpacked app dev-deploy-fat-bashrc ########################################
+
+#!/bin/bash
+
+# Generate and deploy fat packed bashrc
+
+set -e
+
+cd ~/src/bin
+./bashrc-pack
+cd ~/src/bashrc
+git add bashrc
+git commit -m "new fat pack"
+git push
+
 ### fatpacked app df ###########################################################
 
 #!/bin/bash
@@ -2783,7 +2798,7 @@ arg="$@"
 if [[ $arg =~ ^-- ]] ; then
    arg="+/$arg"
 elif [[ $arg =~ ^- ]] ; then
-   arg="+/^\s+$arg"
+   arg="+/^\\\s+$arg"
 elif [[ $arg ]] ; then
    arg="+/$arg"
 fi
@@ -2797,6 +2812,9 @@ fi
     _printifok related man -k $cmd
 
 ) | LESS="-j.5 -inRg" less $arg
+
+
+# This app was created automatically and may be overridden - DONT TOUCH THIS!
 
 ### fatpacked app man-online ###################################################
 

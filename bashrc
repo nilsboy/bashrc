@@ -284,7 +284,9 @@ function cdm() {
 if [[ $DISPLAY ]] ; then
 
     # swap caps lock with escape
-    xmodmap -e 'keycode 0x42 = Escape'
+    if [[ $(xmodmap -pke | grep -i caps) ]] ; then
+        xmodmap -e "remove lock = Caps_Lock" -e "keysym Caps_Lock = Escape"
+    fi
 
     # make windows blink if prompt appears
     if [[ $(type -p wmctrl) ]] ; then
@@ -2692,6 +2694,37 @@ else {
     )->encode($in);
 }
 
+
+### fatpacked app keyboard-reset ###############################################
+
+#!/usr/bin/env perl
+
+# Reset keyboard settings
+
+use strict;
+use warnings;
+
+my $current = `setxkbmap -query`;
+
+die "Error querying current keyboard setting." if !$current;
+
+print "Current keyboard settings:\n$current\n";
+
+my ($rules)   = $current =~ /rules:\s+(\S+)/igm;
+my ($model)   = $current =~ /model:\s+(\S+)/igm;
+my ($layout)  = $current =~ /layout:\s+(\S+)/igm;
+my ($variant) = $current =~ /variant:\s+(\S+)/igm;
+
+$rules   ||= "evdev";
+$model   ||= "pc105";
+$layout  ||= "de";
+$variant ||= "nodeadkeys";
+
+my $cmd =
+    "setxkbmap -model $model -layout $layout -variant $variant -rules $rules";
+
+print STDERR "Running: $cmd\n";
+print `$cmd`;
 
 ### fatpacked app kill-tree ####################################################
 

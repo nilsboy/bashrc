@@ -147,7 +147,7 @@ bind -x '"\C-l":printf "\33[2J"'
 
 alias  ls='ls --color=auto --time-style=+"%a %F %H:%M" -v '
 alias  ll='ls -lh'
-alias   l='ls -1'
+alias   l='ls -1 --color | grep-and -e'
 alias  lr='ls -rt1'
 alias llr='ls -rtlh'
 alias  lc='ls -rtlhc'
@@ -387,10 +387,12 @@ function bashrc-prompt-command() {
 
     [[ $BASHRC_TIMER_START ]] || BASHRC_TIMER_START=$SECONDS
 
+
     PS1=$(
         elapsed=$(($SECONDS - $BASHRC_TIMER_START)) \
         jobs=$(jobs) \
         BASHRC_PROMPT_COLORS=1 \
+        BASHRC_PROMPT_HELPERS=$BASHRC_PROMPT_HELPERS \
         $BASHRC_PROMPT_COMMAND
     )"$BASHRC_BG_COLOR"
 
@@ -409,8 +411,19 @@ function prompt-set() {
     PROMPT_COMMAND=bashrc-prompt-command
 
     if [[ $prompt ]] ; then
-        BASHRC_PROMPT_COMMAND=prompt-$prompt
-        return
+
+        if [[ $(type -p prompt-$prompt) ]] ; then
+            BASHRC_PROMPT_COMMAND=prompt-$prompt
+            return
+        fi
+
+        if [[ $(type -p prompt-helper-$prompt) ]] ; then
+            BASHRC_PROMPT_HELPERS=prompt-helper-$prompt
+            return
+        fi
+
+        echo "Prompt not found $prompt" >&2
+        return 1
     fi
 
     if [[ $(parent) =~ (screen|screen.real|tmux) ]] ; then
@@ -516,7 +529,7 @@ function bashrc-unpack() {
             print $APP_FILE $app_data;
             print $APP_FILE
                 "\n# This app was created automatically and may be overridden"
-                . " - DONT TOUCH THIS!";
+                . " - DONT TOUCH THIS!\n";
 
             chmod(0755, $app_file_name) || die $!;
 
@@ -563,7 +576,7 @@ apt-pop:
 apt-unhold-package:
     Return a deb package to its default upgrade state
 archive:
-    Backup a file appending a timestamp
+    Archive a file appending a timestamp
 bak:
     Backup a file appending a timestamp
 bash-background-jobs-count:
@@ -698,6 +711,8 @@ prompt-dir:
     Prompt containing only the prettified current directory
 prompt-dir-full:
     Prompt containing the current directory ony
+prompt-helper-git:
+    Add git status information to prompt
 prompt-host:
     Prompt containing the current hostname
 prompt-local:
@@ -2498,16 +2513,17 @@ Getopt::Long::Configure("bundling");
 my $red      = "\x1b[38;5;124m";
 my $no_color = "\x1b[33;0m";
 
-if (!-t STDOUT) {
-    $red = $no_color = "";
-}
-
 my $opts = {
     "f|file=s"           => \my $file,
     "p|prefix-file-name" => \my $prefix,
     "e|allow-empty"      => \my $allow_empty,
+    "no-color"           => \my $show_no_color,
 };
 GetOptions(%$opts) or die "Usage:\n$0 " . join("\n", sort keys %$opts) . "\n";
+
+if (!-t STDOUT || $show_no_color) {
+    $red = $no_color = "";
+}
 
 my @patterns = @ARGV;
 
@@ -3236,6 +3252,76 @@ echo -n "> "
 
 echo -n "$PWD> "
 
+### fatpacked app prompt-helper-git ############################################
+
+#!/usr/bin/env perl
+# Add git status information to prompt
+
+# The status is represented in from of the work git followed by a + or -.
+# Of the word git+/- the characters represent:
+# g = untracked files
+# i = unstaged files
+# t = staged files
+# + = branch is ahead of master = unpushed changes
+# - = branch is behind master
+
+use strict;
+use warnings;
+no warnings 'uninitialized';
+
+my $red      = '\[\e[38;5;9m\]';
+my $gray     = '\[\e[38;5;243m\]';
+my $no_color = '\[\e[33;0;m\]';
+
+# test data
+my $git = <<'git';
+# On branch masterx
+# Your branch is ahead of 'origin/master' by 1 commit.
+# Untracked files
+# Changes not staged for commit
+# Changes to be committed
+git
+
+$git = `git status 2>/dev/null` || exit;
+
+my ($branch) = $git =~ /^# On branch (.+)$/gm;
+
+if ($branch eq "master") {
+    $branch = "";
+}
+else {
+    $branch = $gray . "@" . $red . $branch . $no_color;
+}
+
+my ($branch_status) = $git =~ /^# Your branch is (\w+) of/gm;
+
+if ($branch_status eq "ahead") {
+    $branch_status = "+";
+}
+elsif ($branch_status) {
+    $branch_status = "-";
+}
+
+if ($branch_status) {
+    $branch_status = $gray . $red . $branch_status . $no_color;
+}
+
+my $untracked = $gray;
+my $unstaged  = $gray;
+my $staged    = $gray;
+
+$untracked = $red if $git =~ /^# Untracked files/m;
+$unstaged  = $red if $git =~ /^# Changes not staged for commit/m;
+$staged    = $red if $git =~ /^# Changes to be committed/m;
+
+print " "
+    . $untracked . "g"
+    . $unstaged . "i"
+    . $staged . "t"
+    . $branch_status
+    . $no_color
+    . $branch;
+
 ### fatpacked app prompt-host ##################################################
 
 # Prompt containing the current hostname
@@ -3247,6 +3333,7 @@ echo -n "@"
 bashrc-helper-hostname
 echo -n ":"
 dir-name-prettifier $PWD
+$BASHRC_PROMPT_HELPERS
 jobs=$jobs bash-background-jobs-count
 echo -n "> "
 
@@ -3258,6 +3345,7 @@ time-humanize-seconds "$elapsed"
 echo -n " "
 bashrc-helper-login-name 1
 dir-name-prettifier $PWD
+$BASHRC_PROMPT_HELPERS
 jobs=$jobs bash-background-jobs-count
 echo -n "> "
 

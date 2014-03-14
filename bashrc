@@ -498,6 +498,10 @@ function bashrc-reload() {
 # Unpack scripts fatpacked to this bashrc
 function bashrc-unpack() {
 
+    if [[ -d $REMOTE_HOME/.bin ]] ; then
+       rm $REMOTE_HOME/.bin -rf
+    fi
+
     perl - $@ <<'EOF'
         use strict;
         use warnings;
@@ -735,8 +739,6 @@ rel:
     Create a relative path from an absolute path
 replace:
     Change the contens of text files by perl expression
-screen:
-    Run screen
 shell-color-test:
     most color mappings taken from xterm-colortest
 shell-open-access-on-freeport:
@@ -767,8 +769,6 @@ time-humanize-seconds:
     seconds
 time-stamp-to-date:
     Print date for a timestamp
-tmux:
-    Run tmux
 tmux-reattach:
     Reattach to a screen or tmux session
 tree:
@@ -2113,6 +2113,7 @@ foreach my $app (sort(path(".")->children)) {
 set -e
 
 cd ~/src/bin
+git pull
 ./bashrc-pack
 cd ~/src/bashrc
 git add bashrc
@@ -3257,8 +3258,9 @@ echo -n "$PWD> "
 #!/usr/bin/env perl
 # Add git status information to prompt
 
-# The status is represented in from of the work git followed by a + or -.
-# Of the word git+/- the characters represent:
+# The status is represented in the form of the word git followed by a + or -.
+#
+# Of the word git+/- the red characters represent:
 # g = untracked files
 # i = unstaged files
 # t = staged files
@@ -3280,6 +3282,7 @@ my $git = <<'git';
 # Untracked files
 # Changes not staged for commit
 # Changes to be committed
+# Your branch and 'origin/master' have diverged,
 git
 
 $git = `git status 2>/dev/null` || exit;
@@ -3309,16 +3312,19 @@ if ($branch_status) {
 my $untracked = $gray;
 my $unstaged  = $gray;
 my $staged    = $gray;
+my $conflicts = $gray;
 
 $untracked = $red if $git =~ /^# Untracked files/m;
 $unstaged  = $red if $git =~ /^# Changes not staged for commit/m;
 $staged    = $red if $git =~ /^# Changes to be committed/m;
+$conflicts = $red . "!" if $git =~ /^# Your branch .*have diverged/m;
 
 print " "
     . $untracked . "g"
     . $unstaged . "i"
     . $staged . "t"
     . $branch_status
+    . $conflicts
     . $no_color
     . $branch;
 
@@ -3501,17 +3507,6 @@ exit 1 if !$files_changed;
 print STDERR "$files_changed of $file_count files changed"
     . " (example: $example_file)"
     . ( $dry ? "$red - dry run." : "" ) . "\n";
-
-### fatpacked app screen #######################################################
-
-#!/bin/bash
-
-# Run screen
-
-set -e
-
-xtitle screen@$HOSTNAME
-alternative-run screen -c $REMOTE_HOME/.screenrc $@
 
 ### fatpacked app shell-color-test #############################################
 
@@ -4052,17 +4047,6 @@ my $timestamp = $ARGV[0] || die "Timestamp?";
 
 print strftime( "%F %T", localtime( substr( $timestamp, 0, 10 ) ) ) . "\n";
 
-### fatpacked app tmux #########################################################
-
-#!/bin/bash
-
-# Run tmux
-
-set -e
-
-xtitle tmux@$HOSTNAME
-alternative-run tmux $@
-
 ### fatpacked app tmux-reattach ################################################
 
 #!/bin/bash
@@ -4078,18 +4062,23 @@ fi
 ssh-agent-env-grab
 
 (
+    xtitle tmux@$HOSTNAME
     if tmux has-session -t $session ; then
         tmux -2 att -d -t $session
         exit 0
     fi
+
 
     if tmux has-session ; then
         tmux -2 att -d
         exit 0
     fi
 
+    xtitle screen@$HOSTNAME
     screen -rd $session && exit
     screen -rd && exit
+
+    xtitle "Terminal"
 
     exit 1
 

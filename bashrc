@@ -1269,6 +1269,16 @@ function line() {
 EOF
 }
 
+function prefix-if() {
+    
+    if [[ "$@" ]] ; then
+        echo -ne " $@"
+        return
+    fi
+
+    echo -ne "$@"
+}
+
 ### fatpacked app bash-jobs ####################################################
 
 #!/usr/bin/env perl
@@ -2115,9 +2125,13 @@ foreach my $app (sort(path(".")->children)) {
 
 set -e
 
+cd ~/src/bashrc
+git reset --hard HEAD
+git pull || echo "Nothing to pull"
+
 cd ~/src/bin
-git pull
 ./bashrc-pack
+
 cd ~/src/bashrc
 git add bashrc
 git commit -m "new fat pack"
@@ -2873,6 +2887,8 @@ elif [[ $arg =~ ^- ]] ; then
    arg="+/^\\\s+$arg"
 elif [[ $arg ]] ; then
    arg="+/$arg"
+else
+   arg="+/^--- "
 fi
 
 (
@@ -3392,14 +3408,16 @@ print " "
 
 # Prompt containing the current hostname
 
+source bash-helpers
+
 time-humanize-seconds $elapsed
+prefix-if $($BASHRC_PROMPT_HELPERS)
 echo -n " "
 bashrc-helper-login-name
 echo -n "@"
 bashrc-helper-hostname
 echo -n ":"
 dir-name-prettifier $PWD
-$BASHRC_PROMPT_HELPERS
 jobs=$jobs bash-background-jobs-count
 echo -n "> "
 
@@ -3407,11 +3425,12 @@ echo -n "> "
 
 # Prompt for local shells - without hostname
 
+source bash-helpers
+
 time-humanize-seconds "$elapsed"
-echo -n " "
-bashrc-helper-login-name 1
-dir-name-prettifier $PWD
-$BASHRC_PROMPT_HELPERS
+prefix-if $($BASHRC_PROMPT_HELPERS)
+prefix-if $(bashrc-helper-login-name 1)
+prefix-if $(dir-name-prettifier $PWD)
 jobs=$jobs bash-background-jobs-count
 echo -n "> "
 

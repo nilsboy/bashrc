@@ -838,6 +838,10 @@ if ! [[ $app =~ / ]] ; then
     DIE "Specify absolute path to executable."
 fi
 
+if ! [ -x $app ] ; then
+    DIE "Specify existing executable."
+fi
+
 base=$(basename $app)
 
 INFO "Searching for alternative for $base ($app)"
@@ -847,6 +851,12 @@ while read candidate ; do
     if [[ $candidate = $app ]] ; then
         continue
     fi
+
+    if [[ $candidate = $REMOTE_HOME/.bin/$base ]] ; then
+        continue
+    fi
+
+    INFO "Found alternative $candidate"
 
     RETURN $candidate
 

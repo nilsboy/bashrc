@@ -833,7 +833,10 @@ print "$abs\n";
 source bash-helpers
 
 app=${1?Specify app}
-app=$(abs $app)
+
+if ! [[ $app =~ / ]] ; then
+    DIE "Specify absolute path to executable."
+fi
 
 base=$(basename $app)
 
@@ -864,6 +867,10 @@ set -e
 source bash-helpers
 
 app=$1 ; shift
+
+if [[ $SHLVL -gt 20 ]] ; then
+    DIE "Recursion depth of $SHLVL detected."
+fi
 
 alternative=$(alternative $app)
 
@@ -1246,8 +1253,14 @@ function INFO()   { _LOG "INFO " "$@" ; }
 function WARN()   { _LOG "WARN " "$@" ; }
 function ERROR()  { _LOG "ERROR" "$@" ; }
 function DIE()    { _LOG "FATAL" "$@" ; exit 1 ; }
-function EXIT()   { _LOG "INFO"  "$@" ; exit 0 ; }
 function RETURN() { echo -ne "$@"     ; exit 0 ; }
+
+function EXIT()   {
+    if [[ "$@" ]] ; then
+        _LOG "INFO"  "$@"
+    fi
+    exit 0
+}
 
 function usefatal() {
     trap DIE ERR
@@ -2143,12 +2156,14 @@ git push
 
 # Cleaned up df version
 
+source bash-helpers
+
 if [[ $@ ]] ; then
-    command df "$@"
+    alternative-run $0 "$@"
     EXIT
 fi
 
-alternative-run df -h \
+alternative-run $0 -h \
     | perl -0777 -pe 's/Mounted on/Mounted_on/gm' \
     | perl -0777 -pe 's/^(\S+)\n/$1/gm' \
     | csvview \

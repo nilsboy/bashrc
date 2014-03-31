@@ -1292,7 +1292,7 @@ function line() {
 EOF
 }
 
-function prefix-if() {
+function prefixif() {
     
     if [[ "$@" ]] ; then
         echo -ne " $@"
@@ -3436,7 +3436,7 @@ print " "
 source bash-helpers
 
 time-humanize-seconds $elapsed
-prefix-if $($BASHRC_PROMPT_HELPERS)
+prefixif $($BASHRC_PROMPT_HELPERS)
 echo -n " "
 bashrc-helper-login-name
 echo -n "@"
@@ -3453,9 +3453,9 @@ echo -n "> "
 source bash-helpers
 
 time-humanize-seconds "$elapsed"
-prefix-if $($BASHRC_PROMPT_HELPERS)
-prefix-if $(bashrc-helper-login-name 1)
-prefix-if $(dir-name-prettifier $PWD)
+prefixif $($BASHRC_PROMPT_HELPERS)
+prefixif $(bashrc-helper-login-name 1)
+prefixif $(dir-name-prettifier $PWD)
 jobs=$jobs bash-background-jobs-count
 echo -n "> "
 

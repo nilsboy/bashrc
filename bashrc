@@ -674,10 +674,6 @@ keyboard-disable-caps-lock-xwindows:
     Map caps lock to escape for X
 keyboard-reset:
     Reset keyboard settings
-kill-tree:
-    Kill a tree of processes by its root PID
-kill-tree-grep:
-    Find a process and kill it with all its children
 man-multi-lookup:
     Lookup help for a command in several places
 man-online:
@@ -2849,38 +2845,6 @@ my $cmd =
 
 print STDERR "Running: $cmd\n";
 print `$cmd`;
-
-### fatpacked app kill-tree ####################################################
-
-#!/bin/bash
-
-# Kill a tree of processes by its root PID
-
-pid=${1?PID?}
-pids=$(ps opgid= $pid | perl -pe 's/^/-/g; s/\n/ /g')
-kill -TERM $pids
-
-### fatpacked app kill-tree-grep ###############################################
-
-#!/bin/bash
-
-# Find a process and kill it with all its children
-
-set -e
-pattern=${1?Process name or argument?}
-
-pgrep $pattern
-WARN "These and their sub processes?"
-
-read a
-
-if [[ $a != y ]] ; then
-    DIE "User interupt."
-fi
-
-pids=$(\pgrep -f $pattern)
-pids=$(ps opgid= $pids | perl -pe 's/^/-/g; s/\n/ /g')
-kill -TERM $pids
 
 ### fatpacked app man-multi-lookup #############################################
 

@@ -3553,7 +3553,7 @@ watch -n1 "ps -A | grep -i $@ | grep -v grep"
 
 search=${@:-,$PPID}
 
-pstree -apl \
+pstree -aplg \
     | perl -ne '$x = "xxSKIPme"; print if $_ !~ /[\|`]\-\{[\w-_]+},\d+$|less.+\+\/'$1'|$x/' \
     | less "+/$search"
 

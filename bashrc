@@ -692,6 +692,9 @@ note:
     File of notes and a way to query them
 path-grep:
     Find an executable in path
+perl:
+    Set process name of perl process to script name. Usefull when run
+    via /usr/bin/env
 perl-install-deps-for-module:
     Install all CPAN dependencies for a module
 perl-install-latest-stable-perl:
@@ -3175,6 +3178,31 @@ perl -0777 -ne \
 
 # Find an executable in path
 compgen -c | grep -i "$@"
+
+### fatpacked app perl #########################################################
+
+#!/bin/bash
+
+# Set process name of perl process to script name. Usefull when run via /usr/bin/env
+
+# This only works for some tools like pidof because it only changes argv[0] and does
+# not call prctl.
+
+set -e
+
+perl=$(alternative $0)
+
+file=$1
+
+if [[ $file ]] ; then
+    if [[ -f $file ]] ; then
+        file="-a "$(basename $file)
+    else
+        unset file
+    fi
+fi
+
+exec $file $perl "$@"
 
 ### fatpacked app perl-install-deps-for-module #################################
 

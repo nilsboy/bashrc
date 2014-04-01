@@ -662,8 +662,6 @@ grep-list:
     Grep for a list of values
 grep-or:
     or-grep list matching lines
-java:
-    Run java with setting up neccessary environment
 java-decompile-jar:
     Recursively decompile a jar including contained jars
 json-tidy:
@@ -2675,18 +2673,6 @@ while ( my $line = <STDIN> ) {
 }
 
 exit 1 if ! $matches;
-
-### fatpacked app java #########################################################
-
-# Run java with setting up neccessary environment
-
-# TODO
-
-if [[ ! $JAVA_HOME ]] ; then
-    export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
-fi
-
-alternative-run $0
 
 ### fatpacked app java-decompile-jar ###########################################
 

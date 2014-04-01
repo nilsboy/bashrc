@@ -554,7 +554,7 @@ EOF
 prompt-set
 bashrc-set-last-session-pwd
 
-BASHRC_IS_LOADED=1
+export BASHRC_IS_LOADED=1
 
 ### END ########################################################################
 return 0
@@ -688,9 +688,6 @@ note:
     File of notes and a way to query them
 path-grep:
     Find an executable in path
-perl:
-    Set process name of perl process to script name. Usefull when run
-    via /usr/bin/env
 perl-install-deps-for-module:
     Install all CPAN dependencies for a module
 perl-install-latest-stable-perl:
@@ -708,6 +705,9 @@ perl-module-find:
     Find a perl module or script
 perl-module-version:
     Print version of an installed perl module
+perl-named-process:
+    Set process name of perl process to script name. Usefull when run
+    via /usr/bin/env
 perl-profile:
     Profile a perl app and display the html results
 perl-setup-local-lib:
@@ -3143,31 +3143,6 @@ perl -0777 -ne \
 # Find an executable in path
 compgen -c | grep -i "$@"
 
-### fatpacked app perl #########################################################
-
-#!/bin/bash
-
-# Set process name of perl process to script name. Usefull when run via /usr/bin/env
-
-# This only works for some tools like pidof because it only changes argv[0] and does
-# not call prctl.
-
-set -e
-
-perl=$(alternative $0)
-
-file=$1
-
-if [[ $file ]] ; then
-    if [[ -f $file ]] ; then
-        file="-a "$(basename $file)
-    else
-        unset file
-    fi
-fi
-
-exec $file $perl "$@"
-
 ### fatpacked app perl-install-deps-for-module #################################
 
 #!/bin/bash
@@ -3247,6 +3222,31 @@ find $(perl -e 'print join (" ", @INC)') -iname "*$@*.pm" 2>/dev/null \
 # Print version of an installed perl module
 
 perl -M"$@" -e 'print $ARGV[0]->VERSION . "\n"' "$@"
+
+### fatpacked app perl-named-process ###########################################
+
+#!/bin/bash
+
+# Set process name of perl process to script name. Usefull when run via /usr/bin/env
+
+# This only works for some tools like pidof because it only changes argv[0] and does
+# not call prctl.
+
+set -e
+
+perl=$(alternative $0)
+
+file=$1
+
+if [[ $file ]] ; then
+    if [[ -f $file ]] ; then
+        file="-a "$(basename $file)
+    else
+        unset file
+    fi
+fi
+
+exec $file $perl "$@"
 
 ### fatpacked app perl-profile #################################################
 

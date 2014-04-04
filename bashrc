@@ -2910,7 +2910,7 @@ fi
 # MYSQL_PS1="\\u@${GREEN}$h${NO_COLOR}:${RED}\\d db${NO_COLOR}> " \
 xtitle "mysql@$h" && \
     MYSQL_PS1="\\u@$h:\\d db> " \
-    alternative-run $0 --default-character-set=latin1 \
+    alternative-run $0 --default-character-set=utf8 \
         --show-warnings --pager="less -FX" "$@"
 
 ### fatpacked app net-find-free-port ###########################################

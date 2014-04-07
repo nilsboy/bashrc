@@ -309,6 +309,14 @@ if [[ -e $REMOTE_HOME/.ssh/config ]] ; then
     complete -fdW "$(_ssh_completion)" scp
 fi
 
+function fixssh()
+    source ssh-agent-env-restore
+}
+
+function nossh() {
+    ssh-agent-env-clear
+}
+
 ### History ####################################################################
 
 # ignore commands  for history that start  with a space
@@ -750,7 +758,7 @@ ssh-agent-env-grab:
     Save ssh-agent environemnt variables to be loaded in another
     session or on
 ssh-agent-env-restore:
-    Load ssh-agent vars stored by grabssh()
+    Dump ssh-agent vars stored by ssh-agent-env-grab
 ssh-no-check:
     SSH without host key checks
 ssh-persistent-reverse-tunnel-setup:
@@ -3955,9 +3963,11 @@ done 1>$REMOTE_HOME/.ssh/agent_env
 
 #!/bin/bash
 
-# Load ssh-agent vars stored by grabssh()
+# Dump ssh-agent vars stored by ssh-agent-env-grab
 
-source $REMOTE_HOME/.ssh/agent_env
+# source this file to load the vars in your current shell
+
+cat $REMOTE_HOME/.ssh/agent_env
 
 ### fatpacked app ssh-no-check #################################################
 

@@ -2976,8 +2976,6 @@ perl -0777 -ne \
   'foreach(/^(# NOTES ON '$search'.+?\n\n)/imsg){ s/# //g; print "\n$_" }' \
     $0
 
-### NOTES ######################################################################
-
 # NOTES ON ssh
 # * prevent timeouts: /etc/ssh/ssh_config + ServerAliveInterval 5
 # * tunnel (reverse/port forwarding):
@@ -3100,6 +3098,7 @@ perl -0777 -ne \
 # * sg - execute command as different group ID
 
 # NOTES ON ubuntu
+# 
 # * Releases:
 #                                                  Supported until
 #                                                Desktop      Server

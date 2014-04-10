@@ -583,6 +583,8 @@ alternative:
     Find an on disk executable alternative
 alternative-run:
     Find an on disk executable alternative and run it
+app-knows-switch:
+    Check if an app supports specified switch
 apt-hold-package:
     Prevent a deb package from beeing upgraded
 apt-pop:
@@ -891,6 +893,24 @@ fi
 alternative=$(alternative $app)
 
 exec $alternative "$@"
+
+### fatpacked app app-knows-switch #############################################
+
+#!/usr/bin/env perl
+
+# Check if an app supports specified switch
+
+use strict;
+use warnings;
+
+my $app    = $ARGV[0] || die "Specify app.";
+my $switch = $ARGV[1] || die "Specify switch.";
+
+my $output = `$app --help 2>&1`;
+
+exit 0 if $output =~ /^\s*$switch/ms;
+
+exit 1;
 
 ### fatpacked app apt-hold-package #############################################
 
@@ -3520,7 +3540,10 @@ watch -n1 "ps -A | grep -i $@ | grep -v grep"
 
 search=${@:-,$PPID}
 
-pstree -aplg \
+switches="-apl";
+app-knows-switch pstree -g && switches=$switches"g"
+
+pstree $switches \
     | perl -ne '$x = "xxSKIPme"; print if $_ !~ /[\|`]\-\{[\w-_]+},\d+$|less.+\+\/'$1'|$x/' \
     | less "+/$search"
 

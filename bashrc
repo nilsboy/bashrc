@@ -4934,8 +4934,6 @@ set -e
 
 file=$(type -p $@)
 
-echo running $EDITOR
-
 command eval $EDITOR "$file"
 
 ### fatpacked app vnc-server-setup-upstart-script ##############################

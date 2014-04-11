@@ -4900,7 +4900,7 @@ file=$(cat | perl -ne 'print if $. == '$line)
 # close STDIN by connecting it back to the terminal
 exec < $BASHRC_TTY
 
-vi $file
+command eval $EDITOR $file
 
 ### fatpacked app vi-from-find #################################################
 
@@ -4914,7 +4914,7 @@ if [[ ! "$entry" ]] ; then
     exit 1
 fi
 
-command vi "$entry"
+command eval $EDITOR "$entry"
 
 ### fatpacked app vi-from-history ##############################################
 
@@ -4922,7 +4922,7 @@ command vi "$entry"
 
 set -e
 file=$(bash-eternal-history-search --file -c 1 "$@")
-command vi "$file"
+command eval $EDITOR "$file"
 
 ### fatpacked app vi-from-path #################################################
 
@@ -4934,7 +4934,9 @@ set -e
 
 file=$(type -p $@)
 
-$EDITOR "$file"
+echo running $EDITOR
+
+command eval $EDITOR "$file"
 
 ### fatpacked app vnc-server-setup-upstart-script ##############################
 

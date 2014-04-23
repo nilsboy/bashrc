@@ -652,6 +652,8 @@ dir-name-prettifier:
     shorten prompt dir to max 15 chars
 distribution-fix:
     Set conveniences depending on distribution
+docopt-convert:
+    Convert a docopt specification
 dos2unix:
     Convert line endings from dos to unix
 env-grep:
@@ -824,7 +826,7 @@ vnc-start-vino:
 vnc-vino-preferences:
     Set vino preferences
 vncviewer:
-    vncviewer preconfigured to use ssh
+    preconfigured to use ssh
 wcat:
     Easily dump a web site
 webserver-serve-current-directory:
@@ -1214,6 +1216,9 @@ map { print $_ } reverse @to_show;
 # Helper functions for shell scripts
 # Put in you path and you can use them using "source bash-helpers".
 
+set -e
+set -o pipefail
+
 if [[ $BASHRC_PROMPT_COLORS ]] ; then
     NO_COLOR='\[\e[33;0;m\]'
         GRAY='\[\e[38;5;243m\]'
@@ -1344,6 +1349,12 @@ function prefixif() {
     fi
 
     echo -ne "$@"
+}
+
+function docopt() {
+    docopt='docopt-convert $(readlink -f $0) -- "$@"'
+    eval $docopt
+    docopt=$(eval $docopt)
 }
 
 ### fatpacked app bash-jobs ####################################################
@@ -2172,7 +2183,11 @@ foreach my $app (sort(path(".")->children)) {
     next if $app->is_dir;
     next if $app->basename eq "README";
 
-    my ($description) = $app->slurp =~ /^# (.+?)\n/m;
+    my ($description) = $app->slurp =~ /^=head1 NAME\s+(.+)/m;
+    ($description) = $app->slurp =~ /^# (.+?)\n/m if !$description;
+
+    $description =~ s/^$app[\s-]*//g;
+
     $description = wrap('    ', '    ', $description) if $description;
 
     print STDERR "Description ends with a dot app: $app\n"
@@ -2303,6 +2318,90 @@ export DISTRIBUTION
 if [[ $DISTRIBUTION = "suse" ]] ; then
     unalias crontab
 fi
+
+### fatpacked app docopt-convert ###############################################
+
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+no warnings 'uninitialized';
+
+use Docopt;
+use JSON;
+use autobox::Core;
+use Path::Tiny;
+
+my $options  = docopt();
+my $app_argv = $options->{"<argv>"};
+
+my $doc_file = path($options->{"<file.docopt>"});
+my $doc      = $doc_file->slurp;
+
+my $docopt_ran = 0;
+
+if ($doc =~ /^### docopt #*(.+)/sm) {
+    $doc = $1;
+}
+
+my $basename = $doc_file->basename;
+
+$doc =~ s/\$0/$basename/gm;
+
+parse_external_doc($doc, $app_argv);
+
+sub parse_external_doc {
+    my ($doc, $argv) = @_;
+
+    my $app_options = docopt(doc => $doc, argv => $argv);
+
+    $docopt_ran = 1;
+
+    convert_booleans($app_options);
+
+    my $json =
+        JSON->new->pretty($options->{'--pretty'})->encode($app_options);
+
+    $json =~ s/"boolean:(true|false)"/$1/gm;
+
+    print $json;
+}
+
+sub convert_booleans {
+    my ($twig) = @_;
+
+    if (!ref $twig eq 'HASH') {
+        return;
+    }
+
+    $twig->each(
+        sub {
+            my ($key, $value) = @_;
+            convert_booleans($value) if ref($value) eq 'HASH';
+            $twig->{$key} = $value == 1 ? "boolean:true" : "boolean:false"
+                if ref $value eq 'boolean';
+        }
+    );
+}
+
+# Prevent docopt to exit with 0 if --help is specified
+END { exit 1 if !$docopt_ran; }
+
+__END__
+
+=head1 NAME
+
+docopt-convert - Convert a docopt specification
+
+=head1 SYNOPSIS
+
+    docopt-convert [options] <file.docopt> -- [<argv>...]
+
+    Options: 
+    -h --help     Show this screen.
+    --shell       Print bash parsable result - TODO
+    --p --pretty  Pretty print JSON
+
 
 ### fatpacked app dos2unix #####################################################
 
@@ -3422,7 +3521,9 @@ git
 
 $git = `git status 2>/dev/null` || exit;
 
-my ($branch) = $git =~ /^# On branch (.+)$/gm;
+$git =~ s/^# //gm;
+
+my ($branch) = $git =~ /^On branch (.+)$/gm;
 
 if ($branch eq "master") {
     $branch = "";
@@ -3431,7 +3532,7 @@ else {
     $branch = $gray . "@" . $red . $branch . $no_color;
 }
 
-my ($branch_status) = $git =~ /^# Your branch is (\w+) of/gm;
+my ($branch_status) = $git =~ /^Your branch is (\w+) of/gm;
 
 if ($branch_status eq "ahead") {
     $branch_status = "+";
@@ -3449,10 +3550,10 @@ my $unstaged  = $gray;
 my $staged    = $gray;
 my $conflicts = $gray;
 
-$untracked = $red if $git =~ /^# Untracked files/m;
-$unstaged  = $red if $git =~ /^# Changes not staged for commit/m;
-$staged    = $red if $git =~ /^# Changes to be committed/m;
-$conflicts = $red . "!" if $git =~ /^# Your branch .*have diverged/m;
+$untracked = $red if $git =~ /^Untracked files/m;
+$unstaged  = $red if $git =~ /^Changes not staged for commit/m;
+$staged    = $red if $git =~ /^Changes to be committed/m;
+$conflicts = $red . "!" if $git =~ /^Your branch .*have diverged/m;
 
 print " "
     . $untracked . "g"

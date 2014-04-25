@@ -2985,6 +2985,8 @@ print `$cmd`;
 
 source bash-helpers
 
+set +e
+
 function _printifok() {
     local msg=$1 ; shift
     local cmd="$*"

@@ -219,7 +219,6 @@ alias vi="$EDITOR"
 
 alias v=vi-choose-file-from-list
 alias vie=vi-from-path
-alias vif=vi-from-find
 alias vih=vi-from-history
 alias vip="perldoc -lm"
 
@@ -248,7 +247,7 @@ function cdh() {
     fi
 
     local dir=$(bash-eternal-history-search -d --skip-current-dir \
-        --existing-only -c 1 "\/[^\/]*$@[^\/]*$"
+        --existing-only -c 1 "$@" \
     )
 
     if [[ ! "$dir" ]] ; then
@@ -308,14 +307,6 @@ if [[ -e $REMOTE_HOME/.ssh/config ]] ; then
         sshnocheck sshtunnel vncviewer
     complete -fdW "$(_ssh_completion)" scp
 fi
-
-function fixssh() {
-    eval $(ssh-agent-env-restore)
-}
-
-function nossh() {
-    ssh-agent-env-clear
-}
 
 ### History ####################################################################
 
@@ -413,24 +404,6 @@ function bashrc-prompt-command() {
     BASHRC_TIMER_START=$SECONDS
 }
 
-# Add a helper command to display in the prompt
-function prompt-helper-add() {
-
-    cmd=${1?Specify helper command}
-
-    if [[ $BASHRC_PROMPT_HELPERS ]] ; then
-        BASHRC_PROMPT_HELPERS=$BASHRC_PROMPT_HELPERS";"
-    fi
-
-    BASHRC_PROMPT_HELPERS="$BASHRC_PROMPT_HELPERS""prefixif \$($@)"
-}
-
-# Remove all helpers
-function prompt-helper-remove-all() {
-
-    unset BASHRC_PROMPT_HELPERS
-}
-
 # Set the specified prompt or guess which one to set
 function prompt-set() {
 
@@ -446,7 +419,7 @@ function prompt-set() {
         fi
 
         if [[ $(type -p prompt-helper-$prompt) ]] ; then
-            prompt-helper-add prompt-helper-$prompt
+            BASHRC_PROMPT_HELPERS=prompt-helper-$prompt
             return
         fi
 
@@ -546,7 +519,7 @@ function bashrc-unpack() {
         print STDERR "Exporting apps to $dst_dir...\n";
 
         my $export_count = 0;
-        while ($bashrc =~ /^### fatpacked app ([\w-]+) #*$(.+?)(?=^###)/igsm) {
+        while ($bashrc =~ /^### fatpacked app ([\w-]+) #*$(.+?)(?=###)/igsm) {
 
             my $app_name = $1;
             my $app_data = $2;
@@ -580,7 +553,7 @@ EOF
 prompt-set
 bashrc-set-last-session-pwd
 
-export BASHRC_IS_LOADED=1
+BASHRC_IS_LOADED=1
 
 ### END ########################################################################
 return 0
@@ -3010,7 +2983,7 @@ arg="$@"
 if [[ $arg =~ ^-- ]] ; then
    arg="+/$arg"
 elif [[ $arg =~ ^- ]] ; then
-   arg="+/^\\\s+$arg"
+   arg="+/^\\s+$arg"
 elif [[ $arg ]] ; then
    arg="+/$arg"
 else

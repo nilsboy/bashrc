@@ -675,6 +675,8 @@ keyboard-disable-caps-lock-xwindows:
     Map caps lock to escape for X
 keyboard-reset:
     Reset keyboard settings
+man-explain-options:
+    Display man page infos about command line options
 man-multi-lookup:
     Lookup help for a command in several places
 man-online:
@@ -2949,6 +2951,62 @@ my $cmd =
 
 print STDERR "Running: $cmd\n";
 print `$cmd`;
+
+### fatpacked app man-explain-options ##########################################
+
+#!/usr/bin/env perl
+
+# Display man page infos about command line options
+
+use strict;
+use warnings;
+no warnings 'uninitialized';
+use Data::Dumper;
+
+my $cl = join( " ", @ARGV ) || die "Specify command line.";
+my ( $command, $options ) = $cl =~ /^(\S+) (.+)$/;
+die "Specify options." if !$options;
+
+my @options            = $options =~ /(-{1,2}\S+)/g;
+my @normalized_options = ();
+
+foreach my $option (@options) {
+
+    # split grouped options (starting with a single dash)
+    if ( $option =~ /^-[^-]{2,}/g ) {
+        foreach my $single_option ( split( //, $option ) ) {
+            next if $single_option eq "-";
+            push( @normalized_options, "-" . $single_option );
+        }
+    }
+    else {
+        push( @normalized_options, $option );
+    }
+}
+
+@options = @normalized_options;
+
+my $man = `man $command` || die "Cannot open man page for $command";
+
+my @unknown_options = ();
+
+print "$command:\n";
+
+foreach my $option (@options) {
+
+    my ($desc) = $man =~ /^(?:(?:-{1,2}\w+, )*|\s+)($option\W.+?)^\s+-/ms;
+
+    if ( !$desc ) {
+        push( @unknown_options, $option );
+        next;
+    }
+    $desc =~ s/\n$//gms;
+    print "$desc\n";
+}
+
+print STDERR "No description found for options: "
+    . join( ", ", @unknown_options ) . "\n"
+    if @unknown_options;
 
 ### fatpacked app man-multi-lookup #############################################
 

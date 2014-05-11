@@ -3001,7 +3001,7 @@ foreach my $option (@options) {
         next;
     }
     $desc =~ s/\n$//gms;
-    print "$desc\n";
+    print "   $desc\n";
 }
 
 print STDERR "No description found for options: "
@@ -3036,7 +3036,7 @@ if [[ $cmd = git ]] ; then
     shift
 fi
 
-arg="$@"
+arg="$1"
 
 if [[ $arg =~ ^-- ]] ; then
    arg="+/$arg"
@@ -3049,6 +3049,7 @@ else
 fi
 
 (
+    _printifok options man-explain-options $cmd "$@"
     _printifok help help -m $cmd
     _printifok man man -a $cmd
     _printifok perldoc perldoc -f $cmd

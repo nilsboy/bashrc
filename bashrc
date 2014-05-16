@@ -636,6 +636,9 @@ bashrc-pack:
     Attach scripts to the bashrc skeleton
 bashrc-unpack-and-run:
     Run a script that is attached to the bashrc
+cp-merge-directories:
+    Merge two directories on the same disk recursively by using hard
+    links
 cpanm:
     Allow cpanm to install modules specified via Path/File.pm
 csvview:
@@ -1858,6 +1861,30 @@ else {
     die "App $app not found.";
 }
 
+### fatpacked app cp-merge-directories #########################################
+
+#!/bin/bash
+
+# Merge two directories on the same disk recursively by using hard links
+# and avoiding to copy a file
+
+source bash-helpers
+
+src=${1?specify source directory}
+dst=${2?specify destination directory}
+
+test -d "$src" || DIE "Not a directory: $src"
+test -d "$dst" || DIE "Not a directory: $dst"
+
+src_device=$(stat --format "%d" "$src")
+dst_device=$(stat --format "%d" "$dst")
+
+if [[ $src_device != $dst_device ]] ; then
+    DIE "$src and $dst have to reside on the same device for hard links to work"
+fi
+
+cp -rnl "$src"/* "$dst"/
+
 ### fatpacked app cpanm ########################################################
 
 #!/usr/bin/env perl
@@ -3012,6 +3039,8 @@ foreach my $option (@options) {
 }
 
 @options = @normalized_options;
+
+die "No options found." if ! @options;
 
 my $man = `man $command` || die "Cannot open man page for $command";
 

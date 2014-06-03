@@ -5360,13 +5360,13 @@ my $opts = {
     'e|execute-perl=s'      => \my $op,
     'S|dont-split-off-dir'  => \my $dont_split_off_dir,
 };
-GetOptions(%$opts) or die "Usage:\n" . join("\n", sort keys %$opts) . "\n";
+GetOptions(%$opts) or die "Usage:\n" . join( "\n", sort keys %$opts ) . "\n";
 
-if (join(" ", @ARGV) eq "-") {
-    @ARGV = map { /(.+)\n/ } <STDIN>;
+if ( join( " ", @ARGV ) eq "-" ) {
+    @ARGV = map {/(.+)\n/} <STDIN>;
 }
 
-if (!@ARGV) {
+if ( !@ARGV ) {
     die "Usage: xmv [-x] [-d] [-n] [-l file] [-S] [-e perlexpr] [filenames]\n";
 }
 
@@ -5399,7 +5399,7 @@ for (@ARGV) {
 
     # vars to use in perlexpr
     $COUNT++;
-    $COUNT = sprintf("%0" . length(scalar(@ARGV)) . "d", $COUNT);
+    $COUNT = sprintf( "%0" . length( scalar(@ARGV) ) . "d", $COUNT );
 
     if ($op) {
         eval $op;
@@ -5408,13 +5408,13 @@ for (@ARGV) {
 
     my $will = $dir . $_;
 
-    if (!-e $abs) {
+    if ( !-e $abs ) {
         warn "no such file: '$was'";
         $abort = 1;
         next;
     }
 
-    if (-d $abs && !$include_directories) {
+    if ( -d $abs && !$include_directories ) {
         next;
     }
 
@@ -5427,7 +5427,7 @@ for (@ARGV) {
 
     next if $will eq $abs;
 
-    if (-e $will) {
+    if ( -e $will ) {
         warn "file '$will' already exists.";
         $abort = 1;
         next;
@@ -5439,7 +5439,7 @@ for (@ARGV) {
 
 exit 1 if $abort;
 
-foreach my $was (sort keys %was) {
+foreach my $was ( sort keys %was ) {
 
     my $will = $was{$was};
 
@@ -5449,8 +5449,8 @@ foreach my $was (sort keys %was) {
 
     # system("mv", $was, $will) && die $!;
     my $stat = stat($was) || die $!;
-    mv($was, $will) || die $!;
-    utime($stat->atime, $stat->mtime, $will) || die $!;
+    mv( $was, $will ) || die $!;
+    utime( $stat->atime, $stat->mtime, $will ) || die $!;
 }
 
 sub normalize {
@@ -5459,13 +5459,14 @@ sub normalize {
     my $file = basename($abs);
     my $ext  = "";
 
-    if (!-d $abs && $file =~ /^(.+)(\..+?)$/) {
-        ($file, $ext) = ($1, $2);
+    if ( !-d $abs && $file =~ /^(.+)(\..+?)$/ ) {
+        ( $file, $ext ) = ( $1, $2 );
     }
 
     $_ = $file;
 
     s/www\.[^\.]+\.[[:alnum:]]+//g;
+    s/&/and/g;
     s/['`´]+//g;
     s/[^\w\.]+/_/g;
     s/[\._]+/_/g;

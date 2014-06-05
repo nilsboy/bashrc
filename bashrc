@@ -2874,6 +2874,8 @@ exit 1 if ! $matches;
 
 # Recursively decompile a jar including contained jars
 
+source bash-helpers
+
 set -e
 
 org_jar=${1?Specify jar}

@@ -3410,7 +3410,18 @@ perl -c -Mlib::xi=-nq "$@"
 
 # Install latest stable perl via perlbrew
 
-perlbrew install stable --notest --switch
+set -e
+
+perlbrew install stable --notest
+
+echo "Now installed perl versions:"
+perlbrew list
+
+echo
+echo "to install all currently installed modues to new version use:"
+echo "    perl-install-modules-into-perl-version (version)"
+echo
+echo "to switch to new version use: perlbrew swith (version)"
 
 ### fatpacked app perl-install-module ##########################################
 
@@ -3436,7 +3447,7 @@ if [[ ! $version ]] ; then
     DIE "Specify perl version."
 fi
 
-perlbrew list-modules | perlbrew exec --with $version cpanm
+perlbrew list-modules | perlbrew exec --with $version cpanm -nq
 
 ### fatpacked app perl-install-perlbrew ########################################
 

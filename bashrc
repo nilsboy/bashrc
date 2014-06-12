@@ -721,6 +721,8 @@ note:
     File of notes and a way to query them
 path-grep:
     Find an executable in path
+perl-force-stacktrace:
+    Force stracktrace output from a perl script
 perl-install-deps-for-module:
     Install all CPAN dependencies for a module
 perl-install-latest-stable-perl:
@@ -2440,7 +2442,7 @@ __END__
 
 =head1 NAME
 
-docopt-convert - Convert a docopt specification.
+docopt-convert - Convert a docopt specification
 
 =head1 SYNOPSIS
 
@@ -3393,7 +3395,14 @@ perl -0777 -ne \
 #!/bin/bash
 
 # Find an executable in path
-compgen -c | grep -i "$@"
+
+compgen -c | sort -u | find-or-grep "$@"
+
+### fatpacked app perl-force-stacktrace ########################################
+
+# Force stracktrace output from a perl script
+
+perl -Mdiagnostics=-traceonly "$@"
 
 ### fatpacked app perl-install-deps-for-module #################################
 

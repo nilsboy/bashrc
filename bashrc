@@ -2644,7 +2644,8 @@ set -e
 
 source bash-helpers
 
-git checkout -- .
+git clean -df
+git checkout .
 
 ### fatpacked app git-reset-head-to ############################################
 

@@ -605,7 +605,7 @@ app-knows-switch:
     Check if an app supports specified switch
 apt-hold-package:
     Prevent a deb package from beeing upgraded
-apt-pop:
+apt-popularity:
     Search for a debian package, sort by ranking, add description
 apt-unhold-package:
     Return a deb package to its default upgrade state
@@ -680,6 +680,8 @@ find-or-grep:
 git-env-validate:
     Ensure git-scm is configured appropriately
 git-reset-head:
+    Discard all current changes in directory
+git-reset-head-to:
     Discard commits dating back to specified commit
 gnome-send-to-mail-images:
     Resize one or more images and add them as attachements
@@ -2633,6 +2635,18 @@ git config --global --get user.email > /dev/null && DIE 'Global user email set!'
 exit 0
 
 ### fatpacked app git-reset-head ###############################################
+
+#!/bin/bash
+
+# Discard all current changes in directory
+
+set -e
+
+source bash-helpers
+
+git checkout -- .
+
+### fatpacked app git-reset-head-to ############################################
 
 #!/bin/bash
 

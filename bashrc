@@ -636,6 +636,10 @@ bashrc-pack:
     Attach scripts to the bashrc skeleton
 bashrc-unpack-and-run:
     Run a script that is attached to the bashrc
+bytes-from-human:
+    Convert a size from human friendly to bytes
+bytes-to-human:
+    Convert a size of bytes to human friendly
 cp-merge-directories:
     Merge two directories on the same disk recursively by using hard
     links
@@ -663,6 +667,8 @@ env-grep:
     Grep environment
 env-show:
     Display infos about the system
+file-compress-if-size-reaches:
+    Compress a file depending on size
 file-template-filler:
     Create a file from a template
 find-and:
@@ -1889,6 +1895,72 @@ else {
     die "App $app not found.";
 }
 
+### fatpacked app bytes-from-human #############################################
+
+#!/usr/bin/env perl
+
+# Convert a size from human friendly to bytes
+
+use strict;
+use warnings;
+no warnings 'uninitialized';
+
+my $human = $ARGV[0];
+defined $human || die "Specify size in human friendly";
+
+my $k = 1024;
+my $m = $k * 1024;
+my $g = $m * 1024;
+my $t = $g * 1024;
+
+foreach my $unit (qw(k m g t)) {
+    $human =~ s/$unit/ * \$$unit/ig;
+}
+
+print eval $human;
+
+### fatpacked app bytes-to-human ###############################################
+
+#!/usr/bin/env perl
+
+# Convert a size of bytes to human friendly
+
+use strict;
+use warnings;
+no warnings 'uninitialized';
+
+my $bytes = $ARGV[0] || die "Specify size in bytes";
+
+my $k = 1024;
+my $m = $k * 1024;
+my $g = $m * 1024;
+my $t = $g * 1024;
+
+my $human;
+
+if ($bytes >= $t) {
+    $human = sprintf("%.1fT", $bytes / $t);
+}
+elsif ($bytes >= $g) {
+    $human = sprintf("%.1fG", $bytes / $g);
+}
+elsif ($bytes >= $m) {
+    $human = sprintf("%.1fM", $bytes / $m);
+}
+elsif ($bytes >= $k) {
+    $human = sprintf("%.1fK", $bytes / $k);
+}
+elsif ($bytes == 0) {
+    $human = $bytes;
+}
+else {
+    $human = $bytes;
+}
+
+$human =~ s/\.0//g;
+
+print $human;
+
 ### fatpacked app cp-merge-directories #########################################
 
 #!/bin/bash
@@ -2521,6 +2593,37 @@ if [[ $ubuntu_version ]] ; then
 else
     SHOW Linux $(cat /etc/issue.net)
 fi
+
+### fatpacked app file-compress-if-size-reaches ################################
+
+#!/usr/bin/env perl
+
+# Compress a file depending on size
+
+use strict;
+use warnings;
+use File::stat;
+
+my $max_human = $ARGV[0];
+defined $max_human || die "Specify size in human size";
+shift @ARGV;
+my $file = join(" ", @ARGV);
+$file || die "Specify file";
+
+my $max_bytes = `bytes-from-human $max_human`;
+defined $max_bytes || die "Cannot convert size:" . $!;
+
+$max_bytes--;
+
+if (stat($file)->size < $max_bytes || $file =~ /.zip$/i) {
+    print $file;
+    exit 0;
+}
+
+system(qq{zip "$file.zip" "$file" >/dev/null})
+    && die "Error ziping $file: " . $!;
+
+print "$file.zip";
 
 ### fatpacked app file-template-filler #########################################
 

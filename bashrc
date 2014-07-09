@@ -3278,7 +3278,7 @@ fi
     _printifok related man -k $cmd
     _printifok "apt search" apt-cache search $cmd
 
-) | LESS="-j.5 -inRg" less $arg
+) | LESS="-inRg" less $arg
 
 ### fatpacked app man-online ###################################################
 

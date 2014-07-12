@@ -197,7 +197,7 @@ fi
 function  j() { jobs=$(jobs) bash-jobs ; }
 function  t() { tree --summary "$@" | less ; }
 function td() { tree -d "$@" | less ; }
-function csvview() { csvview "$@" | LESS= less -S ; }
+function csvview() { command csvview "$@" | LESS= less -S ; }
 
 ### Vim and less ###############################################################
 
@@ -724,6 +724,8 @@ mysql:
     Fix mysql prompt to show real hostname - NEVER localhost
 net-find-free-port:
     Find an unused port
+net-ip2name:
+    Replace ip adresses with host names inside of text
 net-open-ports:
     List all open ports
 note:
@@ -3343,6 +3345,48 @@ fi
 
 netstat  -atn \
     | perl -0777 -ne '@ports = /tcp.*?\:(\d+)\s+/imsg ; for $port ('$ports') {if(!grep(/^$port$/, @ports)) { print $port; last } }'
+
+### fatpacked app net-ip2name ##################################################
+
+#!/usr/bin/env perl
+
+# Replace ip adresses with host names inside of text
+
+use strict;
+use warnings;
+no warnings 'uninitialized';
+use Socket;
+
+$| = 1;
+
+my %found = ( "0.0.0.0" => "0.0.0.0" );
+
+while (<>) {
+
+    foreach my $ip_and_port (/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(?:\:\d+)*)/g)
+    {
+        my ( $ip, $port ) = split( ":", $ip_and_port );
+
+        if ( $ip =~ /\.255/ ) {
+            $found{$ip} = $ip;
+        }
+
+        my $name
+            = $found{$ip} || gethostbyaddr( inet_aton($ip), AF_INET ) || $ip;
+
+        $found{$ip} = $name;
+
+        $name = $name . ":" . $port if $port;
+
+        if ( length($name) < length($ip_and_port) ) {
+            $name = sprintf( "%-" . length($ip_and_port) . "s", $name );
+        }
+
+        s/\Q$ip_and_port\E/$name/g;
+    }
+
+    print;
+}
 
 ### fatpacked app net-open-ports ###############################################
 

@@ -4443,7 +4443,8 @@ ssh -A \
     -q \
     -o CheckHostIP=no \
     -o UserKnownHostsFile=/dev/null \
-    -o StrictHostKeyChecking=no
+    -o StrictHostKeyChecking=no \
+    "$@"
 
 ### fatpacked app ssh-persistent-reverse-tunnel-setup ##########################
 

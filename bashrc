@@ -602,10 +602,12 @@ alternative:
     Find an on disk executable alternative
 alternative-run:
     Find an on disk executable alternative and run it
-app-knows-switch:
-    Check if an app supports specified switch
+apt-dump-installed-packages:
+    Dump names of all installed packages to a file
 apt-hold-package:
     Prevent a deb package from beeing upgraded
+apt-install-packages-from-file:
+    Install packages listed in a file
 apt-popularity:
     Search for a debian package, sort by ranking, add description
 apt-unhold-package:
@@ -641,6 +643,8 @@ bytes-from-human:
     Convert a size from human friendly to bytes
 bytes-to-human:
     Convert a size of bytes to human friendly
+command-knows-switch:
+    Check if an app supports specified switch
 cp-merge-directories:
     Merge two directories on the same disk recursively by using hard
     links
@@ -934,23 +938,15 @@ alternative=$(alternative $app)
 
 exec $alternative "$@"
 
-### fatpacked app app-knows-switch #############################################
+### fatpacked app apt-dump-installed-packages ##################################
 
-#!/usr/bin/env perl
+#!/bin/bash
 
-# Check if an app supports specified switch
+# Dump names of all installed packages to a file
 
-use strict;
-use warnings;
+set -e
 
-my $app    = $ARGV[0] || die "Specify app.";
-my $switch = $ARGV[1] || die "Specify switch.";
-
-my $output = `$app --help 2>&1`;
-
-exit 0 if $output =~ /^\s*$switch/ms;
-
-exit 1;
+dpkg --get-selections > installed_packages_on_host_$HOSTNAME
 
 ### fatpacked app apt-hold-package #############################################
 
@@ -964,6 +960,17 @@ package_name=${1?package name?}
 dpkg --get-selections $package_name
 echo $package_name hold | sudo dpkg --set-selections
 dpkg --get-selections $package_name
+
+### fatpacked app apt-install-packages-from-file ###############################
+
+#!/bin/bash
+
+# Install packages listed in a file
+
+set -e
+
+file=${1?file name?}
+dpkg --set-selections < $file
 
 ### fatpacked app apt-popularity ###############################################
 
@@ -1963,6 +1970,24 @@ else {
 $human =~ s/\.0//g;
 
 print $human;
+
+### fatpacked app command-knows-switch #########################################
+
+#!/usr/bin/env perl
+
+# Check if an app supports specified switch
+
+use strict;
+use warnings;
+
+my $app    = $ARGV[0] || die "Specify app.";
+my $switch = $ARGV[1] || die "Specify switch.";
+
+my $output = `$app --help 2>&1`;
+
+exit 0 if $output =~ /^\s*$switch/ms;
+
+exit 1;
 
 ### fatpacked app cp-merge-directories #########################################
 
@@ -3982,7 +4007,7 @@ watch -n1 "ps -A | grep -i $@ | grep -v grep"
 search=${@:-,$PPID}
 
 switches="-apl";
-app-knows-switch pstree -g && switches=$switches"g"
+command-knows-switch pstree -g && switches=$switches"g"
 
 pstree $switches \
     | perl -ne '$x = "xxSKIPme"; print if $_ !~ /[\|`]\-\{[\w-_]+},\d+$|less.+\+\/'$1'|$x/' \

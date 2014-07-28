@@ -217,8 +217,8 @@ if [[ $REMOTE_HOST ]] ; then
     EDITOR="DISPLAY= $EDITOR"
 fi
 
-if [[ -e $VIM_HOME/vimrc ]] ; then
-    EDITOR="$EDITOR -u $VIM_HOME/vimrc"
+if [[ -e $VIM_HOME/etc/vimrc ]] ; then
+    EDITOR="$EDITOR -u $VIM_HOME/etc/vimrc"
 else
     EDITOR="$EDITOR -i $REMOTE_HOME/._viminfo"
 fi
@@ -3310,8 +3310,8 @@ fi
     _printifok help help -m $cmd
     _printifok man man -a $cmd
     _printifok perldoc perldoc -f $cmd
-    _printifok related man -k $cmd
     _printifok "apt show" apt-cache show $cmd
+    _printifok related man -k $cmd
     _printifok "apt search" apt-cache search $cmd
 
 ) | LESS="-inRg" less "$arg"

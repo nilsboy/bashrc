@@ -14,6 +14,7 @@ PERL5LIB=~/perldev/lib
 
 if [[ -e ~/perl5/perlbrew/etc/bashrc ]] ; then
     source ~/perl5/perlbrew/etc/bashrc
+    unset MANPATH
 fi
 
 if [[ ! $PERLBREW_PERL ]] ; then
@@ -243,6 +244,7 @@ export PAGER=less
 export MANWIDTH=80
 
 ### Misc #######################################################################
+
 
 # Get parent process id
 function parent() {
@@ -3310,8 +3312,8 @@ fi
     _printifok help help -m $cmd
     _printifok man man -a $cmd
     _printifok perldoc perldoc -f $cmd
-    _printifok "apt show" apt-cache show $cmd
     _printifok related man -k $cmd
+    _printifok "apt show" apt-cache show $cmd
     _printifok "apt search" apt-cache search $cmd
 
 ) | LESS="-inRg" less "$arg"

@@ -3279,12 +3279,17 @@ MAN_KEEP_FORMATTING=1
 
 function _printifok() {
     local msg=$1 ; shift
+    local quote=$1 ; shift
     local cmd="$*"
 
     local out=$($cmd 2>/dev/null)
     [[ ${out[@]} ]] || return 1
     line $msg
-    echo "${out[@]}"
+    if [[ $quote = 1 ]] ; then
+        echo "${out[@]}" | perl -pe 's/^/#   /g'
+    else
+        echo "${out[@]}"
+    fi
     echo
 }
 
@@ -3308,13 +3313,13 @@ else
 fi
 
 (
-    _printifok options man-explain-options $cmd "$@"
-    _printifok help help -m $cmd
-    _printifok man man -a $cmd
-    _printifok perldoc perldoc -f $cmd
-    _printifok related man -k $cmd
-    _printifok "apt show" apt-cache show $cmd
-    _printifok "apt search" apt-cache search $cmd
+    _printifok options 0 man-explain-options $cmd "$@"
+    _printifok help 0 help -m $cmd
+    _printifok man 0 man -a $cmd
+    _printifok perldoc 0 perldoc -f $cmd
+    _printifok related 1 man -k $cmd
+    _printifok "apt show" 1 apt-cache show $cmd
+    _printifok "apt search" 1 apt-cache search $cmd
 
 ) | LESS="-inRg" less "$arg"
 
@@ -4117,6 +4122,7 @@ print STDERR "$files_changed of $file_count files changed"
 
 use strict;
 use warnings;
+no warnings 'uninitialized';
 
 while (<DATA>) {
 

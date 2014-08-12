@@ -211,17 +211,9 @@ function csvview() { command csvview "$@" | LESS= less -S ; }
 
 ### Vim and less ###############################################################
 
-export VIM_HOME=$REMOTE_HOME/.vim
-
 EDITOR=vi
 if [[ $REMOTE_HOST ]] ; then
     EDITOR="DISPLAY= $EDITOR"
-fi
-
-if [[ -e $VIM_HOME/etc/vimrc ]] ; then
-    EDITOR="$EDITOR -u $VIM_HOME/etc/vimrc"
-else
-    EDITOR="$EDITOR -i $REMOTE_HOME/._viminfo"
 fi
 
 export EDITOR
@@ -663,6 +655,10 @@ cpanm:
     Allow cpanm to install modules specified via Path/File.pm
 csvview:
     Quick way to view a csv file on the command line
+ctags-index-sources:
+    Create tags for all source directories
+ctags-setup:
+    Save ctags configuration file
 dev-bin-generate-readme:
     Generate README with descriptions for bin scripts
 dev-deploy-fat-bashrc:
@@ -843,6 +839,8 @@ unix2dos:
     Convert line endings from unix to dos
 url:
     Print absolute SSH url of a file or directory
+vi:
+    Setup and run vim
 vi-choose-file-from-list:
     Edit a file from a list on STDIN
 vi-from-find:
@@ -2325,6 +2323,70 @@ END {
         unlink($file) if -e $file;
     }
 }
+
+### fatpacked app ctags-index-sources ##########################################
+
+#!/bin/bash
+
+# Create tags for all source directories
+
+set -e
+
+# Save absolute path in tags file
+cd /
+
+ctags -f ~/.vim/var/tags -R ~/src
+# $(perl -e 'print join(" ",  grep(!/^\./, @INC))')
+
+### fatpacked app ctags-setup ##################################################
+
+#!/bin/bash
+
+# Save ctags configuration file
+
+# Configured file extensions
+# ctags --list-maps=perl
+
+# Configured kinds:
+# ctags --list-kinds=perl
+
+# Print tags found in file
+# ctags -x file
+
+set -e
+
+# NOTE: \w does not work here inside character classes!
+
+cat > ~/.ctags <<EOF
+
+--regex-sh=
+--regex-sh=/^\s*function\s+(\w+)/1/f,function/
+--regex-sh=/^\s*alias\s+=\s*(\w+)=/1/f,alias/
+--regex-sh=/^(### [^#]+) #/1/f,header/
+
+--regex-vim=/^("### [^#]+) #/1/f,header/
+
+--regex-perl=/^\s*(package|class|role)\s+([a-zA-Z0-9:]+)/\2/p,package,packages/
+--regex-perl=/^\s*(method|fun)\s+(\w+)/\2/s,subroutine,subroutines/
+--regex-perl=/^\s*has\W+(\w+)\W*/\1/a,attribute,attributes/
+--regex-perl=/^\s*with\s+(['"])(.+)\1/\2/w,with/
+--regex-perl=/^\s*extends\s+(['"])(.+)\1/\2/e,extends,extend/
+EOF
+
+exit 0
+
+# --langdef=perl
+# --langmap=perl:+.t
+# --regex-perl=
+
+--langmap='perl:+.pod' \
+--regex-perl='/^\s*use\s+(\w+[\w\:]*?\w*?)/\1/u,use,uses/' \
+--regex-perl='/^\s*require\s+(\w+[\w\:]*?\w*?)/\1/r,require,requires/' \
+--regex-perl='/^\s*\*(\w+)\s*?=/\1/a,alias,aliases/' \
+--regex-perl='/^\s*our\s*?[\$@%](\w+)/\1/o,our,ours/' \
+--regex-perl='/^\=head1\s+(.+)/\1/p,pod,Plain Old Documentation/' \
+--regex-perl='/^\=head2\s+(.+)/-- \1/p,pod,Plain Old Documentation/' \
+--regex-perl='/^\=head[3-5]\s+(.+)/---- \1/p,pod,Plain Old Documentation/' \
 
 ### fatpacked app dev-bin-generate-readme ######################################
 
@@ -5378,6 +5440,29 @@ my $rel = qx{rel "@ARGV"};
 $rel =~ s/\n$//g;
 $rel = "\"$rel\"" if $rel =~ /\s|;/;
 print "$ENV{USER}\@$ENV{HOSTNAME}:$rel\n"
+
+### fatpacked app vi ###########################################################
+
+#!/bin/bash
+
+# Setup and run vim
+
+set -e
+
+export VIM_HOME=$REMOTE_HOME/.vim
+
+if [[ -e $VIM_HOME/etc/vimrc ]] ; then
+    args=" -u $VIM_HOME/etc/vimrc"
+else
+    args=" -i $REMOTE_HOME/._viminfo"
+fi
+
+# Theres no buildin way to check if arguments exists other than files
+if [[ $@ ]] ; then
+    export VIM_HAS_ARGS=1
+fi
+
+alternative-run $0 $args $@
 
 ### fatpacked app vi-choose-file-from-list #####################################
 

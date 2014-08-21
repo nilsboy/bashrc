@@ -740,6 +740,8 @@ net-open-ports:
     List all open ports
 note:
     File of notes and a way to query them
+once:
+    Print stdin once if it has changed since last time
 path-grep:
     Find an executable in path
 perl-force-stacktrace:
@@ -3679,6 +3681,37 @@ perl -0777 -ne \
 # * fsck encrypted volume
 #    - sudo cryptsetup luksOpen /dev/hda5 mydisk
 #    - fsck /dev/mapper/mydisk
+
+### fatpacked app once #########################################################
+
+#!/usr/bin/env perl
+
+# Print stdin once if it has changed since last time
+
+use strict;
+use warnings;
+no warnings 'uninitialized';
+
+my $file = $ARGV[0] || die "Specify cache file";
+$file = "/tmp/once_" . $ENV{USER} . "_" . $file;
+
+undef $/;
+
+my $data = <STDIN>;
+my $old_data;
+
+if (-e $file) {
+    open(my $fileh, "<", $file) || die $!;
+    $old_data = <$fileh>;
+}
+
+exit 0 if $data eq $old_data;
+
+print $data;
+
+open(my $fileh, ">", $file)
+    or die "cannot open < input.txt: $!";
+print $fileh $data;
 
 ### fatpacked app path-grep ####################################################
 

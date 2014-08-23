@@ -2689,6 +2689,7 @@ EOF
 
 SHOW Uname $(uname -a)
 SHOW Kernel $(cat /proc/version)
+SHOW "64-bit-CPU?" $(grep flags /proc/cpuinfo | perl -0777 -ne 'print /\blm\b/ ? "yes" : "no"')
 
 ubuntu_version=$(cat /etc/issue | perl -ne 'print $1 if /ubuntu (\d+\.\d+)/i')
 
@@ -3710,7 +3711,7 @@ exit 0 if $data eq $old_data;
 print $data;
 
 open(my $fileh, ">", $file)
-    or die "cannot open < input.txt: $!";
+    or die "cannot open > $file: $!";
 print $fileh $data;
 
 ### fatpacked app path-grep ####################################################

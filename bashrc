@@ -3886,6 +3886,7 @@ if [[ ! $REMOTE_HOME ]] ; then
 fi
 
 dst=$REMOTE_HOME/perl5
+bin=$dst/bin
 bashrc=$REMOTE_HOME/.bashrc
 
 tmp=$(mktemp -d)
@@ -3907,10 +3908,10 @@ echo
 echo "Setting up cpanm..."
 echo
 
-mkdir -p $REMOTE_HOME/bin
-cd $REMOTE_HOME/bin
 wget -q http://xrl.us/cpanm
 chmod +x cpanm
+mkdir -p $bin
+mv cpanm $bin/
 
 echo
 echo "Updating bashrc..."
@@ -3919,6 +3920,7 @@ echo
 echo 'eval "$(perl -I'$dst'/lib/perl5 -Mlocal::lib='$dst')"' > bashrc
 echo 'alias cpan="(echo use cpanm >&2 ; exit 1)"' >> bashrc
 echo 'alias cpanm="cpanm -nq"' >> bashrc
+echo 'PATH='$bin':$PATH' >> bashrc
 cat $bashrc >> bashrc
 cp bashrc $bashrc
 

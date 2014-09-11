@@ -3390,7 +3390,7 @@ fi
         _printifok "apt search" 1 apt-cache search $cmd
     fi
 
-) | LESS="-inRg" less "$arg"
+) | LESS="-inRgj.5" less "$arg"
 
 ### fatpacked app man-online ###################################################
 

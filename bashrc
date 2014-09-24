@@ -2785,7 +2785,7 @@ move($temp, $file) || die $!;
 
 # Find files excluding dotfiles optional matching several strings
 
-find . -mount \
+find -H * -mount \
     | perl -ne 'print if ! m#/\.#' \
     | grep-and -e $@
 

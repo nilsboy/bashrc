@@ -4215,6 +4215,91 @@ print STDERR "$files_changed of $file_count files changed"
     . " (example: $example_file)"
     . ( $dry ? "$red - dry run." : "" ) . "\n";
 
+### fatpacked app run-and-capture ##############################################
+
+#!/usr/bin/env perl
+
+# Run a program and pretty print all its outputs
+
+use strict;
+use warnings;
+no warnings 'uninitialized';
+use Cwd qw(abs_path);
+
+use Capture::Tiny ':all';
+
+my ( $stdout, $stderr, $exit_code ) = capture {
+    system(@ARGV);
+};
+
+$exit_code = $exit_code >> 8;
+
+chomp($stdout);
+if ($stdout) {
+    $stdout = "--- STDOUT " . ( "-" x 69 ) . "\n" . $stdout . "\n";
+}
+
+chomp($stderr);
+if ($stderr) {
+    $stderr = "--- STDERR " . ( "-" x 69 ) . "\n" . $stderr . "\n";
+}
+
+my $exit_code_message;
+if ($exit_code) {
+    $exit_code_message
+        = "--- EXITED WITH " . ( "-" x 64 ) . "\n" . $exit_code . "\n";
+}
+
+my $output
+    = "--- SHELL COMMAND "
+    . ( "-" x 62 ) . "\n"
+    . join( " ", @ARGV ) . "\n"
+    . "--- LAUNCHED FROM "
+    . ( "-" x 62 ) . "\n"
+    . abs_path() . "\n"
+    . $exit_code_message
+    . $stdout
+    . $stderr
+    . ( "-" x 80 ) . "\n";
+
+print STDOUT $output;
+
+exit $exit_code;
+
+### fatpacked app run-or-test ##################################################
+
+#!/usr/bin/env perl
+
+# Run a programs tests if any exist otherwise the program itself
+
+use strict;
+use warnings;
+no warnings 'uninitialized';
+use Path::Tiny;
+
+my $file     = $ARGV[0] || die "Specify file.";
+my $path     = path($file)->absolute;
+my $basename = $path->basename;
+my $cmd;
+
+if ( $path =~ /\.t$/ ) {
+    my $wd = $path->parent->parent;
+    $cmd = "cd $wd && prove -Pretty $path";
+}
+elsif ( $path =~ /\/bin\/$basename/ ) {
+
+    my $wd        = $path->parent->parent;
+    my $test_file = $wd->child("t")->child( $basename . ".t" );
+
+    $cmd = "cd $wd && prove -Pretty $test_file" if $test_file->exists;
+}
+else {
+    $cmd = $path;
+}
+
+print STDERR "Running $cmd\n";
+exec $cmd;
+
 ### fatpacked app shell-color-test #############################################
 
 #!/usr/bin/perl

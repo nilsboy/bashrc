@@ -800,6 +800,10 @@ rel:
     Create a relative path from an absolute path
 replace:
     Change the contens of text files by perl expression
+run-and-capture:
+    Run a program and pretty print all its outputs
+run-or-test:
+    Run a programs tests if any exist otherwise the program itself
 shell-color-test:
     most color mappings taken from xterm-colortest
 shell-open-access-on-freeport:
@@ -5558,10 +5562,16 @@ perl -i -pe 's/\n/\r\n/' "$@"
 
 # Print absolute SSH url of a file or directory
 
+use strict;
+use warnings FATAL => 'all';
+
+my $hostname = `hostname` || die "Error getting hostname";
+$hostname =~ s/\n//g;
+
 my $rel = qx{rel "@ARGV"};
 $rel =~ s/\n$//g;
 $rel = "\"$rel\"" if $rel =~ /\s|;/;
-print "$ENV{USER}\@$ENV{HOSTNAME}:$rel\n"
+print "$ENV{USER}\@" . $hostname . ":$rel\n"
 
 ### fatpacked app vi ###########################################################
 

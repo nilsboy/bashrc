@@ -3734,6 +3734,60 @@ compgen -c | sort -u | find-or-grep "$@"
 
 perl -Mdiagnostics=-traceonly "$@"
 
+### fatpacked app perl-install-cpanm ###########################################
+
+#!/bin/bash
+
+# Setup user dir for cpan perl libs using local::lib and cpanm
+
+set -e
+
+if [[ ! $REMOTE_HOME ]] ; then
+    REMOTE_HOME=$HOME
+fi
+
+dst=$REMOTE_HOME/perl5
+bin=$dst/bin
+bashrc=$REMOTE_HOME/.bashrc
+
+tmp=$(mktemp -d)
+cd $tmp
+
+echo
+echo "Setting up local::lib..."
+echo
+
+wget -q http://cpan.metacpan.org/authors/id/H/HA/HAARG/local-lib-2.000008.tar.gz
+tar xfz local-lib*tar.gz
+rm *tar.gz
+
+cd local*
+perl Makefile.PL --bootstrap=$dst
+echo Makefile.PL | replace -e 's/ test runtime/ runtime/g' -x
+make install
+
+echo
+echo "Setting up cpanm..."
+echo
+
+wget -q http://xrl.us/cpanm
+chmod +x cpanm
+mkdir -p $bin
+mv cpanm $bin/
+
+echo
+echo "Updating bashrc..."
+echo
+
+echo 'eval "$(perl -I'$dst'/lib/perl5 -Mlocal::lib='$dst')"' > bashrc
+echo 'alias cpan="(echo use cpanm >&2 ; exit 1)"' >> bashrc
+echo 'alias cpanm="cpanm -nq"' >> bashrc
+echo 'export PATH='$bin':$PATH' >> bashrc
+cat $bashrc >> bashrc
+cp bashrc $bashrc
+
+echo "done."
+
 ### fatpacked app perl-install-deps-for-module #################################
 
 #!/bin/bash
@@ -3876,59 +3930,6 @@ if [ -e nytprof.out ] ; then
 fi
 
 see $dir/index.html
-
-### fatpacked app perl-setup-local-lib #########################################
-
-#!/bin/bash
-
-# Setup user dir for cpan perl libs using local::lib and cpanm
-
-set -e
-
-if [[ ! $REMOTE_HOME ]] ; then
-    REMOTE_HOME=$HOME
-fi
-
-dst=$REMOTE_HOME/perl5
-bin=$dst/bin
-bashrc=$REMOTE_HOME/.bashrc
-
-tmp=$(mktemp -d)
-cd $tmp
-
-echo
-echo "Setting up local::lib..."
-echo
-
-wget -q http://cpan.metacpan.org/authors/id/H/HA/HAARG/local-lib-2.000008.tar.gz
-tar xfz local-lib*tar.gz
-rm *tar.gz
-
-cd local*
-perl Makefile.PL --bootstrap=$dst
-make install
-
-echo
-echo "Setting up cpanm..."
-echo
-
-wget -q http://xrl.us/cpanm
-chmod +x cpanm
-mkdir -p $bin
-mv cpanm $bin/
-
-echo
-echo "Updating bashrc..."
-echo
-
-echo 'eval "$(perl -I'$dst'/lib/perl5 -Mlocal::lib='$dst')"' > bashrc
-echo 'alias cpan="(echo use cpanm >&2 ; exit 1)"' >> bashrc
-echo 'alias cpanm="cpanm -nq"' >> bashrc
-echo 'export PATH='$bin':$PATH' >> bashrc
-cat $bashrc >> bashrc
-cp bashrc $bashrc
-
-echo "done."
 
 ### fatpacked app perl-upgrade-outdated-modules ################################
 
@@ -4164,8 +4165,9 @@ no warnings 'uninitialized';
 use Data::Dumper;
 use Getopt::Long;
 
-my $red = "\x1b[38;5;124m";
-my $dry = 1;
+my $red      = "\x1b[38;5;124m";
+my $no_color = "\x1b[33;0m";
+my $dry      = 1;
 
 my $opts = {
     "e|eval=s"  => \my $op,
@@ -4217,7 +4219,7 @@ exit 1 if !$files_changed;
 
 print STDERR "$files_changed of $file_count files changed"
     . " (example: $example_file)"
-    . ( $dry ? "$red - dry run." : "" ) . "\n";
+    . ( $dry ? "$red - dry run.$no_color" : "" ) . "\n";
 
 ### fatpacked app run-and-capture ##############################################
 

@@ -746,6 +746,8 @@ path-grep:
     Find an executable in path
 perl-force-stacktrace:
     Force stracktrace output from a perl script
+perl-install-cpanm:
+    Setup user dir for cpan perl libs using local::lib and cpanm
 perl-install-deps-for-module:
     Install all CPAN dependencies for a module
 perl-install-latest-stable-perl:
@@ -768,8 +770,6 @@ perl-named-process:
     via /usr/bin/env
 perl-profile:
     Profile a perl app and display the html results
-perl-setup-local-lib:
-    Setup user dir for cpan perl libs using local::lib and cpanm
 perl-upgrade-outdated-modules:
     Upgrade installed perl modules if a new version is available
 prompt-dir:
@@ -856,6 +856,8 @@ vi-from-path:
     Find an executable in the path and edit it
 vi-from-perl-inc:
     Find an executable in the perl %INC and edit it
+vim-setup:
+    Setup vim environment
 vnc-server-setup-upstart-script:
     Setup remote desktop access via ssh and vnc right from the login
     screen of
@@ -5663,6 +5665,29 @@ set -e
 file=$(perldoc -lm "$@")
 
 command eval $EDITOR "$file"
+
+### fatpacked app vim-setup ####################################################
+
+#!/bin/bash
+
+# Setup vim environment
+
+source bash-helpers
+
+INFO "Setting up vim config..."
+
+VIM_DIR=$REMOTE_HOME/.vim/
+
+mkdir -p $VIM_DIR
+cd $VIM_DIR
+
+INFO "Cloning git dotvim repo..."
+
+git clone https://github.com/nilsboy/dotvim.git etc
+
+INFO "Starting vim to download plugins..."
+
+exec vi
 
 ### fatpacked app vnc-server-setup-upstart-script ##############################
 

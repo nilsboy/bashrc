@@ -700,6 +700,8 @@ git-reset-head:
     Discard all current changes in directory
 git-reset-head-to:
     Discard commits dating back to specified commit
+git-reset-origin:
+    Discard all current changes in directory to origin/master
 gnome-send-to-mail-images:
     Resize one or more images and add them as attachements
 grep-and:
@@ -2883,6 +2885,20 @@ git reset --hard $commit_id
 
 INFO "Push now with: git push origin HEAD --force"
 
+### fatpacked app git-reset-origin #############################################
+
+#!/bin/bash
+
+# Discard all current changes in directory to origin/master
+
+set -e
+
+source bash-helpers
+
+git reset origin/master .
+git clean -df
+git checkout .
+
 ### fatpacked app gnome-send-to-mail-images ####################################
 
 #!/usr/bin/perl
@@ -3320,7 +3336,26 @@ print "$command:\n";
 
 foreach my $option (@options) {
 
-    my ($desc) = $man =~ /^(?:(?:-{1,2}\w+, )*|\s+)($option\W.+?)^\s+-/ms;
+    my $option_regex = $option;
+
+    if($option =~ /^--(\w+)/) {
+        my $bare_option = $1;
+        $bare_option =~ s/^no//g;
+        $option_regex .= "|--no" . $bare_option . "|--\\[no\\]" . $bare_option . "|-no-" . $bare_option;
+    }
+
+    $option_regex = "(" . $option_regex . ")";
+
+    # TODO: support:
+    # -c, --count
+    # --color-lineno=color
+    # ack -s -H --nocolor --nogroup --column --smart-case --follow --count --flush --with-filename -c
+    # --nocolor
+    # --[no]color, --[no]colour
+    # -H, --with-filename
+
+    # print "checking option: $option / $option_regex\n";
+    my ($space, $desc) = $man =~ /^(\s+)(?:(?:-{1,2}\w+, )*|\s+)($option_regex\W.+?)^\1-/ms;
 
     if ( !$desc ) {
         push( @unknown_options, $option );

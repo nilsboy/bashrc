@@ -716,6 +716,8 @@ grep-list:
     Grep for a list of values
 grep-or:
     or-grep list matching lines
+html-strip:
+    Strip HTML of tags and entities
 java-decompile-jar:
     Recursively decompile a jar including contained jars
 json-tidy:
@@ -3135,6 +3137,21 @@ while ( my $line = <STDIN> ) {
 }
 
 exit 1 if ! $matches;
+
+### fatpacked app html-strip ###################################################
+
+#!/usr/bin/env perl
+
+# Strip HTML of tags and entities
+
+use strict;
+use warnings;
+
+use HTML::Strip;
+
+undef $/;
+
+print HTML::Strip->new()->parse( <> );
 
 ### fatpacked app java-decompile-jar ###########################################
 

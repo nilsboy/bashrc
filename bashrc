@@ -763,6 +763,9 @@ perl-install-modules-into-perl-version:
     into another
 perl-install-perlbrew:
     Install perlbrew
+perl-module-create:
+    Identify a perl class name in a line of code and open or create its
+    file
 perl-module-edit:
     Edit perl module that is located within perls module path
 perl-module-find:
@@ -3913,6 +3916,52 @@ perlbrew init > /dev/null
 perlbrew install-cpanm > /dev/null
 
 INFO "You have to re-login now for changes to take effect."
+
+### fatpacked app perl-module-create ###########################################
+
+#!/usr/bin/env perl
+
+# Identify a perl class name in a line of code and open or create its file
+
+use strict;
+use warnings;
+
+use Path::Tiny;
+
+my $code = join(" ", @ARGV);
+
+my ($module) = $code =~ /([\w]+\:\:[\w\:]+)/;
+
+if (!$module) {
+    $code =~ s/^\s*(use|require|package)//g;
+    ($module) = $code =~ /([\w\:]+)/;
+}
+
+$module || die "Specify module";
+$module =~ s/\n//g;
+
+my $path = `pmpath $module`;
+
+# wtf errors on stdout?
+if ($path !~ /no such/i) {
+    print $path;
+    exit 0;
+}
+
+$path = $module;
+$path =~ s/\:\:/\//g;
+$path =~ s/$/.pm/g;
+
+my $base_dir = $ENV{PERL5LIB} || die "Set PERL5LIB environment variable";
+$path = $base_dir . "/" . $path;
+
+$path = path($path);
+
+if (!$path->exists) {
+    $path->touchpath;
+}
+
+print $path;
 
 ### fatpacked app perl-module-edit #############################################
 

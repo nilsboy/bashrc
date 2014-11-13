@@ -1403,7 +1403,7 @@ EOF
 }
 
 function prefixif() {
-    
+
     if [[ "$@" ]] ; then
         echo -ne " $@"
         return
@@ -1427,6 +1427,7 @@ function docopt() {
 
     # save json to $docopt
     docopt=$(docopt-convert $(readlink -f $0)$docopt_files --json -- "$@")
+    eval $(docopt-convert $(readlink -f $0)$docopt_files --env -- "$@")
 }
 
 ### fatpacked app bash-jobs ####################################################
@@ -2583,7 +2584,7 @@ use autobox::Core;
 use Path::Tiny;
 use Try::Tiny;
 
-my $options = docopt();
+my $options  = docopt();
 my $app_argv = $options->{"<argv>"};
 
 my $doc;
@@ -2616,13 +2617,41 @@ sub parse_external_doc {
     $docopt_ran = 1;
 
     convert_booleans($app_options);
+    my $env_vars = generate_env_vars($app_options);
 
     my $json =
         JSON->new->pretty($options->{'--pretty'})->encode($app_options);
 
     $json =~ s/"boolean:(true|false)"/$1/gm;
 
-    print $json if $options->{'--json'};
+    print $json     if $options->{'--json'};
+    print $env_vars if $options->{'--env'};
+}
+
+sub generate_env_vars {
+    my ($app_options) = @_;
+
+    my $env_vars;
+
+    foreach my $key (keys %$app_options) {
+
+        my $value = $app_options->{$key};
+
+        next if $value =~ /^\s*$/;
+
+        $key =~ s/\W/_/g;
+        $key =~ s/^_*//g;
+        $key =~ s/_*$//g;
+
+        $key = "docopt_" . $key;
+
+        $value = 1 if $value =~ /^boolean:true$/;
+        $value = 0 if $value =~ /^boolean:false$/;
+
+        $env_vars .= "export $key='$value'; ";
+    }
+
+    return $env_vars;
 }
 
 sub convert_booleans {
@@ -2658,6 +2687,7 @@ docopt-convert - Convert a docopt specification
     Options: 
     -h --help     Show this screen.
     --json        Output JSON
+    --env         Output environment variables for eval
     -p --pretty   Pretty print JSON
 
 
@@ -2847,6 +2877,26 @@ if [[ -t 0 ]] ; then
     find-and | while read i; do grep-and -epf "$i" "$@" ; done
 else
     grep-and -e $@
+fi
+
+### fatpacked app git ##########################################################
+
+#!/bin/bash
+
+# Default options for git commands
+
+source bash-helpers
+
+if [[ $1 == "status" ]] ; then
+
+    alternative-run $0 status -uall "${@:2}"
+
+elif [[ $1 == "log" ]] ; then
+
+    alternative-run $0 log --oneline --decorate --graph "${@:2}"
+
+else
+    alternative-run $0 "$@"
 fi
 
 ### fatpacked app git-env-validate #############################################

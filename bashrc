@@ -199,6 +199,9 @@ alias srd=tmux-reattach
 alias ps-grep="pgrep -fl"
 alias ps-attach="sudo strace -ewrite -s 1000 -p"
 
+# Clear screen that is also visible in the scrollback buffer
+alias clear='printf "\33[2J"'
+
 alias p=pstree-search
 if [[ ! $(type -t pstree) ]] ; then
     alias p="ps axjf"

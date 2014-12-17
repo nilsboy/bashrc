@@ -694,6 +694,8 @@ find-older-than-days:
     Recursively find files oder than days
 find-or-grep:
     Find a file or grep stdin
+git:
+    Default options for git commands
 git-env-validate:
     Ensure git-scm is configured appropriately
 git-reset-head:
@@ -775,6 +777,9 @@ perl-module-version:
 perl-named-process:
     Set process name of perl process to script name. Usefull when run
     via /usr/bin/env
+perl-plack-test-server:
+    Start a plack server for debugging with autoreloading of changed
+    files
 perl-profile:
     Profile a perl app and display the html results
 perl-upgrade-outdated-modules:
@@ -1428,6 +1433,10 @@ function docopt() {
     # save json to $docopt
     docopt=$(docopt-convert $(readlink -f $0)$docopt_files --json -- "$@")
     eval $(docopt-convert $(readlink -f $0)$docopt_files --env -- "$@")
+}
+
+function clear-with-scrollback() {
+    printf "\33[2J"
 }
 
 ### fatpacked app bash-jobs ####################################################
@@ -4060,6 +4069,19 @@ if [[ $file ]] ; then
 fi
 
 exec $file $perl "$@"
+
+### fatpacked app perl-plack-test-server #######################################
+
+#!/bin/bash
+
+# Start a plack server for debugging with autoreloading of changed files
+
+source bash-helpers
+
+clear-with-scrollback
+
+# plackup -L Shotgun --port 5000 ${1?Specify psgi file}
+plackup -R ~/perldev --port 5000 ${1?Specify psgi file}
 
 ### fatpacked app perl-profile #################################################
 

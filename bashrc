@@ -841,6 +841,8 @@ text-quote:
     Quote text
 text-remove-comments:
     Remove comment from text
+time-dehumanize:
+    Convert a humanized time spec into seconds
 time-humanize-seconds:
     Return a humanly comprehendable representation of an amount of
     seconds
@@ -1099,11 +1101,12 @@ mv $file $bak
 
 # Backup a file appending a timestamp
 
-set -e
-
 source bash-helpers
 
 file=${1?filename not specified}
+
+# remove optional trailing slash
+file=${file%/}
 bak=$file"_"$(date +%Y%m%d_%H%M%S)
 
 INFO "Backing up: $file -> $bak"
@@ -4990,6 +4993,30 @@ fmt -s | perl -pe 's/^/> /g' -
 # Remove comment from text
 
 perl -ne 'print if ! /^#/ && ! /^$/' -
+
+### fatpacked app time-dehumanize ##############################################
+
+#!/usr/bin/env perl
+
+# Convert a humanized time spec into seconds
+
+use strict;
+use warnings;
+
+my ($human) = $ARGV[0] || die "Specify humanized time";
+
+my $s = 1;
+my $m = $s * 60;
+my $h = $m * 60;
+my $d = $h * 24;
+my $w = $d * 7;
+my $y = $d * 365;
+
+my ($amount, $unit) = $human =~ /^(\d+)(.)$/g;
+$amount || die "Cannot find amount in $human";
+$unit   || die "Cannot find unit in $human";
+
+print $amount * eval("\$" . $unit);
 
 ### fatpacked app time-humanize-seconds ########################################
 

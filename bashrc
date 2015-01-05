@@ -704,6 +704,8 @@ git-reset-head-to:
     Discard commits dating back to specified commit
 git-reset-origin:
     Discard all current changes in directory to origin/master
+git-root:
+    Print git project root
 gnome-send-to-mail-images:
     Resize one or more images and add them as attachements
 grep-and:
@@ -2969,6 +2971,12 @@ source bash-helpers
 git reset origin/master .
 git clean -df
 git checkout .
+
+### fatpacked app git-root #####################################################
+
+# Print git project root
+
+git rev-parse --show-toplevel
 
 ### fatpacked app gnome-send-to-mail-images ####################################
 

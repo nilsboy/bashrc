@@ -698,6 +698,8 @@ git:
     Default options for git commands
 git-env-validate:
     Ensure git-scm is configured appropriately
+git-project:
+    Print git project root dir name
 git-reset-head:
     Discard all current changes in directory
 git-reset-head-to:
@@ -2927,6 +2929,12 @@ git config --global --get user.name  > /dev/null && DIE 'Global user name set!'
 git config --global --get user.email > /dev/null && DIE 'Global user email set!'
 
 exit 0
+
+### fatpacked app git-project ##################################################
+
+# Print git project root dir name
+
+basename $(git rev-parse --show-toplevel)
 
 ### fatpacked app git-reset-head ###############################################
 

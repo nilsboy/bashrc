@@ -641,6 +641,8 @@ bashrc-pack:
     Attach scripts to the bashrc skeleton
 bashrc-unpack-and-run:
     Run a script that is attached to the bashrc
+bashrc-upload:
+    Generate and deploy fat packed bashrc
 bytes-from-human:
     Convert a size from human friendly to bytes
 bytes-to-human:
@@ -660,8 +662,6 @@ ctags-setup:
     Save ctags configuration file
 dev-bin-generate-readme:
     Generate README with descriptions for bin scripts
-dev-deploy-fat-bashrc:
-    Generate and deploy fat packed bashrc
 df:
     Cleaned up df version
 dir-diff:
@@ -1945,6 +1945,29 @@ else {
     die "App $app not found.";
 }
 
+### fatpacked app bashrc-upload ################################################
+
+#!/bin/bash
+
+# Generate and deploy fat packed bashrc
+
+set -e
+
+cd ~/src/dotfiles
+git pull || echo "Nothing to pull"
+
+cd ~/src/bashrc
+git reset --hard HEAD
+git pull || echo "Nothing to pull"
+
+cd ~/src/bin
+./bashrc-pack
+
+cd ~/src/bashrc
+git add bashrc
+git commit -m "new fat pack"
+git push
+
 ### fatpacked app bytes-from-human #############################################
 
 #!/usr/bin/env perl
@@ -2462,29 +2485,6 @@ foreach my $app (sort(path(".")->children)) {
     $readme->append("$app:\n$description\n");
 }
 
-### fatpacked app dev-deploy-fat-bashrc ########################################
-
-#!/bin/bash
-
-# Generate and deploy fat packed bashrc
-
-set -e
-
-cd ~/src/dotfiles
-git pull || echo "Nothing to pull"
-
-cd ~/src/bashrc
-git reset --hard HEAD
-git pull || echo "Nothing to pull"
-
-cd ~/src/bin
-./bashrc-pack
-
-cd ~/src/bashrc
-git add bashrc
-git commit -m "new fat pack"
-git push
-
 ### fatpacked app df ###########################################################
 
 #!/bin/bash
@@ -2905,11 +2905,13 @@ source bash-helpers
 
 if [[ $1 == "status" ]] ; then
 
-    alternative-run $0 status -uall "${@:2}"
+    shift
+    alternative-run $0 status -uall "${@:2}" "$@"
 
 elif [[ $1 == "log" ]] ; then
 
-    alternative-run $0 log --oneline --decorate --graph "${@:2}"
+    shift
+    alternative-run $0 log --decorate --graph --format='%h: %s | %ar by %an' "$@"
 
 else
     alternative-run $0 "$@"

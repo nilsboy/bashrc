@@ -317,7 +317,7 @@ function fixssh() {
 }
 
 function nossh() {
-    source ssh-agent-env-clear
+    ssh-agent-env-clear
 }
 
 ### History ####################################################################

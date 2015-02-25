@@ -204,6 +204,8 @@ if [[ ! $(type -t pstree) ]] ; then
     alias p="ps axjf"
 fi
 
+alias top="top -c"
+
 function  j() { jobs=$(jobs) bash-jobs ; }
 function  t() { tree --summary "$@" | less ; }
 function td() { tree -d "$@" | less ; }
@@ -854,6 +856,8 @@ time-stamp-to-date:
     Print date for a timestamp
 tmux-reattach:
     Reattach to a screen or tmux session
+top-mem:
+    View top ordered by memory usage
 tree:
     List a directory as a tree
 uniq-unsorted:
@@ -5110,6 +5114,12 @@ ssh-agent-env-grab
     exit 1
 
 ) && clear
+
+### fatpacked app top-mem ######################################################
+
+# View top ordered by memory usage
+
+exec top -c -o '%MEM'
 
 ### fatpacked app tree #########################################################
 

@@ -758,8 +758,6 @@ path-grep:
     Find an executable in path
 perl-force-stacktrace:
     Force stracktrace output from a perl script
-perl-install-cpanm:
-    Setup user dir for cpan perl libs using local::lib and cpanm
 perl-install-deps-for-module:
     Install all CPAN dependencies for a module
 perl-install-latest-stable-perl:
@@ -788,6 +786,8 @@ perl-plack-test-server:
     files
 perl-profile:
     Profile a perl app and display the html results
+perl-setup-environment:
+    Setup home directory based perl environment
 perl-upgrade-outdated-modules:
     Upgrade installed perl modules if a new version is available
 prompt-dir:
@@ -2086,9 +2086,11 @@ cp -rnl "$src"/* "$dst"/
 
 # Allow cpanm to install modules specified via Path/File.pm
 
-map { s/\//\:\:/g ; s/\.pm$//g } @ARGV;
+map { s/\//\:\:/g ; s/\.pm$//g } $ARGV[$#ARGV];
 
-system("alternative-run", "$0", "-nq" , @ARGV) && exit 1;
+my @local_lib = ( "--local-lib", "$ENV{REMOTE_HOME}/perl5" );
+
+system("alternative-run", "$0", "-nq", @local_lib , @ARGV) && exit 1;
 
 ### fatpacked app csvview ######################################################
 
@@ -3879,60 +3881,6 @@ compgen -c | sort -u | find-or-grep "$@"
 
 perl -Mdiagnostics=-traceonly "$@"
 
-### fatpacked app perl-install-cpanm ###########################################
-
-#!/bin/bash
-
-# Setup user dir for cpan perl libs using local::lib and cpanm
-
-set -e
-
-if [[ ! $REMOTE_HOME ]] ; then
-    REMOTE_HOME=$HOME
-fi
-
-dst=$REMOTE_HOME/perl5
-bin=$dst/bin
-bashrc=$REMOTE_HOME/.bashrc
-
-tmp=$(mktemp -d)
-cd $tmp
-
-echo
-echo "Setting up local::lib..."
-echo
-
-wget -q http://cpan.metacpan.org/authors/id/H/HA/HAARG/local-lib-2.000008.tar.gz
-tar xfz local-lib*tar.gz
-rm *tar.gz
-
-cd local*
-perl Makefile.PL --bootstrap=$dst
-echo Makefile.PL | replace -e 's/ test runtime/ runtime/g' -x
-make install
-
-echo
-echo "Setting up cpanm..."
-echo
-
-wget -q http://xrl.us/cpanm
-chmod +x cpanm
-mkdir -p $bin
-mv cpanm $bin/
-
-echo
-echo "Updating bashrc..."
-echo
-
-echo 'eval "$(perl -I'$dst'/lib/perl5 -Mlocal::lib='$dst')"' > bashrc
-echo 'alias cpan="(echo use cpanm >&2 ; exit 1)"' >> bashrc
-echo 'alias cpanm="cpanm -nq"' >> bashrc
-echo 'export PATH='$bin':$PATH' >> bashrc
-cat $bashrc >> bashrc
-cp bashrc $bashrc
-
-echo "done."
-
 ### fatpacked app perl-install-deps-for-module #################################
 
 #!/bin/bash
@@ -4134,6 +4082,96 @@ if [ -e nytprof.out ] ; then
 fi
 
 see $dir/index.html
+
+### fatpacked app perl-setup-environment #######################################
+
+#!/bin/bash
+
+# Setup home directory based perl environment
+
+set -e
+
+home=${1:-$HOME}
+
+# convert to absolute path
+home=$(perl -MCwd -e '$dir = Cwd::abs_path(<"'$home'">); print $dir')
+
+dst=$home/perl5
+lib=$dst/lib/perl5
+bin=$dst/bin
+local_lib=$home/perldev/lib
+local_bin=$home/perldev/bin
+bashrc=$home/.bashrc
+bashrc_d=$home/.bashrc.d
+
+cpan_dir=$home/.cpan
+cpanm_dir=$home/.cpanm
+
+tmp=$(mktemp -d)
+cd $tmp
+
+echo
+echo "Using temp dir: $tmp" >&2
+echo
+
+echo "downloading cpanm..." >&2
+
+wget -q http://xrl.us/cpanm
+ 
+if [[ -d $cpan_dir ]] ; then
+    echo "Backing up old $cpan_dir to $tmp/..."
+    mv $cpan_dir $tmp/
+fi
+
+if [[ -d $cpanm_dir ]] ; then
+    echo "Backing up old $cpanm_dir to $tmp/..."
+    mv $cpanm_dir $tmp/
+fi
+
+
+chmod +x cpanm
+mkdir -p $bin
+mv cpanm $bin/
+
+mkdir -p $local_lib $local_bin
+
+echo "updating $bashrc..." >&2
+
+add_msg="# added by perl-setup-environment"
+
+echo "export PERL5LIB=$local_lib:$lib $add_msg" > bashrc
+echo "export PATH=\$PATH:$local_bin:$bin $add_msg" >> bashrc
+echo "alias cpanm='cpanm -nq --local-lib $dst' $add_msg" >> bashrc
+echo 'alias cpan="(echo use cpanm >&2 ; exit 1)" '"$add_msg" >> bashrc
+
+perl -0777 -pi -e 's/$ENV{HOME}/~/g' bashrc
+
+if [[ -d $bashrc_d ]] ; then
+    cp bashrc $bashrc_d/perl
+else
+
+    if [[ ! -e "$bashrc" ]] ; then
+        echo "$bashrc does not exist - creating new one..."
+        touch $bashrc
+    fi
+
+    (cat $bashrc ; echo) | grep -v "$add_msg" >> bashrc
+    cp bashrc $bashrc
+fi
+
+echo
+echo "Environment setup complete - please review the changes." >&2
+echo
+echo "Use 'cpanm ModuleName' to install modules from cpan." >&2
+echo "Save your own modules to $local_lib." >&2
+echo "Save your own executables to $local_bin." >&2
+echo
+echo "To run perl script as crons add these lines to your crontab:"
+echo "SHELL=/bin/bash"
+echo "BASH_ENV=$bashrc"
+echo
+echo "Please logout and back in for the changes to take effect." >&2
+echo
 
 ### fatpacked app perl-upgrade-outdated-modules ################################
 

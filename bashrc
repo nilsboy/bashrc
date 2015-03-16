@@ -750,6 +750,8 @@ net-ip2name:
     Replace ip adresses with host names inside of text
 net-open-ports:
     List all open ports
+net-scan-private-network:
+    Scan for hosts in private network
 note:
     File of notes and a way to query them
 once:
@@ -3654,6 +3656,12 @@ while (<>) {
 # List all open ports
 
 netstat -tapnu | less -S
+
+### fatpacked app net-scan-private-network #####################################
+
+# Scan for hosts in private network
+
+nmap -sn 192.168.0.0/16
 
 ### fatpacked app note #########################################################
 

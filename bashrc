@@ -25,7 +25,8 @@ export PERL5LIB
 
 ### PATH #######################################################################
 
-export PATH=~/.bin:~/bin:~/opt/bin:$PATH
+export PATH=~/.bin:~/bin:~/opt/bin:~/node_modules/bin:$PATH
+export NODE_PATH=~/node_modules/lib/node_modules
 
 ### Set remote user stuff ######################################################
 
@@ -742,6 +743,8 @@ html-strip:
     Strip HTML of tags and entities
 java-decompile-jar:
     Recursively decompile a jar including contained jars
+js-format-using-prettydiff:
+    Javascript formatter using "npm install prettydiff"
 json-tidy:
     Tidy a json file and sort hash keys to make the output diffable
 keyboard-disable-caps-lock-console:
@@ -2493,6 +2496,7 @@ foreach my $app (sort(path(".")->children)) {
 
     my ($description) = $app->slurp =~ /^=head1 NAME\s+(.+)/m;
     ($description) = $app->slurp =~ /^# (.+?)\n/m if !$description;
+    ($description) = $app->slurp =~ /^\/\/ (.+?)\n/m if !$description;
 
     $description =~ s/^$app[\s-]*//g;
 
@@ -3304,6 +3308,43 @@ for class in `find . -name '*.class'`; do
     fi
 
 done
+
+### fatpacked app js-format-using-prettydiff ###################################
+
+#!/usr/bin/env node
+
+// Javascript formatter using "npm install prettydiff"
+
+var prettydiff = require("prettydiff");
+
+var js = "";
+
+process.stdin.on("data", receiveStdinChunk)
+	.on("end", beautifyToStdout);
+
+function receiveStdinChunk(chunk) {
+	js += chunk.toString();
+}
+
+function beautifyToStdout() {
+
+	var output = prettydiff.api({
+		source: js,
+		mode: "beautify",
+		lang: "javascript",
+		report: false,
+		preserve: true,
+		varword: "each",
+		wrap: 80,
+		correct: true,
+		quoteconvert: "double"
+	});
+
+	// remove report
+	output.pop();
+
+	process.stdout.write(output.toString());
+}
 
 ### fatpacked app json-tidy ####################################################
 

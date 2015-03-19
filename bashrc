@@ -745,6 +745,8 @@ java-decompile-jar:
     Recursively decompile a jar including contained jars
 js-format-using-prettydiff:
     Javascript formatter using "npm install prettydiff"
+js-setup-environment:
+    Setup javascript environment
 json-tidy:
     Tidy a json file and sort hash keys to make the output diffable
 keyboard-disable-caps-lock-console:
@@ -3345,6 +3347,12 @@ function beautifyToStdout() {
 
 	process.stdout.write(output.toString());
 }
+
+### fatpacked app js-setup-environment #########################################
+
+# Setup javascript environment
+
+npm config set prefix=~/node_modules
 
 ### fatpacked app json-tidy ####################################################
 

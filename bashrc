@@ -896,6 +896,11 @@ vi-from-path:
     Find an executable in the path and edit it
 vi-from-perl-inc:
     Find an executable in the perl %INC and edit it
+video-dvd-rip:
+    Rip and transcode a video dvd
+video-transcode:
+    Transcode a media file to x264 preserving all video, audio and
+    subtitle tracks
 vim-setup:
     Setup vim environment
 vnc-server-setup-upstart-script:
@@ -6004,6 +6009,63 @@ set -e
 file=$(perldoc -lm "$@")
 
 command eval $EDITOR "$file"
+
+### fatpacked app video-dvd-rip ################################################
+
+# Rip and transcode a video dvd
+
+source bash-helpers
+
+for track in $@ ; do
+    INFO "Ripping track: $track..."
+    mpv dvd://$track --stream-dump dvd-$track.vob
+    INFO "Done ripping track: $track"
+done
+
+eject /dev/dvd
+
+INFO "Encoding..."
+
+for track in $@ ; do
+    INFO "Transcoding track: $track"
+    video-transcode dvd-$track.vob
+    INFO "Done transcoding track: $track"
+done
+
+INFO "All done"
+
+### fatpacked app video-transcode ##############################################
+
+# Transcode a media file to x264 preserving all video, audio and subtitle tracks
+
+# To copy a single audio track use: audio_track=3 video-transcode file
+
+source bash-helpers
+
+if [[ "$audio_track" ]] ; then
+    audio_track=":$audio_track"
+fi
+
+for file in $@ ; do
+
+    INFO "Encoding $file..."
+
+    avconv \
+        -analyzeduration 1000000k -probesize 1000000k \
+        -i $file \
+        -map 0:v \
+        -c:v libx264 \
+        -crf 23 \
+        -preset medium \
+        -map 0:a$audio_track \
+        -c:a copy \
+        -map 0:s \
+        -c:s copy \
+        $file.mkv
+
+    INFO "Done: $file"
+
+done
 
 ### fatpacked app vim-setup ####################################################
 

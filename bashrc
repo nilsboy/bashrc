@@ -6354,6 +6354,8 @@ for (@ARGV) {
     # vars to use in perlexpr
     $COUNT++;
     $COUNT = sprintf( "%0" . length( scalar(@ARGV) ) . "d", $COUNT );
+    my $DIR = dirname($abs);
+    my $FILE = basename($abs);
 
     if ($op) {
         eval $op;

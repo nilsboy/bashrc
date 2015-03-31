@@ -896,6 +896,8 @@ vi-from-path:
     Find an executable in the path and edit it
 vi-from-perl-inc:
     Find an executable in the perl %INC and edit it
+video-dvd-install-decss:
+    Install decss for encrypted dvd playback
 video-dvd-rip:
     Rip and transcode a video dvd
 video-transcode:
@@ -5942,7 +5944,7 @@ if [[ $@ ]] ; then
     export VIM_HAS_ARGS=1
 fi
 
-alternative-run $0 $args $@
+alternative-run $0 $args "$@"
 
 ### fatpacked app vi-choose-file-from-list #####################################
 
@@ -6010,6 +6012,15 @@ file=$(perldoc -lm "$@")
 
 command eval $EDITOR "$file"
 
+### fatpacked app video-dvd-install-decss ######################################
+
+# Install decss for encrypted dvd playback
+
+# https://help.ubuntu.com/community/RestrictedFormats/PlayingDVDs
+
+sudo apt-get install libdvdread4
+sudo /usr/share/doc/libdvdread4/install-css.sh
+
 ### fatpacked app video-dvd-rip ################################################
 
 # Rip and transcode a video dvd
@@ -6018,11 +6029,11 @@ source bash-helpers
 
 for track in $@ ; do
     INFO "Ripping track: $track..."
-    mpv dvd://$track --stream-dump dvd-$track.vob
+    mpv dvd://$track --stream-dump dvd-$track.vob  || true
     INFO "Done ripping track: $track"
 done
 
-eject /dev/dvd
+eject /dev/dvd || WARN "Cannot eject dvd - skipping"
 
 INFO "Encoding..."
 
@@ -6042,25 +6053,36 @@ INFO "All done"
 
 source bash-helpers
 
-if [[ "$audio_track" ]] ; then
-    audio_track=":$audio_track"
+if [[ "$audio_tracks" ]] ; then
+    for track in $audio_tracks ; do
+        audio_option=$audio_option" -map 0:a:$track"
+    done
+else
+    audio_option="-map 0:a$audio_track"
 fi
 
 for file in $@ ; do
 
     INFO "Encoding $file..."
 
+    # only set copy subtitles option if input file contains any
+    # avconv dies otherwise
+    (avconv -analyzeduration 1000000k -probesize 1000000k -i $file 2>&1 ; true) \
+        | grep -i subtitle && subtitle_option=" -map 0:s -c:s copy "
+
     avconv \
+        $_doc_check_for_subtitle_streams_that_start_later \
         -analyzeduration 1000000k -probesize 1000000k \
         -i $file \
         -map 0:v \
         -c:v libx264 \
+        $_doc_x264_quality_level \
         -crf 23 \
-        -preset medium \
-        -map 0:a$audio_track \
+        $_doc_how_much_time_to_invest \
+        -preset veryslow \
+        $audio_option \
         -c:a copy \
-        -map 0:s \
-        -c:s copy \
+        $subtitle_option \
         $file.mkv
 
     INFO "Done: $file"

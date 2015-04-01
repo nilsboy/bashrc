@@ -932,7 +932,7 @@ xtitle:
 # Print the absolute path of a file or dir
 
 use Cwd;
-my $file = $ARGV[0] || ".";
+my $file = join(" ", @ARGV) || ".";
 my $abs = Cwd::abs_path($file);
 $abs .= "/" if -d $file;
 $abs = "'$abs'" if $abs =~ /\s/;

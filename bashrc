@@ -3176,7 +3176,7 @@ LINE: while (<$h>) {
     }
 
     foreach my $pattern (@patterns) {
-        if (!s/(\Q$pattern\E)/$red$1$no_color/gi) {
+        if (!s/($pattern)/$red$1$no_color/gi) {
             next LINE;
         }
     }

@@ -1475,6 +1475,18 @@ function clear-with-scrollback() {
     printf "\33[2J"
 }
 
+# Find file name without extension
+function filename() {
+    local file="$@"
+    echo ${file%.*}
+}
+
+# Find extension of a file name
+function extension() {
+    local file="$@"
+    echo ${file##*.}
+}
+
 ### fatpacked app bash-jobs ####################################################
 
 #!/usr/bin/env perl

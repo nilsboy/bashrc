@@ -752,6 +752,8 @@ keyboard-disable-caps-lock-xwindows:
     Map caps lock to escape for X
 keyboard-reset:
     Reset keyboard settings
+ls-creation-time:
+    List the creation time of a file
 man-explain-options:
     Display man page infos about command line options
 man-multi-lookup:
@@ -3482,6 +3484,19 @@ my $cmd =
 
 print STDERR "Running: $cmd\n";
 print `$cmd`;
+
+### fatpacked app ls-creation-time #############################################
+
+# List the creation time of a file
+
+file="$@"
+filesystem=$(df --output=source "$file" | tail -1)
+inode=$(stat --printf=%i "$file")
+date=$(sudo debugfs -R "stat <$inode>" $filesystem 2>/dev/null \
+    | perl -007 -ne 'print "$1\n" if /crtime.*--(.+)/i')
+
+formatted_date=$(date -d "$date" +"%F %T %a")
+echo $formatted_date $file
 
 ### fatpacked app man-explain-options ##########################################
 

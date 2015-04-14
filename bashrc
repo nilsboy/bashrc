@@ -605,10 +605,15 @@ return 0
 ### fatpacked apps start here ##################################################
 ### fatpacked app README #######################################################
 
-Tools that make my shell life easier and are too big to fit into my bashrc.
+Tools that make my shell life easier.
 
-Most of the tools are implemented in core perl so they do not need additional
-modules from CPAN and thus can be used directly on most unix systems.
+See bashrc-pack for how I append them to my bashrc.
+
+Most of the tools are implemented in bash or core perl so they don't have
+additional dependencies and run directly on any current linux distro.
+
+Most bash scripts depend on my bash-helpers script - so make sure it's
+in your path.
 
 Descriptions:
 
@@ -736,6 +741,9 @@ grep-list:
     Grep for a list of values
 grep-or:
     or-grep list matching lines
+groups-reload-memberships:
+    Start new shell to "reload" changes to the list of groups the user
+    belongs to
 html-strip:
     Strip HTML of tags and entities
 java-decompile-jar:
@@ -3266,6 +3274,12 @@ while ( my $line = <STDIN> ) {
 }
 
 exit 1 if ! $matches;
+
+### fatpacked app groups-reload-memberships ####################################
+
+# Start new shell to "reload" changes to the list of groups the user belongs to
+
+exec su -l $USER
 
 ### fatpacked app html-strip ###################################################
 

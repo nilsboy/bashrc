@@ -4961,6 +4961,18 @@ __DATA__
 254;e4e4e4
 255;eeeeee
 
+### fatpacked app shell-line-wrap-off ##########################################
+
+# Turn off shell line wrapping
+
+printf '\033[?7l'
+
+### fatpacked app shell-line-wrap-on ###########################################
+
+# Turn off shell line wrapping
+
+printf '\033[?7h'
+
 ### fatpacked app shell-open-access-on-freeport ################################
 
 #!/bin/bash

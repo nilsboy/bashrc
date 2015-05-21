@@ -89,13 +89,47 @@ export BROWSER=links
 # remove domain from hostname if necessary
 HOSTNAME=${HOSTNAME%%.*}
 
-# set distribution info
-
 export LINES COLUMNS
 
 export BASHRC_TTY=$(tty)
 
 export FTP_PASSIVE=1
+
+### Set linux distribution #####################################################
+
+function bashrc-linux-distribution-set() {
+
+    if [[ $DISTRIB_ID != "" ]] ; then
+        return
+    fi
+
+    if [[ -e /etc/debian_version ]] ; then
+        DISTRIB_ID=debian
+    elif [[ -e /etc/lsb-release ]] ; then
+        . /etc/lsb-release
+    else
+        DISTRIB_ID=$(cat /etc/*{version,release} 2>/dev/null \
+            | perl -0777 -ne 'print lc $1 if /(debian|suse|redhat)/igm')
+    fi
+
+    export DISTRIB_ID
+}
+
+bashrc-linux-distribution-set
+
+function bashrc-linux-distribution-run-fixes() {
+
+    if [[ $DISTRIB_ID = "" ]] ; then
+        return
+    fi
+
+    local fix_file=bashrc-linux-distribution-fix-$DISTRIB_ID
+        echo using fix file: $fix_file
+    if [[ $(type -t $fix_file) ]] ; then
+        echo running fix file: $fix_file
+        . $fix_file
+    fi
+}
 
 ### Input config ###############################################################
 
@@ -591,6 +625,8 @@ EOF
 
 [ -e "$REMOTE_HOME/.bin" ] || bashrc-unpack
 
+bashrc-linux-distribution-run-fixes
+
 prompt-set
 bashrc-set-last-session-pwd
 
@@ -656,6 +692,8 @@ bashrc-helper-hostname:
     Format hostname for bash prompt usage
 bashrc-helper-login-name:
     Format login for bash prompt usage
+bashrc-linux-distribution-fix-suse:
+    Script to run when logging into suse machine
 bashrc-pack:
     Attach scripts to the bashrc skeleton
 bashrc-unpack-and-run:
@@ -687,8 +725,6 @@ dir-diff:
     Diff two directory structures
 dir-name-prettifier:
     shorten prompt dir to max 15 chars
-distribution-fix:
-    Set conveniences depending on distribution
 docopt-convert:
     Convert a docopt specification
 dos2unix:
@@ -852,6 +888,10 @@ run-or-test:
     Run a programs tests if any exist otherwise the program itself
 shell-color-test:
     most color mappings taken from xterm-colortest
+shell-line-wrap-off:
+    Turn off shell line wrapping
+shell-line-wrap-on:
+    Turn off shell line wrapping
 shell-open-access-on-freeport:
     Create shell access on a free port
 ssh-agent-env-clear:
@@ -1913,6 +1953,12 @@ fi
 
 RETURN $USER
 
+### fatpacked app bashrc-linux-distribution-fix-suse ###########################
+
+# Script to run when logging into suse machine
+
+unalias crontab
+
 ### fatpacked app bashrc-pack ##################################################
 
 #!/usr/bin/env perl
@@ -2618,27 +2664,6 @@ fi
 
 RETURN $dir
 
-### fatpacked app distribution-fix #############################################
-
-# Set conveniences depending on distribution
-
-# TODO
-
-if [[ -e /etc/lsb-release ]] ; then
-    . /etc/lsb-release
-    DISTRIBUTION=${DISTRIB_ID,,}
-elif [[ -e /etc/debian_version ]] ; then
-    DISTRIBUTION=debian
-else
-    DISTRIBUTION=$(cat /etc/*{version,release} 2>/dev/null \
-        | perl -0777 -ne 'print lc $1 if /(debian|suse|redhat)/igm')
-fi
-
-export DISTRIBUTION
-if [[ $DISTRIBUTION = "suse" ]] ; then
-    unalias crontab
-fi
-
 ### fatpacked app docopt-convert ###############################################
 
 #!/usr/bin/env perl
@@ -2965,11 +2990,12 @@ if [[ $1 == "status" ]] ; then
 elif [[ $1 == "log" ]] ; then
 
     shift
-    alternative-run $0 log --decorate --graph --format='%h: %s | %ar by %an' "$@"
+    alternative-run $0 log --follow --decorate --graph --format='%h: %s | %ar by %an' "$@"
 
 else
     alternative-run $0 "$@"
 fi
+
 
 ### fatpacked app git-env-validate #############################################
 

@@ -702,6 +702,8 @@ bytes-from-human:
     Convert a size from human friendly to bytes
 bytes-to-human:
     Convert a size of bytes to human friendly
+clear-with-scrollback:
+    Clear screen including scrollback buffer
 command-knows-switch:
     Check if an app supports specified switch
 cp-merge-directories:
@@ -1525,10 +1527,6 @@ function docopt() {
     eval $(docopt-convert $(readlink -f $0)$docopt_files --env -- "$@")
 }
 
-function clear-with-scrollback() {
-    printf "\33[2J"
-}
-
 # Find file name without extension
 function filename() {
     local file="$@"
@@ -2134,6 +2132,12 @@ else {
 $human =~ s/\.0//g;
 
 print $human;
+
+### fatpacked app clear-with-scrollback ########################################
+
+# Clear screen including scrollback buffer
+
+printf "\33[2J"
 
 ### fatpacked app command-knows-switch #########################################
 

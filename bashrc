@@ -784,8 +784,6 @@ java-decompile-jar:
     Recursively decompile a jar including contained jars
 js-format-using-prettydiff:
     Javascript formatter using "npm install prettydiff"
-js-setup-environment:
-    Setup javascript environment
 json-tidy:
     Tidy a json file and sort hash keys to make the output diffable
 keyboard-disable-caps-lock-console:
@@ -812,8 +810,14 @@ net-open-ports:
     List all open ports
 net-scan-private-network:
     Scan for hosts in private network
+node-install:
+    Install latest node version
 note:
     File of notes and a way to query them
+npm-set-global-modules-dir:
+    Make npm use local dir for modules
+npm-set-proxy-from-environment:
+    Set proxy from environment
 once:
     Print stdin once if it has changed since last time
 path-grep:
@@ -953,6 +957,8 @@ video-transcode:
     subtitle tracks
 vim-setup:
     Setup vim environment
+vim-url:
+    Print absolute SSH url of a file or directory in vim syntax
 vnc-server-setup-upstart-script:
     Setup remote desktop access via ssh and vnc right from the login
     screen of
@@ -3404,12 +3410,6 @@ function beautifyToStdout() {
 	process.stdout.write(output.toString());
 }
 
-### fatpacked app js-setup-environment #########################################
-
-# Setup javascript environment
-
-npm config set prefix=~/node_modules
-
 ### fatpacked app json-tidy ####################################################
 
 #!/usr/bin/env perl
@@ -3802,6 +3802,50 @@ netstat -tapnu | less -S
 
 nmap -sn 192.168.0.0/16
 
+### fatpacked app node-install #################################################
+
+#!/bin/bash
+
+# Install latest node version
+
+source bash-helpers
+
+wd=$(mktemp -d)
+cd $wd
+
+bits=$(uname -m | perl -ne 'print $1 if /_(32|64)$/')
+
+url=https://nodejs.org/dist/latest
+
+file=$(wget -q -O - $url | perl -ne 'print $1 if /(node-v[\d\.]+-linux-x'$bits'.tar.gz)/i')
+url=$url/$file
+dir=$(echo $file | perl -pe 's/\.tar.gz//g')
+
+INFO "Downloading: $url to $file"
+
+mkdir -p ~/opt/bin
+
+wget -q $url
+
+INFO "Extracting to $dir"
+tar xfz $file
+
+rm $file
+
+mv $dir ~/opt/$dir
+
+cd ~/opt
+ln -s $dir node
+
+cd ~/opt/bin
+
+ln -s ../node/bin/node .
+ln -s ../node/bin/npm .
+
+npm-set-global-modules-dir
+
+INFO "Done."
+
 ### fatpacked app note #########################################################
 
 #!/bin/bash
@@ -3982,6 +4026,24 @@ perl -0777 -ne \
 # * fsck encrypted volume
 #    - sudo cryptsetup luksOpen /dev/hda5 mydisk
 #    - fsck /dev/mapper/mydisk
+
+### fatpacked app npm-set-global-modules-dir ###################################
+
+# Make npm use local dir for modules
+
+npm config set prefix=~/node_modules
+
+### fatpacked app npm-set-proxy-from-environment ###############################
+
+# Set proxy from environment
+
+if [[ $http_proxy ]] ; then
+	npm config set proxy $http_proxy
+fi
+
+if [[ $https_proxy ]] ; then
+	npm config set https-proxy $https_proxy
+fi
 
 ### fatpacked app once #########################################################
 
@@ -6028,6 +6090,10 @@ if [[ $@ ]] ; then
     export VIM_HAS_ARGS=1
 fi
 
+if [[ $1 =~ @ ]] && [[ $1 =~ : ]] ; then
+    args="$args "$(vim-url $1)
+fi
+
 alternative-run $0 $args "$@"
 
 ### fatpacked app vi-choose-file-from-list #####################################
@@ -6195,6 +6261,23 @@ git clone https://github.com/nilsboy/dotvim.git etc
 INFO "Starting vim to download plugins..."
 
 exec vi
+
+### fatpacked app vim-url ######################################################
+
+#!/usr/bin/env perl
+
+# Print absolute SSH url of a file or directory in vim syntax
+
+use strict;
+use warnings FATAL => 'all';
+
+my $url = qx{url "@ARGV"};
+$url =~ s/\n//g;
+
+$url =~ s/\:/\//;
+$url =~ s/^/scp:\/\//g;
+
+print "$url\n";
 
 ### fatpacked app vnc-server-setup-upstart-script ##############################
 

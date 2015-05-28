@@ -2193,6 +2193,97 @@ my @local_lib = ( "--local-lib", "$ENV{REMOTE_HOME}/perl5" );
 
 system("alternative-run", "$0", "-nq", @local_lib , @ARGV) && exit 1;
 
+### fatpacked app cpanm-install ################################################
+
+#!/bin/bash
+
+# Setup home directory based perl environment
+
+set -e
+
+home=${1:-$HOME}
+
+# convert to absolute path
+home=$(perl -MCwd -e '$dir = Cwd::abs_path(<"'$home'">); print $dir')
+
+dst=$home/perl5
+lib=$dst/lib/perl5
+bin=$dst/bin
+local_lib=$home/perldev/lib
+local_bin=$home/perldev/bin
+bashrc=$home/.bashrc
+bashrc_d=$home/.bashrc.d
+
+cpan_dir=$home/.cpan
+cpanm_dir=$home/.cpanm
+
+tmp=$(mktemp -d)
+cd $tmp
+
+echo
+echo "Using temp dir: $tmp"
+echo
+
+echo "downloading cpanm..."
+
+wget -q http://xrl.us/cpanm
+ 
+if [[ -d $cpan_dir ]] ; then
+    echo "Backing up old $cpan_dir to $tmp/..."
+    mv $cpan_dir $tmp/
+fi
+
+if [[ -d $cpanm_dir ]] ; then
+    echo "Backing up old $cpanm_dir to $tmp/..."
+    mv $cpanm_dir $tmp/
+fi
+
+
+chmod +x cpanm
+mkdir -p $bin
+mv cpanm $bin/
+
+mkdir -p $local_lib $local_bin
+
+echo "updating $bashrc..."
+
+add_msg="# added by cpanm-install"
+
+echo "export PERL5LIB=$local_lib:$lib $add_msg" > bashrc
+echo "export PATH=\$PATH:$local_bin:$bin $add_msg" >> bashrc
+echo "alias cpanm='cpanm -nq --local-lib $dst' $add_msg" >> bashrc
+echo 'alias cpan="(echo use cpanm ; exit 1)" '"$add_msg" >> bashrc
+
+perl -0777 -pi -e 's/$ENV{HOME}/~/g' bashrc
+
+if [[ -d $bashrc_d ]] ; then
+    echo "adding $bashrc_d/perl..."
+    cp bashrc $bashrc_d/perl
+else
+
+    if [[ ! -e "$bashrc" ]] ; then
+        echo "$bashrc does not exist - creating new one..."
+        touch $bashrc
+    fi
+
+    (cat $bashrc ; echo) | grep -v "$add_msg" >> bashrc
+    cp bashrc $bashrc
+fi
+
+echo
+echo "Environment setup complete - please review the changes."
+echo
+echo "Use 'cpanm ModuleName' to install modules from cpan."
+echo "Save your own modules to $local_lib."
+echo "Save your own executables to $local_bin."
+echo
+echo "To run perl script as crons add these lines to your crontab:"
+echo "SHELL=/bin/bash"
+echo "BASH_ENV=$bashrc"
+echo
+echo "Please logout and back in for the changes to take effect."
+echo
+
 ### fatpacked app csvview ######################################################
 
 #!/usr/bin/env perl
@@ -4295,97 +4386,6 @@ if [ -e nytprof.out ] ; then
 fi
 
 see $dir/index.html
-
-### fatpacked app perl-setup-environment #######################################
-
-#!/bin/bash
-
-# Setup home directory based perl environment
-
-set -e
-
-home=${1:-$HOME}
-
-# convert to absolute path
-home=$(perl -MCwd -e '$dir = Cwd::abs_path(<"'$home'">); print $dir')
-
-dst=$home/perl5
-lib=$dst/lib/perl5
-bin=$dst/bin
-local_lib=$home/perldev/lib
-local_bin=$home/perldev/bin
-bashrc=$home/.bashrc
-bashrc_d=$home/.bashrc.d
-
-cpan_dir=$home/.cpan
-cpanm_dir=$home/.cpanm
-
-tmp=$(mktemp -d)
-cd $tmp
-
-echo
-echo "Using temp dir: $tmp"
-echo
-
-echo "downloading cpanm..."
-
-wget -q http://xrl.us/cpanm
- 
-if [[ -d $cpan_dir ]] ; then
-    echo "Backing up old $cpan_dir to $tmp/..."
-    mv $cpan_dir $tmp/
-fi
-
-if [[ -d $cpanm_dir ]] ; then
-    echo "Backing up old $cpanm_dir to $tmp/..."
-    mv $cpanm_dir $tmp/
-fi
-
-
-chmod +x cpanm
-mkdir -p $bin
-mv cpanm $bin/
-
-mkdir -p $local_lib $local_bin
-
-echo "updating $bashrc..."
-
-add_msg="# added by perl-setup-environment"
-
-echo "export PERL5LIB=$local_lib:$lib $add_msg" > bashrc
-echo "export PATH=\$PATH:$local_bin:$bin $add_msg" >> bashrc
-echo "alias cpanm='cpanm -nq --local-lib $dst' $add_msg" >> bashrc
-echo 'alias cpan="(echo use cpanm ; exit 1)" '"$add_msg" >> bashrc
-
-perl -0777 -pi -e 's/$ENV{HOME}/~/g' bashrc
-
-if [[ -d $bashrc_d ]] ; then
-    echo "adding $bashrc_d/perl..."
-    cp bashrc $bashrc_d/perl
-else
-
-    if [[ ! -e "$bashrc" ]] ; then
-        echo "$bashrc does not exist - creating new one..."
-        touch $bashrc
-    fi
-
-    (cat $bashrc ; echo) | grep -v "$add_msg" >> bashrc
-    cp bashrc $bashrc
-fi
-
-echo
-echo "Environment setup complete - please review the changes."
-echo
-echo "Use 'cpanm ModuleName' to install modules from cpan."
-echo "Save your own modules to $local_lib."
-echo "Save your own executables to $local_bin."
-echo
-echo "To run perl script as crons add these lines to your crontab:"
-echo "SHELL=/bin/bash"
-echo "BASH_ENV=$bashrc"
-echo
-echo "Please logout and back in for the changes to take effect."
-echo
 
 ### fatpacked app perl-upgrade-outdated-modules ################################
 

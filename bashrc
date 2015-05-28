@@ -711,6 +711,10 @@ cp-merge-directories:
     links
 cpanm:
     Allow cpanm to install modules specified via Path/File.pm
+cpanm-install:
+    Setup home directory based perl environment
+crontab-setup:
+    Add default crontab settings to existing crontab
 csvview:
     Quick way to view a csv file on the command line
 ctags-index-sources:
@@ -854,8 +858,6 @@ perl-plack-test-server:
     files
 perl-profile:
     Profile a perl app and display the html results
-perl-setup-environment:
-    Setup home directory based perl environment
 perl-upgrade-outdated-modules:
     Upgrade installed perl modules if a new version is available
 prompt-dir:
@@ -2283,6 +2285,36 @@ echo "BASH_ENV=$bashrc"
 echo
 echo "Please logout and back in for the changes to take effect."
 echo
+
+### fatpacked app crontab-setup ################################################
+
+#!/bin/bash
+
+# Add default crontab settings to existing crontab
+
+source bash-helpers
+
+(crontab -l 2>/dev/null || echo) > ~/etc/crontab.org
+
+(
+cat <<EOF
+### Environment ################################################################
+
+SHELL=/bin/bash
+BASH_ENV=~/.bashrc
+
+0 0 * * * crontab -l > ~/etc/crontab.local
+
+### ADD JOB NAME HERE ##########################################################
+
+# MAILTO=email1,email2,...
+# m h  dom mon dow   command
+
+################################################################################
+
+EOF
+crontab -l
+) | crontab -
 
 ### fatpacked app csvview ######################################################
 

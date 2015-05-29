@@ -251,7 +251,7 @@ fi
 alias top="top -c"
 
 function  j() { jobs=$(jobs) bash-jobs ; }
-function  t() { tree --summary "$@" | less ; }
+function  t() { tree -C --summary "$@" | less ; }
 function td() { tree -d "$@" | less ; }
 function csvview() { command csvview "$@" | LESS= less -S ; }
 
@@ -792,8 +792,6 @@ iptables-port-redirect:
     Forward an incoming port to a different port
 java-decompile-jar:
     Recursively decompile a jar including contained jars
-jo:
-    TODO
 js-format-using-prettydiff:
     Javascript formatter using "npm install prettydiff"
 json-tidy:

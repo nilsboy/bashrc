@@ -786,6 +786,8 @@ groups-reload-memberships:
     belongs to
 html-strip:
     Strip HTML of tags and entities
+iptables-port-redirect:
+    Forward an incoming port to a different port
 java-decompile-jar:
     Recursively decompile a jar including contained jars
 js-format-using-prettydiff:
@@ -3452,6 +3454,20 @@ use HTML::Strip;
 undef $/;
 
 print HTML::Strip->new()->parse( <> );
+
+### fatpacked app iptables-port-redirect #######################################
+
+#!/bin/bash
+
+# Forward an incoming port to a different port
+# Often needed to map a privileged port to an unprivileged one.
+
+source bash-helpers
+
+src=${1?Specify incoming port}
+dst=${2?Specify outgoing port}
+
+sudo iptables -t nat -A PREROUTING -p tcp --dport $src -j REDIRECT --to-port $dst
 
 ### fatpacked app java-decompile-jar ###########################################
 

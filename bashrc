@@ -757,6 +757,8 @@ git:
     Default options for git commands
 git-env-validate:
     Ensure git-scm is configured appropriately
+git-ignore:
+    Download and save a default .gitignore for a specific environment
 git-project:
     Print git project root dir name
 git-reset-head:
@@ -790,6 +792,8 @@ iptables-port-redirect:
     Forward an incoming port to a different port
 java-decompile-jar:
     Recursively decompile a jar including contained jars
+jo:
+    TODO
 js-format-using-prettydiff:
     Javascript formatter using "npm install prettydiff"
 json-tidy:
@@ -3144,6 +3148,28 @@ git config --global --get user.name  > /dev/null && DIE 'Global user name set!'
 git config --global --get user.email > /dev/null && DIE 'Global user email set!'
 
 exit 0
+
+### fatpacked app git-ignore ###################################################
+
+#!/bin/bash
+
+# Download and save a default .gitignore for a specific environment
+
+source bash-helpers
+
+if [[ ! -d .git ]] ; then
+    DIE "You need to be in the root of a git managed directory"
+fi
+
+environment=${1?Specify environment}
+environment=$(echo $environment | perl -pe '$_ = ucfirst $_')
+
+url=https://raw.githubusercontent.com/github/gitignore/master/$environment.gitignore
+
+INFO "Fetching gitignore for $environment from $url..."
+wget -qO - $url >> .gitignore
+
+INFO "Appended to .gitignore"
 
 ### fatpacked app git-project ##################################################
 

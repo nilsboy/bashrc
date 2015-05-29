@@ -5453,7 +5453,7 @@ $Data::Dumper::Sortkeys = 1;
 
 use File::stat;
 
-binmode STDOUT, ":utf8";
+binmode STDOUT, ":encoding(UTF-8)";
 use File::Basename;
 use Cwd qw(abs_path getcwd);
 use File::Spec;
@@ -5462,37 +5462,45 @@ use Getopt::Long;
 Getopt::Long::Configure("bundling");
 my %o                  = ();
 my @option_definitions = (
-    "directories-only|d", "summary",   "all|a",            "colors!",
-    "ascii",              "eval|e=s",  "exec|execute|x=s", "include=s",
-    "grep|g=s",           "exclude=s", "empty!",           "v|verbose",
-    "info|i",             "warnings!", "mounted!",         "stats",
-    "age",                "size|s",    "entry-count",      "html",
-    "abs",
+    "directories-only|d", "summary",
+    "all|a",              "colors!",
+    "ascii",              "eval|e=s",
+    "exec|execute|x=s",   "include=s",
+    "grep|g=s",           "exclude=s",
+    "empty!",             "v|verbose",
+    "info|i",             "warnings!",
+    "mounted!",           "stats",
+    "age",                "size|s",
+    "entry-count",        "html",
+    "abs",                "scm-exclude|C"
 );
 
-GetOptions( \%o, @option_definitions )
-    or die "Usage:\n" . join( "\n", sort @option_definitions ) . "\n";
+GetOptions(\%o, @option_definitions)
+    or die "Usage:\n" . join("\n", sort @option_definitions) . "\n";
 
 $o{empty}    = 1 if !defined $o{empty};
 $o{warnings} = 1 if !defined $o{warnings};
 $o{mounted}  = 0 if !defined $o{mounted};
 $o{colors}   = 1 if !defined $o{colors};
+if ($o{"scm-exclude"} && !$o{a}) {
+    $o{exclude} = qr/.(git|csv|svn|node_modules)/;
+}
 
-if ( $ENV{LANG} !~ /utf/i ) {
+if ($ENV{LANG} !~ /utf/i) {
     $o{ascii} = 1;
 }
 
-if ( $o{info} ) {
+if ($o{info}) {
     $o{age}           = 1;
     $o{size}          = 1;
     $o{'entry-count'} = 1;
 }
 
-if ( $o{grep} ) {
+if ($o{grep}) {
     $o{include} = ".*" . $o{grep} . ".*";
     $o{empty}   = 0;
 }
-if ( $o{include} ) {
+if ($o{include}) {
     $o{all} = 1;
 }
 
@@ -5506,7 +5514,7 @@ foreach my $root_dir (@ARGV) {
     $root_dev = stat($root_dir)->dev;
     $root_dir =~ s/\/$//g;
 
-    if ( $o{v} ) {
+    if ($o{v}) {
         print STDERR "Using options: \n", Dumper \%o;
     }
 
@@ -5523,13 +5531,13 @@ package Path;
 use Data::Dumper;
 use File::stat;
 
-my ( $blue, $green, $red, $gray, $no_color );
-my ( $graph_vertical, $graph_t, $graph_l, $graph_line );
+my ($blue, $green, $red, $gray, $no_color);
+my ($graph_vertical, $graph_t, $graph_l, $graph_line);
 my %warnings;
 my %stats;
 
 sub init {
-    if ( $o{colors} ) {
+    if ($o{colors}) {
         $blue     = "\x1b[34;5;250m";
         $green    = "\x1b[32;5;250m";
         $red      = "\x1b[31;5;250m";
@@ -5537,7 +5545,7 @@ sub init {
         $no_color = "\x1b[33;0m";
     }
 
-    if ( $o{html} ) {
+    if ($o{html}) {
         $blue     = q{<font color="blue">};
         $green    = q{<font color="green">};
         $red      = q{<font color="red">};
@@ -5550,7 +5558,7 @@ sub init {
     $graph_l        = "\x{2514}";
     $graph_line     = "\x{2500}";
 
-    if ( $o{ascii} ) {
+    if ($o{ascii}) {
         $graph_vertical = "|";
         $graph_t        = "+";
         $graph_l        = "+";
@@ -5567,7 +5575,7 @@ sub print {
     $self->add_children;
     $self->add_warnings;
 
-    if ( $o{html} ) {
+    if ($o{html}) {
         print "<pre>\n";
     }
 
@@ -5575,14 +5583,14 @@ sub print {
     $self->print_warnings;
     $self->print_stats;
 
-    if ( $o{html} ) {
+    if ($o{html}) {
         print "</pre>\n";
         print "<hr noshade>\n" if $self->multiple;
     }
 }
 
 sub _print {
-    my ( $self, $parent, $is_parent_last_entry, $prefix ) = @_;
+    my ($self, $parent, $is_parent_last_entry, $prefix) = @_;
 
     $self->prefix($prefix);
 
@@ -5595,7 +5603,7 @@ sub _print {
         . $name
         . $self->link_info
         . $no_color
-        . ( $o{warnings} ? $self->warnings : "" )
+        . ($o{warnings} ? $self->warnings : "")
         . $self->info . "\n";
 
     my $next_prefix = $is_parent_last_entry ? "  " : $graph_vertical . " ";
@@ -5604,22 +5612,22 @@ sub _print {
 
     my $entry_count         = keys %{ $self->entries };
     my $current_entry_count = 0;
-    foreach my $path_name ( sort keys %{ $self->entries } ) {
+    foreach my $path_name (sort keys %{ $self->entries }) {
 
         $current_entry_count++;
         my $is_last_entry = $current_entry_count == $entry_count;
 
         my $path = $self->entries->{$path_name};
 
-        if ( $path->is_dir ) {
-            $path->_print( $self, $is_last_entry, $next_prefix );
+        if ($path->is_dir) {
+            $path->_print($self, $is_last_entry, $next_prefix);
             next;
         }
 
         my $name = $path->name;
-        if ( $path->count > 1 ) {
-            $name
-                = $red
+        if ($path->count > 1) {
+            $name =
+                  $red
                 . $path->count . "x "
                 . $green
                 . $path->normalized_marking
@@ -5627,11 +5635,11 @@ sub _print {
         }
 
         print $self->prefix
-            . $self->file_prefix( $is_parent_last_entry, $is_last_entry )
+            . $self->file_prefix($is_parent_last_entry, $is_last_entry)
             . $path->color
             . $name
             . $path->link_info
-            . ( $o{warnings} ? $path->warnings : "" )
+            . ($o{warnings} ? $path->warnings : "")
             . $path->info
             . $no_color . "\n";
     }
@@ -5640,7 +5648,7 @@ sub _print {
 sub link_info {
     my ($self) = @_;
     return if !$self->is_link;
-    return "$red -> " . readlink( $self->abs ) . $no_color;
+    return "$red -> " . readlink($self->abs) . $no_color;
 }
 
 sub print_warnings {
@@ -5648,7 +5656,7 @@ sub print_warnings {
     return if !%warnings;
     return if !$o{warnings};
 
-    print "\n${red}Warnings:${no_color}\n", dumps( \%warnings, $red ), "\n";
+    print "\n${red}Warnings:${no_color}\n", dumps(\%warnings, $red), "\n";
 }
 
 sub print_stats {
@@ -5656,11 +5664,11 @@ sub print_stats {
     return if !%stats;
     return if !$o{stats};
 
-    print "\nStats:\n", dumps( \%stats ), "\n";
+    print "\nStats:\n", dumps(\%stats), "\n";
 }
 
 sub dumps {
-    my ( $ref, $color ) = @_;
+    my ($ref, $color) = @_;
 
     $Data::Dumper::Sortkeys = 1;
     $Data::Dumper::Terse    = 1;
@@ -5696,20 +5704,20 @@ sub humanize_secs {
 
     my $human;
 
-    if ( $secs >= $y ) {
-        $human = sprintf( "%.1fy", $secs / $y );
+    if ($secs >= $y) {
+        $human = sprintf("%.1fy", $secs / $y);
     }
-    elsif ( $secs >= $d99 ) {
-        $human = sprintf( "%0dw", $secs / $w );
+    elsif ($secs >= $d99) {
+        $human = sprintf("%0dw", $secs / $w);
     }
-    elsif ( $secs >= $h99 ) {
-        $human = sprintf( "%0dd", $secs / $d );
+    elsif ($secs >= $h99) {
+        $human = sprintf("%0dd", $secs / $d);
     }
-    elsif ( $secs >= $m99 ) {
-        $human = sprintf( "%0dh", $secs / $h );
+    elsif ($secs >= $m99) {
+        $human = sprintf("%0dh", $secs / $h);
     }
-    elsif ( $secs >= $m ) {
-        $human = sprintf( "%0dm", $secs / $m );
+    elsif ($secs >= $m) {
+        $human = sprintf("%0dm", $secs / $m);
     }
     else {
         $human = $secs . "s";
@@ -5730,19 +5738,19 @@ sub humanize_bytes {
 
     my $human;
 
-    if ( $bytes >= $t ) {
-        $human = sprintf( "%.1fT", $bytes / $t );
+    if ($bytes >= $t) {
+        $human = sprintf("%.1fT", $bytes / $t);
     }
-    elsif ( $bytes >= $g ) {
-        $human = sprintf( "%.1fG", $bytes / $g );
+    elsif ($bytes >= $g) {
+        $human = sprintf("%.1fG", $bytes / $g);
     }
-    elsif ( $bytes >= $m ) {
-        $human = sprintf( "%.1fM", $bytes / $m );
+    elsif ($bytes >= $m) {
+        $human = sprintf("%.1fM", $bytes / $m);
     }
-    elsif ( $bytes >= $k ) {
-        $human = sprintf( "%.1fK", $bytes / $k );
+    elsif ($bytes >= $k) {
+        $human = sprintf("%.1fK", $bytes / $k);
     }
-    elsif ( $bytes == 0 ) {
+    elsif ($bytes == 0) {
         $human = $bytes;
     }
     else {
@@ -5770,7 +5778,7 @@ sub warnings {
     return
           " "
         . $red
-        . join( "$no_color, $red", @{ $self->{warnings} } )
+        . join("$no_color, $red", @{ $self->{warnings} })
         . $no_color;
 }
 
@@ -5779,27 +5787,27 @@ sub info {
 
     my @info;
 
-    if ( $o{'entry-count'} ) {
-        push( @info, "Entries: " . ( keys %{ $self->entries } || 0 ) )
+    if ($o{'entry-count'}) {
+        push(@info, "Entries: " . (keys %{ $self->entries } || 0))
             if $self->is_dir;
     }
 
-    if ( $o{age} ) {
-        push( @info, $self->age );
+    if ($o{age}) {
+        push(@info, $self->age);
     }
 
-    if ( $o{size} ) {
-        push( @info, $self->size );
+    if ($o{size}) {
+        push(@info, $self->size);
     }
 
-    if ( $o{eval} ) {
+    if ($o{eval}) {
         $_ = $self->abs;
-        my $eval = eval $o{eval};
+        my $eval = eval { $o{eval} };
         die $@ if $@;
-        push( @info, $eval );
+        push(@info, $eval);
     }
 
-    if ( $o{exec} ) {
+    if ($o{exec}) {
         my $exec = $o{exec};
         my $abs  = $self->abs;
         $exec =~ s/\{\}/'$abs'/g;
@@ -5808,19 +5816,19 @@ sub info {
         $exec =~ s/\n+$//g;
         $exec =~ s/\n/ | /g;
         $exec =~ s/^ +//g;
-        push( @info, $exec );
+        push(@info, $exec);
     }
 
     return if !@info;
-    return " " . $gray . join( ", ", @info ) . $no_color;
+    return " " . $gray . join(", ", @info) . $no_color;
 }
 
 sub file_prefix {
-    my ( $self, $is_last_dir_entry, $is_last_entry ) = @_;
+    my ($self, $is_last_dir_entry, $is_last_entry) = @_;
 
     my $fork     = $is_last_entry     ? $graph_l : $graph_t;
     my $dir_fork = $is_last_dir_entry ? " "      : $graph_vertical;
-    if ( $self->is_root ) {
+    if ($self->is_root) {
         $dir_fork = "";
     }
     else {
@@ -5831,7 +5839,7 @@ sub file_prefix {
 }
 
 sub dir_prefix {
-    my ( $self, $is_last_entry ) = @_;
+    my ($self, $is_last_entry) = @_;
 
     return if $self->is_root;
 
@@ -5861,9 +5869,9 @@ sub entries {
 sub is_mounted {
     my ($self) = @_;
 
-    my $dev = stat( $self->abs )->dev;
+    my $dev = stat($self->abs)->dev;
 
-    if ( $dev != $root_dev ) {
+    if ($dev != $root_dev) {
         return 1;
     }
 
@@ -5871,40 +5879,38 @@ sub is_mounted {
 }
 
 sub add {
-    my ( $self, $path ) = @_;
+    my ($self, $path) = @_;
 
-    if ( !$path->is_dir && $o{include} ) {
+    if (!$path->is_dir && $o{include}) {
         return 0 if $path->abs !~ /$o{include}/i;
     }
 
-    if ( !$path->is_dir && $o{exclude} ) {
-        return 0 if $path->abs =~ /$o{exclude}/i;
-    }
+    return 0 if $path->abs =~ /$o{exclude}/i;
 
     $path->add_warnings;
 
-    if ( $path->is_dir ) {
+    if ($path->is_dir) {
 
         $path->color($blue);
         $stats{Directories}++;
 
-        if ( $path->name =~ /^\.(git|svn)/ ) {
+        if ($path->name =~ /^\.(git|svn)/) {
         }
-        elsif ( !stat( $path->abs ) ) {
+        elsif (!stat($path->abs)) {
         }
-        elsif ( $path->is_mounted ) {
+        elsif ($path->is_mounted) {
         }
-        elsif ( !$path->is_link ) {
+        elsif (!$path->is_link) {
             $path->add_children;
         }
 
         $path->add_to_global_warnings;
 
-        if ( $path->name =~ /^\./ ) {
+        if ($path->name =~ /^\./) {
             return if !$o{all};
         }
 
-        if ( !$path->has_entries && !$o{empty} ) {
+        if (!$path->has_entries && !$o{empty}) {
             return;
         }
 
@@ -5912,7 +5918,7 @@ sub add {
         return;
     }
 
-    if ( $o{'directories-only'} ) {
+    if ($o{'directories-only'}) {
         return;
     }
 
@@ -5920,7 +5926,7 @@ sub add {
 
     $path->add_to_global_warnings;
 
-    if ( $path->name =~ /^\./ ) {
+    if ($path->name =~ /^\./) {
         return if !$o{all};
     }
 
@@ -5933,12 +5939,12 @@ sub add {
 
     my $path_key = $path->name;
 
-    if ( $o{summary} ) {
+    if ($o{summary}) {
         $path_key = $path->normalized;
         $path->count(1);
     }
 
-    if ( exists $self->entries->{$path_key} ) {
+    if (exists $self->entries->{$path_key}) {
         $self->entries->{$path_key}{count}++;
     }
     else {
@@ -5947,34 +5953,34 @@ sub add {
 }
 
 sub add_warning {
-    my ( $self, $warning ) = @_;
-    push( @{ $self->{warnings} }, $warning );
+    my ($self, $warning) = @_;
+    push(@{ $self->{warnings} }, $warning);
 }
 
 sub add_warnings {
     my ($self) = @_;
 
-    if ( $self->name =~ /^\./ ) {
+    if ($self->name =~ /^\./) {
         $self->add_warning('DOTFILE');
     }
 
     $self->add_warning("PRECEDING SPACE") if $self->name =~ /^\ /;
     $self->add_warning("TRAILING SPACE")  if $self->name =~ /\ $/;
 
-    if ( $self->name =~ /^\.(git|svn)/ ) {
+    if ($self->name =~ /^\.(git|svn)/) {
         $self->add_warning("SCM DIR");
     }
 
-    if ( !stat $self->abs ) {
+    if (!stat $self->abs) {
         $self->add_warning("READ ERROR");
     }
     else {
 
-        if ( $self->is_mounted ) {
+        if ($self->is_mounted) {
             $self->add_warning("MOUNTED");
         }
 
-        if ( $self->is_link ) {
+        if ($self->is_link) {
             $self->add_warning("LINK");
         }
     }
@@ -5984,7 +5990,7 @@ sub add_warnings {
 sub add_to_global_warnings {
     my ($self) = @_;
 
-    foreach my $warning ( @{ $self->{warnings} } ) {
+    foreach my $warning (@{ $self->{warnings} }) {
         $warnings{$warning}++;
     }
 }
@@ -5993,16 +5999,16 @@ sub add_children {
     my ($self) = @_;
 
     my $dirh;
-    if ( !opendir( $dirh, $self->abs ) ) {
-        $self->add_warning( "ERROR: " . $! );
+    if (!opendir($dirh, $self->abs)) {
+        $self->add_warning("ERROR: " . $!);
         return;
     }
 
-    while ( my $entry = readdir($dirh) ) {
+    while (my $entry = readdir($dirh)) {
 
         next if $entry =~ /^\.{1,2}$/;
 
-        my $path = Path->new( parent_name => $self->abs, name => $entry, );
+        my $path = Path->new(parent_name => $self->abs, name => $entry,);
 
         $self->add($path);
     }
@@ -6047,7 +6053,7 @@ sub normalized_marking {
 sub age {
     my ($self) = @_;
 
-    my $stat = stat( $self->abs ) || return;
+    my $stat = stat($self->abs) || return;
 
     my $age   = time - $stat->mtime;
     my $h_age = humanize_secs($age);
@@ -6060,7 +6066,7 @@ sub size {
 
     return if $self->is_dir;
 
-    my $stat = stat( $self->abs ) || return;
+    my $stat = stat($self->abs) || return;
 
     my $size       = $stat->size;
     my $blocks     = $stat->blocks;
@@ -6068,7 +6074,7 @@ sub size {
 
     my $alloc = $blocks * 512;
     my $done  = 100;
-    $done = $alloc / ( $size / 100 ) if $size != 0;
+    $done = $alloc / ($size / 100) if $size != 0;
     $done = int($done);
 
     my $info = $gray . "Size: " . humanize_bytes($size);

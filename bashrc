@@ -3937,6 +3937,20 @@ nmap -sn 192.168.0.0/16
 
 source bash-helpers
 
+node_dst=~/opt/node
+
+if [[ -e $node_dst || -h $node_dst ]] ; then
+
+    if [[ $1 != "--force" ]] ; then
+        DIE "Directory $node_dst already exists - use --force if you are sure"
+    fi
+
+    rm $node_dst
+    rm ~/opt/bin/node
+    rm ~/opt/bin/npm
+fi
+
+
 wd=$(mktemp -d)
 cd $wd
 
@@ -3949,9 +3963,6 @@ url=$url/$file
 dir=$(echo $file | perl -pe 's/\.tar.gz//g')
 
 INFO "Downloading: $url to $file"
-
-mkdir -p ~/opt/bin
-
 wget -q $url
 
 INFO "Extracting to $dir"
@@ -3959,7 +3970,17 @@ tar xfz $file
 
 rm $file
 
-mv $dir ~/opt/$dir
+mkdir -p ~/opt/bin
+
+node_dst_versioned=~/opt/$dir
+
+if [[ -e $node_dst_versioned ]] ; then
+    node_bak=${node_dst_versioned}_$(date +%Y%m%d_%H%M%S)
+    WARN "Backing up existing node to $node_bak"
+    mv $node_dst_versioned $node_bak
+fi
+
+mv $dir $node_dst_versioned
 
 cd ~/opt
 ln -s $dir node

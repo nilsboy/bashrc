@@ -810,6 +810,8 @@ man-multi-lookup:
     Lookup help for a command in several places
 man-online:
     Lookup a man page on the internet
+markdown-view:
+    View markdown in the terminal
 mysql:
     Fix mysql prompt to show real hostname - NEVER localhost
 net-find-free-port:
@@ -3865,6 +3867,24 @@ cmd=$1
         && echo
 
 ) | LESS="-j.5 -inRg" less $arg
+
+### fatpacked app markdown-view ################################################
+
+#!/usr/bin/env node
+
+// View markdown in the terminal
+
+var fs = require('fs');
+
+var marked = require('marked');
+var TerminalRenderer = require('marked-terminal');
+
+marked.setOptions({
+    renderer: new TerminalRenderer()
+});
+
+console.log(marked(fs.readFileSync(process.argv[2])
+    .toString()));
 
 ### fatpacked app mysql ########################################################
 

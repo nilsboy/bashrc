@@ -2315,6 +2315,7 @@ BASH_ENV=~/.bashrc
 
 # MAILTO=email1,email2,...
 # m h  dom mon dow   command
+# @reboot my_script
 
 ################################################################################
 
@@ -6298,15 +6299,32 @@ sudo /usr/share/doc/libdvdread4/install-css.sh
 
 # Rip and transcode a video dvd
 
+# Use `lsdvd -a` to inspect dvd to choose titles and audio tracks.
+
+# TODO: title tracks need to be specified starting from 0
+# TODO: audio tracks need to be specified starting from 0
+
 source bash-helpers
 
-for track in $@ ; do
+tracks="$@"
+
+if [[ ! $tracks ]] ; then
+    tracks=x
+fi
+
+for track in $tracks ; do
+
+    if [[ $track = x ]] ; then
+        track=""
+    fi
+
     INFO "Ripping track: $track..."
-    mpv dvd://$track --stream-dump dvd-$track.vob  || true
+    mpv --dvd-device /dev/sr1 dvdnav://$track --stream-dump dvd-$track.vob || true
+    # mpv dvd://$track --stream-dump dvd-$track.vob || true
     INFO "Done ripping track: $track"
 done
 
-eject /dev/dvd || WARN "Cannot eject dvd - skipping"
+# eject /dev/dvd || WARN "Cannot eject dvd - skipping"
 
 INFO "Encoding..."
 
@@ -6323,6 +6341,14 @@ INFO "All done"
 # Transcode a media file to x264 preserving all video, audio and subtitle tracks
 
 # To copy a single audio track use: audio_track=3 video-transcode file
+#
+# Codec options:
+# https://www.ffmpeg.org/ffmpeg-codecs.html
+# ac3 is the best quality audio encoder directly included in libav - see:
+# https://trac.ffmpeg.org/wiki/Encode/HighQualityAudio
+
+# fix aspect "flag" - make 4:3 to display as 16:9 for NTSC:
+# mkvpropedit *.mkv --edit track:v1 --set display-width=853
 
 source bash-helpers
 
@@ -6343,16 +6369,48 @@ for file in $@ ; do
     (avconv -analyzeduration 1000000k -probesize 1000000k -i $file 2>&1 ; true) \
         | grep -i subtitle && subtitle_option=" -map 0:s -c:s copy "
 
+# TODO copy meta data:
+#   avconv -i in.ogg -map_metadata 0:s:0 out.mp3
+# TODO extra option to convert all audio to ogg
+#   avconv -i INPUT -map 0 -c copy -c:v:1 libx264 -c:a:137 libvorbis OUTPUT
+#       will copy all the streams except the second video, which will be
+#       encoded with libx264, and the 138th audio, which will be encoded
+#       with libvorbis.
+# -acodec libvorbis \
+
+# "hi-fi transparency demands data rates of at least 128 kbit/s (VBR). The
+# MPEG-2 audio tests showed that AAC meets the requirements referred to as
+# "transparent" for the ITU at 128 kbit/s for stereo, and 320 kbit/s for 5.1 audio."
+# (https://en.wikipedia.org/wiki/Advanced_Audio_Coding)
+#
+# vbr 3 = ~50kbit/channel should be fine
+#        -c:a libfdk_aac -vbr 3 -cutoff 20000 \
+#        -cutoff 20000 # needs to be set to turn off the default cutoff at 14000Hz (libfdk_aac only)
+#
+# crf: 
+# A change of ±6 should result in about half/double the file size, although your results might vary.
+# lower values would result in better quality (at the expense of higher file sizes).
+# http://slhck.info/articles/crf
+# default crf: 23
+
+# even though apparently all dvds are interlaced - results seem to be better without deinterlacing
+
+    # deinterlacer="-vf yadif"
+
+    if [[ "$deinterlacer" ]] ; then
+        WARN '#################################### Deinterlacing!'
+    fi
+
     avconv \
         $_doc_check_for_subtitle_streams_that_start_later \
         -analyzeduration 1000000k -probesize 1000000k \
         -i $file \
         -map 0:v \
+        $deinterlacer \
         -c:v libx264 \
         $_doc_x264_quality_level \
         -crf 23 \
         $_doc_how_much_time_to_invest \
-        -preset veryslow \
         $audio_option \
         -c:a copy \
         $subtitle_option \
@@ -6361,6 +6419,13 @@ for file in $@ ; do
     INFO "Done: $file"
 
 done
+
+if [[ "$deinterlacer" ]] ; then
+    WARN '#################################### Deinterlacing!'
+fi
+
+exit
+        -c:a ac3 -b:a 448k \
 
 ### fatpacked app vim-setup ####################################################
 

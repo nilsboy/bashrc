@@ -669,6 +669,10 @@ apt-unhold-package:
     Return a deb package to its default upgrade state
 archive:
     Archive a file appending a timestamp
+audio-ogg-from-any:
+    Convert any audio file to ogg
+audio-split-by-cue:
+    Split an album audio file into several tracks using a cue file
 bak:
     Backup a file appending a timestamp
 bash-background-jobs-count:
@@ -769,6 +773,8 @@ git-reset-origin:
     Discard all current changes in directory to origin/master
 git-root:
     Print git project root
+git-setup-defaults:
+    Setup default git configuration
 gnome-send-to-mail-images:
     Resize one or more images and add them as attachements
 grep-and:
@@ -984,6 +990,8 @@ webserver-serve-current-directory:
     Serve current directory files via http
 wikipedia-via-dns:
     Query wikipedia via DNS
+x2x-east:
+    Share input devices with another host
 xmv:
     Rename files by perl expression
 xtitle:
@@ -1191,6 +1199,107 @@ bak=$REMOTE_HOME/backup/$file"_"$(date +%Y%m%d_%H%M%S)
 INFO "Archiving to: $file -> $bak"
 
 mv $file $bak
+
+### fatpacked app audio-ogg-from-any ###########################################
+
+#!/bin/bash
+
+# Convert any audio file to ogg
+
+source bash-helpers
+
+file="$@" 
+
+if [[ ! $file ]] ; then
+    DIE "Specify audio file"
+fi
+
+file=$(abs $file)
+
+file_prefix=$(filename $file)
+file_type=$(extension $file)
+
+tmp=$(mktemp -d)/transcode.flac
+
+trap 'rm -f $tmp' ERR EXIT
+
+INFO "Transcoding file: $file / type: $file_type to ogg"
+DEBUG "Using temp file: $tmp"
+
+# pipe does not save the tags
+# sox $file -t wav - | oggenc -q6 -o $x.ogg -
+
+# save to flac first to keep the tags
+if [[ $file_type = ogg ]] ; then
+    RETURN "File is already an ogg file"
+fi
+
+ogg_file="$file".ogg
+
+# cannot convert to ogg directly because I don't know 
+# how to specify the ogg quality level with avconv
+if [[ $file_type != flac ]] ; then
+    DEBUG "Transcoding $file to flac"
+    # sox $file -t flac $tmp
+    avconv -i "$file" $tmp
+else
+    ln -s "$file" $tmp
+fi
+
+# remove old extension if old format was lossless
+# if [[ $file_type = flac || $file_type = ape ]] ; then
+#   ogg_file="$file_prefix".ogg
+# fi
+
+DEBUG "Transcoding $file to ogg"
+oggenc -q6 -o "$file.ogg" "$tmp"
+rm "$file"
+rm $tmp
+
+DEBUG "Done"
+
+### fatpacked app audio-split-by-cue ###########################################
+
+#!/bin/bash
+
+# Split an album audio file into several tracks using a cue file
+
+source bash-helpers
+
+audio_file_path=${1?Specify audio file}
+wd=$(dirname $audio_file_path)
+audio_file=$(basename $audio_file_path)
+
+audio_file_prefix=$(filename $audio_file)
+audio_file_type=$(extension $audio_file)
+
+cue_file=$2
+
+cd "$wd"
+
+if [[ ! "$cue_file" ]] ; then
+    cue_file=$(filename $audio_file).cue
+fi
+
+cue_file=$(abs $cue_file)
+
+INFO "Splitting file $audio_file via cue $cue_file"
+
+if [[ ! -f "$cue_file" ]] ; then
+    DIE "Cue file not found: $cue_file"
+fi
+
+if [[ $audio_file_type = ogg ]] ; then
+    oggsplt -c $cue_file $audio_file
+elif [[ $audio_file_type = mp3 ]] ; then
+    mp3splt -c $cue_file $audio_file
+else
+    DIE "Don't know how to split $audio_file_type files"
+fi
+
+rm $audio_file
+
+INFO "Done"
 
 ### fatpacked app bak ##########################################################
 
@@ -2177,8 +2286,16 @@ source bash-helpers
 src=${1?specify source directory}
 dst=${2?specify destination directory}
 
+if [[ $dst = . ]] ; then
+    dst=$(basename $(abs $src))
+fi
+
+mkdir -p "$dst"
+
 test -d "$src" || DIE "Not a directory: $src"
 test -d "$dst" || DIE "Not a directory: $dst"
+
+INFO "copying $src -> $dst"
 
 src_device=$(stat --format "%d" "$src")
 dst_device=$(stat --format "%d" "$dst")
@@ -2188,6 +2305,7 @@ if [[ $src_device != $dst_device ]] ; then
 fi
 
 cp -rnl "$src"/* "$dst"/
+
 
 ### fatpacked app cpanm ########################################################
 
@@ -3128,7 +3246,14 @@ if [[ $1 == "status" ]] ; then
 elif [[ $1 == "log" ]] ; then
 
     shift
-    alternative-run $0 log --follow --decorate --graph --format='%h: %s | %ar by %an' "$@"
+
+    files="$@"
+
+    if [[ ! "$files" ]] ; then
+        files="."
+    fi
+
+    alternative-run $0 log --follow --decorate --graph --format='%h: %s | %ar by %an' "$files"
 
 else
     alternative-run $0 "$@"
@@ -3227,6 +3352,12 @@ git checkout .
 # Print git project root
 
 git rev-parse --show-toplevel
+
+### fatpacked app git-setup-defaults ###########################################
+
+# Setup default git configuration
+
+git config --global push.default simple
 
 ### fatpacked app gnome-send-to-mail-images ####################################
 
@@ -4557,6 +4688,9 @@ git
 
 $git = `git status 2>/dev/null` || exit;
 
+my $user = `git config user.name 2>/dev/null`;
+$user = "" if $user eq "nilsboyxx";
+
 $git =~ s/^# //gm;
 
 my ($branch)   = $git =~ /^On branch (.+)$/gm;
@@ -4594,8 +4728,11 @@ $untracked = $red if $git =~ /^Untracked files/m;
 $unstaged  = $red if $git =~ /^Changes not staged for commit/m;
 $staged    = $red if $git =~ /^Changes to be committed/m;
 $conflicts = $red . "!" if $git =~ /^Your branch .*have diverged/m;
+$user = $red . $user . "@" if $user;
+print "user: $user";
 
 print " "
+    . $user
     . $untracked . "g"
     . $unstaged . "i"
     . $staged . "t"
@@ -6641,6 +6778,12 @@ http_this
 
 dig +short txt "$@".wp.dg.cx | perl -0777 -pe 'exit 1 if ! $_ ; s/\\//g'
 
+### fatpacked app x2x-east #####################################################
+
+# Share input devices with another host
+
+ssh -X $1 x2x -east -to $DISPLAY
+
 ### fatpacked app xmv ##########################################################
 
 #!/usr/bin/env perl
@@ -6680,10 +6823,11 @@ if ( !@ARGV ) {
     die "Usage: xmv [-x] [-d] [-n] [-l file] [-S] [-e perlexpr] [filenames]\n";
 }
 
-my %will  = ();
-my %was   = ();
-my $abort = 0;
-my $COUNT = 0;
+my %will                  = ();
+my %was                   = ();
+my $abort                 = 0;
+my $COUNT                 = 0;
+my $empty_file_name_count = 0;
 
 for (@ARGV) {
 
@@ -6710,7 +6854,7 @@ for (@ARGV) {
     # vars to use in perlexpr
     $COUNT++;
     $COUNT = sprintf( "%0" . length( scalar(@ARGV) ) . "d", $COUNT );
-    my $DIR = dirname($abs);
+    my $DIR  = dirname($abs);
     my $FILE = basename($abs);
 
     if ($op) {
@@ -6763,7 +6907,7 @@ foreach my $was ( sort keys %was ) {
     my $stat = stat($was) || die $!;
     my $dir = dirname($will);
 
-    if(! -d $dir) {
+    if ( !-d $dir ) {
         make_path($dir) || die "Error creating directory: $dir";
     }
 
@@ -6791,10 +6935,14 @@ sub normalize {
     s/^[\._]+//g;
     s/[\._]+$//g;
 
-    $_ ||= "_empty_file_name";
+    if ( !$_ ) {
+        $empty_file_name_count++;
+        $_ = "_empty_file_name." . $empty_file_name_count;
+    }
 
     return $_ . lc($ext);
 }
+
 
 ### fatpacked app xtitle #######################################################
 

@@ -1280,6 +1280,7 @@ cd "$wd"
 
 if [[ ! "$cue_file" ]] ; then
     cue_file=$(filename $audio_file).cue
+    cue_file=$(echo $cue_file | perl -pe 's/\.(ogg|flac|ape)//g')
 fi
 
 cue_file=$(abs $cue_file)
@@ -1301,6 +1302,7 @@ fi
 rm $audio_file
 
 INFO "Done"
+
 
 ### fatpacked app bak ##########################################################
 
@@ -3359,6 +3361,7 @@ git rev-parse --show-toplevel
 # Setup default git configuration
 
 git config --global push.default simple
+git config --global pull.rebase true
 
 ### fatpacked app gnome-send-to-mail-images ####################################
 
@@ -4691,7 +4694,7 @@ $git = `git status 2>/dev/null` || exit;
 
 my $user = `git config user.name 2>/dev/null`;
 $user =~ s/\s+$//g;
-$user = "" if $user eq "nilsboy";
+$user = "" if $user eq $ENV{GIT_USER};
 
 $git =~ s/^# //gm;
 
@@ -4741,6 +4744,7 @@ print " "
     . $conflicts
     . $no_color
     . $branch;
+
 
 ### fatpacked app prompt-host ##################################################
 

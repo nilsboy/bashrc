@@ -3241,6 +3241,9 @@ fi
 
 source bash-helpers
 
+git config --global user.name 2>/dev/null && DIE "Global git user.name is set"
+git config --global user.email 2>/dev/null && DIE "Global git user.email is set"
+
 if [[ $1 == "status" ]] ; then
 
     shift

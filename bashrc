@@ -8,21 +8,6 @@ else
     PATH=$BASHRC_PATH_ORG
 fi
 
-### Perl libs and bin path #####################################################
-
-PERL5LIB=~/perldev/lib
-
-if [[ -e ~/perl5/perlbrew/etc/bashrc ]] ; then
-    unset MANPATH
-    source ~/perl5/perlbrew/etc/bashrc
-fi
-
-if [[ ! $PERLBREW_PERL ]] ; then
-    PERL5LIB=$PERL5LIB:~/perl5/lib/perl5
-fi
-
-export PERL5LIB
-
 ### PATH #######################################################################
 
 export PATH=~/.bin:~/bin:~/opt/bin:~/node_modules/bin:$PATH
@@ -561,6 +546,7 @@ function bashrc-update() {
     (
         set -e
         cd $REMOTE_HOME
+	mkdir -p $REMOTE_HOME/.bashrc.d
         wcat tinyurl.com/phatbashrc3 -o .bashrc
     )
     bashrc-reload
@@ -2326,25 +2312,34 @@ system("alternative-run", "$0", "-nq", @local_lib , @ARGV) && exit 1;
 
 #!/bin/bash
 
-# Setup home directory based perl environment
+# Setup home directory based perl environment and cpanm
 
 set -e
 
-home=${1:-$HOME}
+existing_cpanm=$(type -p cpanm)
+if [[ $existing_cpanm ]] ; then
 
-# convert to absolute path
-home=$(perl -MCwd -e '$dir = Cwd::abs_path(<"'$home'">); print $dir')
+    if [[ $1 != "--force" ]] ; then
+        echo "Found existing cpanm ($existing_cpanm) - use --force if you are sure" >&2
+        exit 1
+    fi
+fi
 
-dst=$home/perl5
+if [[ ! $HOME =~ ^/ ]] ; then
+    echo "Please specify a home starting with a /" >&2
+    exit 1
+fi
+
+dst=$HOME/perl5
 lib=$dst/lib/perl5
 bin=$dst/bin
-local_lib=$home/perldev/lib
-local_bin=$home/perldev/bin
-bashrc=$home/.bashrc
-bashrc_d=$home/.bashrc.d
+local_lib=$HOME/perldev/lib
+local_bin=$HOME/perldev/bin
+bashrc=$HOME/.bashrc
+bashrc_d=$HOME/.bashrc.d
 
-cpan_dir=$home/.cpan
-cpanm_dir=$home/.cpanm
+cpan_dir=$HOME/.cpan
+cpanm_dir=$HOME/.cpanm
 
 tmp=$(mktemp -d)
 cd $tmp
@@ -2355,7 +2350,7 @@ echo
 
 echo "downloading cpanm..."
 
-wget -q http://xrl.us/cpanm
+wget --no-check-certificate -q http://xrl.us/cpanm
  
 if [[ -d $cpan_dir ]] ; then
     echo "Backing up old $cpan_dir to $tmp/..."
@@ -2366,7 +2361,6 @@ if [[ -d $cpanm_dir ]] ; then
     echo "Backing up old $cpanm_dir to $tmp/..."
     mv $cpanm_dir $tmp/
 fi
-
 
 chmod +x cpanm
 mkdir -p $bin
@@ -2383,8 +2377,6 @@ echo "export PATH=\$PATH:$local_bin:$bin $add_msg" >> bashrc
 echo "alias cpanm='cpanm -nq --local-lib $dst' $add_msg" >> bashrc
 echo 'alias cpan="(echo use cpanm ; exit 1)" '"$add_msg" >> bashrc
 
-perl -0777 -pi -e 's/$ENV{HOME}/~/g' bashrc
-
 if [[ -d $bashrc_d ]] ; then
     echo "adding $bashrc_d/perl..."
     cp bashrc $bashrc_d/perl
@@ -2400,9 +2392,11 @@ else
 fi
 
 echo
-echo "Environment setup complete - please review the changes."
+echo "Perl environment setup complete - please review the changes."
 echo
 echo "Use 'cpanm ModuleName' to install modules from cpan."
+echo "Cpan modules will be installed to your local directory: $dst."
+echo
 echo "Save your own modules to $local_lib."
 echo "Save your own executables to $local_bin."
 echo
@@ -6338,6 +6332,26 @@ my $rel = qx{rel "@ARGV"};
 $rel =~ s/\n$//g;
 $rel = "\"$rel\"" if $rel =~ /\s|;/;
 print "$ENV{USER}\@" . $hostname . ":$rel\n"
+
+### fatpacked app user-add #####################################################
+
+#!/bin/bash
+
+# Add a new user to the system without hassle
+
+source bash-helpers
+
+user=${1?Specify user name}
+shift
+
+sudo adduser --disabled-password --quiet --gecos "" $user "$@"
+
+sudo mkdir -p /home/$user/.ssh/
+sudo cp ~/.ssh/authorized_keys /home/$user/.ssh/
+sudo cp ~/.bashrc /home/$user/
+sudo chown -R $user:$user /home/$user
+
+ssh $user@localhost
 
 ### fatpacked app vi ###########################################################
 

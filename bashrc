@@ -3235,15 +3235,12 @@ fi
 
 source bash-helpers
 
-alternative-run $0 config --global user.name 2>/dev/null && DIE "Global git user.name is set"
-alternative-run $0 config --global user.email 2>/dev/null && DIE "Global git user.email is set"
-
 if [[ $1 == "status" ]] ; then
-
     shift
-    alternative-run $0 status -uall "${@:2}" "$@"
+    exec alternative-run $0 status -uall "${@:2}" "$@"
+fi
 
-elif [[ $1 == "log" ]] ; then
+if [[ $1 == "log" ]] ; then
 
     shift
 
@@ -3253,13 +3250,19 @@ elif [[ $1 == "log" ]] ; then
         files="."
     fi
 
-    alternative-run $0 log --follow --decorate --graph --format='%h: %s | %ar by %an' "$files"
-
-else
-    alternative-run $0 "$@"
+    exec alternative-run $0 log --follow --decorate --graph --format='%h: %s | %ar by %an' "$files"
 fi
 
+if [[ $1 == "branch"  && ! "$2" ]] ; then
+    exec alternative-run $0 branch --list -vva
+fi
 
+if [[ $1 == "commit" ]] ; then
+    alternative-run $0 config --global user.name 2>/dev/null && DIE "Global git user.name is set"
+    alternative-run $0 config --global user.email 2>/dev/null && DIE "Global git user.email is set"
+fi
+
+exec alternative-run $0 "$@"
 
 ### fatpacked app git-env-validate #############################################
 

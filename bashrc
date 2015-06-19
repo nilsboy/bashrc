@@ -3235,8 +3235,8 @@ fi
 
 source bash-helpers
 
-git config --global user.name 2>/dev/null && DIE "Global git user.name is set"
-git config --global user.email 2>/dev/null && DIE "Global git user.email is set"
+alternative-run $0 config --global user.name 2>/dev/null && DIE "Global git user.name is set"
+alternative-run $0 config --global user.email 2>/dev/null && DIE "Global git user.email is set"
 
 if [[ $1 == "status" ]] ; then
 
@@ -3258,6 +3258,7 @@ elif [[ $1 == "log" ]] ; then
 else
     alternative-run $0 "$@"
 fi
+
 
 
 ### fatpacked app git-env-validate #############################################

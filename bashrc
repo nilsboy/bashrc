@@ -703,7 +703,7 @@ cp-merge-directories:
 cpanm:
     Allow cpanm to install modules specified via Path/File.pm
 cpanm-install:
-    Setup home directory based perl environment
+    Setup home directory based perl environment and cpanm
 crontab-setup:
     Add default crontab settings to existing crontab
 csvview:
@@ -933,12 +933,16 @@ top-mem:
     View top ordered by memory usage
 tree:
     List a directory as a tree
+ubuntu-setup:
+    Stuff to do after a new ubuntu installation
 uniq-unsorted:
     uniq replacement without the need for sorted input
 unix2dos:
     Convert line endings from unix to dos
 url:
     Print absolute SSH url of a file or directory
+user-add:
+    Add a new user to the system without hassle
 vi:
     Setup and run vim
 vi-choose-file-from-list:
@@ -6299,6 +6303,21 @@ sub size {
         . " - ${red}$done\%"
         . $gray;
 }
+
+### fatpacked app ubuntu-setup #################################################
+
+#!/bin/bash
+
+# Stuff to do after a new ubuntu installation
+
+source bash-helpers
+
+if [[ $USER != root ]] ; then
+    DIE "Please run as root"
+fi
+
+INFO "Turning off crash reports..."
+echo enabled=0 >> /etc/default/apport
 
 ### fatpacked app uniq-unsorted ################################################
 

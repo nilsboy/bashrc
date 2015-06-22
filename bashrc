@@ -2175,7 +2175,7 @@ cd ~/src/bin
 
 cd ~/src/bashrc
 git add bashrc
-git commit -m "new fat pack"
+git commit -m "repackage bashrc"
 git push
 
 ### fatpacked app bytes-from-human #############################################
@@ -2383,8 +2383,9 @@ echo "alias cpanm='cpanm -nq --local-lib $dst' $add_msg" >> bashrc
 echo 'alias cpan="(echo use cpanm ; exit 1)" '"$add_msg" >> bashrc
 
 if [[ -d $bashrc_d ]] ; then
+    echo '### AUTOMATICALLY GENERATED FILE - DONT EDIT! '"$add_msg" >> bashrc
     echo "adding $bashrc_d/perl..."
-    cp bashrc $bashrc_d/perl
+    cp bashrc $bashrc_d/0_perl
 else
 
     if [[ ! -e "$bashrc" ]] ; then

@@ -760,7 +760,7 @@ git-reset-origin:
     Discard all current changes in directory to origin/master
 git-root:
     Print git project root
-git-setup-defaults:
+git-setup:
     Setup default git configuration
 gnome-send-to-mail-images:
     Resize one or more images and add them as attachements
@@ -3239,6 +3239,10 @@ fi
 
 # Default options for git commands
 
+if [[ ! $PS1 ]] ; then
+    exec alternative-run $0 "$@"
+fi
+
 source bash-helpers
 
 if [[ $1 == "status" ]] ; then
@@ -3363,12 +3367,12 @@ git checkout .
 
 git rev-parse --show-toplevel
 
-### fatpacked app git-setup-defaults ###########################################
+### fatpacked app git-setup ####################################################
 
 # Setup default git configuration
 
 git config --global push.default simple
-git config --global pull.rebase true
+# git config --global pull.rebase true
 
 ### fatpacked app gnome-send-to-mail-images ####################################
 
@@ -6319,6 +6323,9 @@ fi
 
 INFO "Turning off crash reports..."
 echo enabled=0 >> /etc/default/apport
+
+INFO "Removing outdated flash plugin (flashplugin-installer)..."
+dpkg -P flashplugin-installer
 
 ### fatpacked app uniq-unsorted ################################################
 

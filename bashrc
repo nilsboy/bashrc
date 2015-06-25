@@ -3187,8 +3187,11 @@ if [[ $abs ]] ; then
 fi
 
 find -H $abs* -mount \
+    -type f \
     | perl -ne 'print if ! m#/\.#' \
+    | perl -ne 'print if ! m#(^|/)node_modules/#' \
     | grep-and -e $@
+
 
 ### fatpacked app find-from-date ###############################################
 

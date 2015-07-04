@@ -4184,7 +4184,6 @@ rm $file
 
 mkdir -p ~/opt/bin
 
-set -x
 node_dst_versioned=~/opt/$dir
 
 mv $node_dst $backup/ || true

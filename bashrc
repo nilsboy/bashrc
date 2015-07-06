@@ -3190,6 +3190,7 @@ find -H $abs* -mount \
     -type f \
     | perl -ne 'print if ! m#/\.#' \
     | perl -ne 'print if ! m#(^|/)node_modules/#' \
+    | perl -ne 'print if ! m#(^|/)bower_components/#' \
     | grep-and -e $@
 
 

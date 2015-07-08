@@ -819,6 +819,8 @@ node-install:
     Install latest node version
 note:
     File of notes and a way to query them
+npm-readme:
+    Find and print README.md of node executable
 npm-set-global-modules-dir:
     Make npm use local dir for modules
 npm-set-proxy-from-environment:
@@ -3995,6 +3997,7 @@ fi
     _printifok help 0 help -m $cmd
     _printifok man 0 man -a $cmd
     _printifok perldoc 0 perldoc -f $cmd
+    _printifok npm-readme 0 npm-readme $cmd
 
     if [[ ! $SHORT ]] ; then
         _printifok related 1 man -k $cmd
@@ -4003,6 +4006,7 @@ fi
     fi
 
 ) | LESS="-inRgSj.5" less "$arg"
+
 
 ### fatpacked app man-online ###################################################
 
@@ -4385,6 +4389,36 @@ perl -0777 -ne \
 # * fsck encrypted volume
 #    - sudo cryptsetup luksOpen /dev/hda5 mydisk
 #    - fsck /dev/mapper/mydisk
+
+### fatpacked app npm-readme ###################################################
+
+#!/usr/bin/env node
+
+// Find and print README.md of node executable
+
+var fs = require('fs')
+var path = require('path')
+var exec = require('child_process')
+  .execSync
+var _ = require('mout')
+
+var cmd = process.argv[2]
+
+var executable = _.string.rtrim(exec('bash -c "cd / && type -p ' + cmd + '"') .toString())
+var executableDir = path.dirname(executable)
+
+var linkDst = fs.readlinkSync(executable)
+
+var abs = path.join(executableDir, linkDst)
+
+var modulePath = abs.replace(/(^.+node_modules\/.+?\/).+$/, '$1')
+var readme = modulePath + 'README.md'
+
+if (!fs.existsSync(readme)) {
+  process.exit(0)
+}
+
+fs.createReadStream(readme).pipe(process.stdout)
 
 ### fatpacked app npm-set-global-modules-dir ###################################
 

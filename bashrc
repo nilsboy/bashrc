@@ -4994,8 +4994,8 @@ print STDERR "$files_changed of $file_count files changed"
 
 source bash-helpers
 
-file=${1?Specify file}
-url=${2?Specify url}
+file=${1?Specify file containing json post data}
+url=${2?Specify url to post to}
 
 curl -H "Content-Type: application/json" -X POST -d "@${file}" "$url"
 

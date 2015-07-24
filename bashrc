@@ -889,6 +889,8 @@ rel:
     Create a relative path from an absolute path
 replace:
     Change the contens of text files by perl expression
+rest-post-json:
+    Send a POST request to a website
 run-and-capture:
     Run a program and pretty print all its outputs
 run-or-test:
@@ -4983,6 +4985,19 @@ exit 1 if !$files_changed;
 print STDERR "$files_changed of $file_count files changed"
     . " (example: $example_file)"
     . ( $dry ? "$red - dry run.$no_color" : "" ) . "\n";
+
+### fatpacked app rest-post-json ###############################################
+
+#!/bin/bash
+
+# Send a POST request to a website
+
+source bash-helpers
+
+file=${1?Specify file}
+url=${2?Specify url}
+
+curl -H "Content-Type: application/json" -X POST -d "@${file}" "$url"
 
 ### fatpacked app run-and-capture ##############################################
 

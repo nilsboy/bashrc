@@ -1308,10 +1308,15 @@ INFO "Done"
 source bash-helpers
 
 file=${1?filename not specified}
+info=$2
+
+if [[ $info ]] ; then
+    info=".$info"
+fi
 
 # remove optional trailing slash
 file=${file%/}
-bak=$file"_"$(date +%Y%m%d_%H%M%S)
+bak=$file"_"$(date +%Y%m%d_%H%M%S)$info
 
 INFO "Backing up: $file -> $bak"
 
@@ -6378,6 +6383,9 @@ echo enabled=0 >> /etc/default/apport
 
 INFO "Removing outdated flash plugin (flashplugin-installer)..."
 dpkg -P flashplugin-installer
+
+INFO "Add user group editor - to be started via the ubuntu menu"
+sudo apt-get install gnome-system-tools
 
 ### fatpacked app uniq-unsorted ################################################
 

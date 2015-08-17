@@ -522,8 +522,8 @@ function bashrc-set-last-session-pwd() {
 }
 
 # Turn of history for testing passwords etc
-function godark() {
-    BASHRC_NO_HISTORY=1
+function shell-private() {
+    export PRIVATE_SHELL=1
     unset HISTFILE
     BASHRC_BG_COLOR=$BASHRC_COLOR_GREEN
 }
@@ -679,6 +679,8 @@ bash-setup-multi-user-environment:
     environment
 bashrc-eternal-history-add:
     Add entry to the eternal bash history
+bashrc-eternal-history-add-simple:
+    Add an entry to the eternal history
 bashrc-helper-hostname:
     Format hostname for bash prompt usage
 bashrc-helper-login-name:
@@ -766,6 +768,8 @@ git-setup:
     Setup default git configuration
 gnome-send-to-mail-images:
     Resize one or more images and add them as attachements
+gnome-send-to-mail-images-setup:
+    Download and setup gnome-send-to-mail-images
 grep-and:
     Search for lines matching one or more perl regex patterns
 grep-before:
@@ -2023,9 +2027,7 @@ $HISTFILE_ETERNAL || DIE "Set HISTFILE_ETERNAL"
 $history1 || DIE "Specify history 1"
 $history2 || DIE "Specify history 2"
 
-if [[ $BASHRC_NO_HISTORY ]] ; then
-    exit 0
-fi
+$PRIVATE_SHELL && exit 0
 
 # TODO remove history position (by splitting)
 # history1=$(history 1)
@@ -2048,6 +2050,37 @@ line="$line $(date +'%F %T')"
 line="$line $BASHPID"
 line="$line \"$quoted_pwd\""
 line="$line \"$bashrc_last_return_values\""
+line="$line $cmd"
+echo "$line" >> $HISTFILE_ETERNAL
+
+
+### fatpacked app bashrc-eternal-history-add-simple ############################
+
+#!/bin/bash
+
+# Add an entry to the eternal history
+
+source bash-helpers
+
+cmd="$@"
+
+test -z $HISTFILE_ETERNAL && DIE "Set env var: HISTFILE_ETERNAL"
+test -z "$cmd" && DIE "Specify command"
+
+$PRIVATE_SHELL && exit 0
+
+if [[ $cmd == "rm "* ]] ; then
+    cmd="# $cmd"
+fi
+
+quoted_pwd=${PWD//\"/\\\"}
+
+# update cleanup_eternal_history if changed:
+line="$USER"
+line="$line $(date +'%F %T')"
+line="$line $BASHPID"
+line="$line \"$quoted_pwd\""
+line="$line \"0\""
 line="$line $cmd"
 echo "$line" >> $HISTFILE_ETERNAL
 
@@ -3408,7 +3441,10 @@ Needs imagemagick
 
 =over
 
-=item - copy script to ~/.gnome2/nautilus-scripts
+=item - wget https://raw.githubusercontent.com/nilsboy/bin/master/gnome-send-to-mail-images-setup | bash
+        or
+
+=item - copy script to ~/.local/share/nautilus/scripts/
 
 =item - rename the script to match what you want to see in the gnome file
 context menu
@@ -3485,6 +3521,31 @@ if ($use_thunderbird) {
     exit 0;
 }
 qx { $evolution_cmd };
+
+### fatpacked app gnome-send-to-mail-images-setup ##############################
+
+#!/bin/bash
+
+# Download and setup gnome-send-to-mail-images
+
+set -e
+
+# Does not seem to work in a pipe...
+# (sudo apt-get install imagemagick)
+
+dir=~/.local/share/nautilus/scripts
+
+mkdir -p $dir
+cd $dir
+
+wget -q https://raw.githubusercontent.com/nilsboy/bin/master/gnome-send-to-mail-images
+chmod +x gnome-send-to-mail-images
+
+if [[ $LANG =~ de ]] ; then
+    mv gnome-send-to-mail-images Bild_per_Email_verschicken
+fi
+
+echo "OK - script installed"
 
 ### fatpacked app grep-and #####################################################
 

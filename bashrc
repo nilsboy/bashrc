@@ -2061,6 +2061,7 @@ echo "$line" >> $HISTFILE_ETERNAL
 
 #!/bin/bash
 
+
 # Add an entry to the eternal history
 
 source bash-helpers
@@ -2070,7 +2071,7 @@ cmd="$@"
 test -z $HISTFILE_ETERNAL && DIE "Set env var: HISTFILE_ETERNAL"
 test -z "$cmd" && DIE "Specify command"
 
-$PRIVATE_SHELL && exit 0
+test -z $PRIVATE_SHELL || exit 0
 
 if [[ $cmd == "rm "* ]] ; then
     cmd="# $cmd"
@@ -2086,6 +2087,7 @@ line="$line \"$quoted_pwd\""
 line="$line \"0\""
 line="$line $cmd"
 echo "$line" >> $HISTFILE_ETERNAL
+
 
 ### fatpacked app bashrc-helper-hostname #######################################
 

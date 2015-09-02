@@ -3475,7 +3475,7 @@ context menu
 
 =cut
 
-my $use_thunderbird = 0;
+my $use_thunderbird = 1;
 
 use strict;
 use warnings;

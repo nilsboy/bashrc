@@ -88,10 +88,10 @@ function bashrc-linux-distribution-set() {
         return
     fi
 
-    if [[ -e /etc/debian_version ]] ; then
-        DISTRIB_ID=debian
-    elif [[ -e /etc/lsb-release ]] ; then
+    if [[ -e /etc/lsb-release ]] ; then
         . /etc/lsb-release
+    elif [[ -e /etc/debian_version ]] ; then
+        DISTRIB_ID=debian
     else
         DISTRIB_ID=$(cat /etc/*{version,release} 2>/dev/null \
             | perl -0777 -ne 'print lc $1 if /(debian|suse|redhat)/igm')
@@ -735,6 +735,8 @@ env-grep:
     Grep environment
 env-show:
     Display infos about the system
+file-add-line-if-new:
+    Add a line to a file if a line matching regex is not found
 file-compress-if-size-reaches:
     Compress a file depending on size
 file-template-filler:
@@ -773,6 +775,8 @@ gnome-send-to-mail-images:
     Resize one or more images and add them as attachements
 gnome-send-to-mail-images-setup:
     Download and setup gnome-send-to-mail-images
+gotroot:
+    Make sure we're running as root
 grep-and:
     Search for lines matching one or more perl regex patterns
 grep-before:
@@ -948,6 +952,8 @@ tree:
     List a directory as a tree
 ubuntu-setup:
     Stuff to do after a new ubuntu installation
+ubuntu-setup-automatic-updates:
+    Make sure update and backports soures are activated
 uniq-unsorted:
     uniq replacement without the need for sorted input
 unix2dos:
@@ -3148,6 +3154,37 @@ else
     SHOW Linux $(cat /etc/issue.net)
 fi
 
+### fatpacked app file-add-line-if-new #########################################
+
+#!/usr/bin/env perl
+
+# Add a line to a file if a line matching regex is not found
+
+use autodie;
+
+my $file  = $ARGV[0] || die "Specify file";
+my $regex = $ARGV[1] || die "Specify regex";
+my $line  = $ARGV[2] || die "Specify line";
+
+$line .= "\n";
+
+my @out;
+open( F, "<", $file );
+while (<F>) {
+    if (/$regex/) {
+        exit 0;
+    }
+    push( @out, $_ );
+}
+close( F );
+
+push(@out, $line) if ! $found;
+
+local $/;
+open(F, ">", $file);
+print F join("", @out);
+close(F);
+
 ### fatpacked app file-compress-if-size-reaches ################################
 
 #!/usr/bin/env perl
@@ -3551,6 +3588,18 @@ if [[ $LANG =~ de ]] ; then
 fi
 
 echo "OK - script installed"
+
+### fatpacked app gotroot ######################################################
+
+#!/bin/bash
+
+# Make sure we're running as root
+
+source bash-helpers
+
+if [[ $USER != root ]] ; then
+    DIE "Please run as root"
+fi
 
 ### fatpacked app grep-and #####################################################
 
@@ -6441,9 +6490,7 @@ sub size {
 
 source bash-helpers
 
-if [[ $USER != root ]] ; then
-    DIE "Please run as root"
-fi
+gotroot
 
 INFO "Turning off crash reports..."
 echo enabled=0 >> /etc/default/apport
@@ -6453,6 +6500,32 @@ dpkg -P flashplugin-installer
 
 INFO "Add user group editor - to be started via the ubuntu menu"
 sudo apt-get install gnome-system-tools
+
+ubuntu-setup-automatic-updates
+
+### fatpacked app ubuntu-setup-automatic-updates ###############################
+
+#!/bin/bash
+
+# Make sure update and backports soures are activated
+
+# Updates - should be activated otherwise regular updates might fail because
+#    of missing/outdated dependencies
+# Backports - should be activated - by default only installed manually
+# Proposed - don't activate - aproved packages move to updates anyway
+
+source bash-helpers
+
+INFO "Including updates and backports in sources list..."
+
+gotroot
+
+bak /etc/apt/sources.list
+
+file-add-line-if-new /etc/apt/sources.list '^deb http://\S+\s+'$DISTRIB_CODENAME'-updates.*$'   'deb http://archive.ubuntu.com/ubuntu '$DISTRIB_CODENAME'-updates   main restricted universe multiverse'
+file-add-line-if-new /etc/apt/sources.list '^deb http://\S+\s+'$DISTRIB_CODENAME'-backports.*$' 'deb http://archive.ubuntu.com/ubuntu '$DISTRIB_CODENAME'-backports main restricted universe multiverse'
+
+apt-get update
 
 ### fatpacked app uniq-unsorted ################################################
 

@@ -745,6 +745,8 @@ find-and:
     Find files excluding dotfiles optional matching several strings
 find-from-date:
     Find files newer than date
+find-largest-directories:
+    Find largest directories recursively from current directory
 find-largest-files:
     Find largest files recursively from current directory
 find-newest:
@@ -3287,6 +3289,18 @@ find -H $abs* -mount \
 find -maxdepth 1 -type f -printf "%CF %CH:%CM %h/%f\n" \
     | perl -ne 'print substr($_, 17) if m#^\Q'$@'\E#'
 
+### fatpacked app find-largest-directories #####################################
+
+#!/bin/bash
+
+# Find largest directories recursively from current directory
+
+find . -mount -type d \
+    | xargs -I {} du -sh {} \
+    | sort -rh \
+    | less
+
+
 ### fatpacked app find-largest-files ###########################################
 
 #!/bin/bash
@@ -5802,14 +5816,12 @@ ssh-agent-env-grab
 (
     xtitle tmux@$HOSTNAME
     if tmux has-session -t $session ; then
-        tmux -2 att -d -t $session
-        exit 0
+        exec tmux -2 att -d -t $session
     fi
 
 
     if tmux has-session ; then
-        tmux -2 att -d
-        exit 0
+        exec tmux -2 att -d
     fi
 
     xtitle screen@$HOSTNAME

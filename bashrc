@@ -906,6 +906,8 @@ replace:
     Change the contens of text files by perl expression
 rest-post-json:
     Send a POST request to a website
+rest-server:
+    JSON backed rest server
 run-and-capture:
     Run a program and pretty print all its outputs
 run-or-test:
@@ -5133,6 +5135,37 @@ file=${1?Specify file containing json post data}
 url=${2?Specify url to post to}
 
 curl -H "Content-Type: application/json" -X POST -d "@${file}" "$url"
+
+### fatpacked app rest-server ##################################################
+
+#!/bin/bash
+
+# JSON backed rest server
+
+source bash-helpers
+
+name=${1?Specify server dir}
+port=$(net-find-free-port)
+
+if [[ ! $(type -p json-server) ]] ; then
+    INFO "Installing json-server npm module..."
+    npm -g install json-server
+fi
+
+INFO "Starting rest server - documentation: https://www.npmjs.com/package/json-server"
+
+mkdir -p "$name/public"
+
+cd "$name"
+
+db="db.json"
+
+if [ ! -e $db ] ; then
+    echo '{ "list" : [], "map": {} }' > $db
+    echo '<b>'"$name"'</b> - rest service' > public/index.html
+fi
+
+json-server --port $port --watch $db
 
 ### fatpacked app run-and-capture ##############################################
 

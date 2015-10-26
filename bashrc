@@ -743,6 +743,8 @@ file-template-filler:
     Create a file from a template
 find-and:
     Find files excluding dotfiles optional matching several strings
+find-and-limit:
+    find-and with a limit
 find-from-date:
     Find files newer than date
 find-largest-directories:
@@ -3283,8 +3285,16 @@ find -H $abs* -mount \
     | perl -ne 'print if ! m#/\.#' \
     | perl -ne 'print if ! m#(^|/)node_modules/#' \
     | perl -ne 'print if ! m#(^|/)bower_components/#' \
+    | perl -ne 'print if ! m#(^|/)classes/#' \
     | grep-and -e $@
 
+
+### fatpacked app find-and-limit ###############################################
+
+#!/bin/bash
+# find-and with a limit
+
+find-and "$@" | head -100
 
 ### fatpacked app find-from-date ###############################################
 

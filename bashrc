@@ -3296,7 +3296,7 @@ find -H $abs* -mount \
 #!/bin/bash
 # find-and with a limit
 
-find-and "$@" | head -100
+find-and "$@" | sort-by-path-depth | head -100
 
 ### fatpacked app find-from-date ###############################################
 

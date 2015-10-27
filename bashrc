@@ -924,6 +924,8 @@ shell-line-wrap-on:
     Turn off shell line wrapping
 shell-open-access-on-freeport:
     Create shell access on a free port
+sort-by-path-depth:
+    Sort input by depth of path
 ssh-agent-env-clear:
     Remove connection to ssh-agent
 ssh-agent-env-grab:
@@ -5619,6 +5621,16 @@ if [ -e $fifo ] ; then
     echo "removing fifo: $fifo"
 #    rm -f $fifo
 fi
+
+### fatpacked app sort-by-path-depth ###########################################
+
+#!/bin/bash
+
+# Sort input by depth of path
+
+perl -n -e '$x = $_; $x =~ tr%/%%cd; print length($x), " $_";' \
+    | sort -k 1n -k 2 \
+    | perl -pe 's/^\S+ //' 
 
 ### fatpacked app ssh-agent-env-clear ##########################################
 

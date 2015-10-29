@@ -661,6 +661,8 @@ apt-unhold-package:
     Return a deb package to its default upgrade state
 archive:
     Archive a file appending a timestamp
+audio-file-prefix-track-number:
+    Add a leading two digit track number to the file name
 audio-ogg-from-any:
     Convert any audio file to ogg
 audio-split-by-cue:
@@ -1220,6 +1222,28 @@ bak=$REMOTE_HOME/backup/"$bak""_"$(date +%Y%m%d_%H%M%S)
 INFO "Archiving to: $file -> $bak"
 
 mv "$file" "$bak"
+
+### fatpacked app audio-file-prefix-track-number ###############################
+
+#!/usr/bin/env node
+// Add a leading two digit track number to the file name
+
+var fs = require('fs')
+var mm = require('musicmetadata')
+var sprintf = require('sprint')
+var src = process.argv[2]
+
+var parser = mm(fs.createReadStream(src), function (err, metadata) {
+    if (err) throw err
+    if(!metadata.track.no) {
+      throw new Error("No track number found")
+    }
+    var dst = sprintf("%.2d", metadata.track.no) + "_" + src
+    console.log("mv " + src + " -> " + dst)
+    fs.renameSync(src, dst)
+  }
+)
+
 
 ### fatpacked app audio-ogg-from-any ###########################################
 

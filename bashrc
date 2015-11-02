@@ -958,6 +958,8 @@ time-stamp-to-date:
     Print date for a timestamp
 tmux-reattach:
     Reattach to a screen or tmux session
+tmux-session:
+    Start a named tmux session with 10 tabs
 top-mem:
     View top ordered by memory usage
 tree:
@@ -5943,6 +5945,41 @@ ssh-agent-env-grab
     exit 1
 
 ) && clear
+
+### fatpacked app tmux-session #################################################
+
+#!/bin/sh
+
+# Start a named tmux session with 10 tabs
+
+set -e
+
+session=${1?Specify session name}
+
+tmux new-session -d -s $session -n ""
+
+tmux new-window -n ""
+tmux new-window -n ""
+tmux new-window -n ""
+tmux new-window -n ""
+tmux new-window -n ""
+tmux new-window -n ""
+tmux new-window -n ""
+tmux new-window -n ""
+tmux new-window -n ""
+tmux new-window -n ""
+tmux new-window -n ""
+
+# tmux split-window -d -v -t $session:1 'ssh workflow@qualle3'
+# tmux split-window -d -v -t $session:1 'ssh workflow@qualle2'
+
+# tmux send-keys -t $session:1.0 C-l
+# tmux send-keys -t $session:1.1 C-l
+# tmux send-keys -t $session:1.2 C-l
+
+tmux select-window -t $session:1
+
+# xtitle "$session" tmux -2 attach-session -d -t $session
 
 ### fatpacked app top-mem ######################################################
 

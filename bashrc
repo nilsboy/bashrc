@@ -977,7 +977,7 @@ url:
 user-add:
     Add a new user to the system without hassle
 vi:
-    Setup and run vim
+    alias for vim
 vi-choose-file-from-list:
     Edit a file from a list on STDIN
 vi-from-find:
@@ -995,6 +995,8 @@ video-dvd-rip:
 video-transcode:
     Transcode a media file to x264 preserving all video, audio and
     subtitle tracks
+vim:
+    Setup and run vim
 vim-setup:
     Setup vim environment
 vim-url:
@@ -6750,28 +6752,10 @@ ssh $user@localhost
 
 #!/bin/bash
 
-# Setup and run vim
+# vi alias for vim
 
-set -e
+vim "$@"
 
-export VIM_HOME=$REMOTE_HOME/.vim
-
-if [[ -e $VIM_HOME/etc/vimrc ]] ; then
-    args=" -u $VIM_HOME/etc/vimrc"
-else
-    args=" -i $REMOTE_HOME/._viminfo"
-fi
-
-# Theres no buildin way to check if arguments exists other than files
-if [[ $@ ]] ; then
-    export VIM_HAS_ARGS=1
-fi
-
-if [[ $1 =~ @ ]] && [[ $1 =~ : ]] ; then
-    args="$args "$(vim-url $1)
-fi
-
-alternative-run $0 $args "$@"
 
 ### fatpacked app vi-choose-file-from-list #####################################
 
@@ -6979,6 +6963,33 @@ fi
 
 exit
         -c:a ac3 -b:a 448k \
+
+### fatpacked app vim ##########################################################
+
+#!/bin/bash
+
+# Setup and run vim
+
+set -e
+
+export VIM_HOME=$REMOTE_HOME/.vim
+
+if [[ -e $VIM_HOME/etc/vimrc ]] ; then
+    args=" -u $VIM_HOME/etc/vimrc"
+else
+    args=" -i $REMOTE_HOME/._viminfo"
+fi
+
+# Theres no buildin way to check if arguments exists other than files
+if [[ $@ ]] ; then
+    export VIM_HAS_ARGS=1
+fi
+
+if [[ $1 =~ @ ]] && [[ $1 =~ : ]] ; then
+    args="$args "$(vim-url $1)
+fi
+
+alternative-run $0 $args "$@"
 
 ### fatpacked app vim-setup ####################################################
 

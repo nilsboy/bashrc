@@ -713,6 +713,11 @@ cpanm:
     Allow cpanm to install modules specified via Path/File.pm
 cpanm-install:
     Setup home directory based perl environment and cpanm
+cpanm-list-locally-installed-modules:
+    List all cpanm installed perl modules
+cpanm-reinstall-local-modules:
+    Reinstall all cpanm installed perl modules (i.e. to recompile after
+    server move)
 crontab-setup:
     Add default crontab settings to existing crontab
 csvview:
@@ -2505,6 +2510,33 @@ echo "BASH_ENV=$bashrc"
 echo
 echo "Please logout and back in for the changes to take effect."
 echo
+
+### fatpacked app cpanm-list-locally-installed-modules #########################
+
+#!/usr/bin/env perl
+
+# List all cpanm installed perl modules
+
+use ExtUtils::Installed;
+my $instmod = ExtUtils::Installed->new();
+foreach my $module ($instmod->modules()) {
+    print "$module\n";
+}
+
+### fatpacked app cpanm-reinstall-local-modules ################################
+
+#!/bin/bash
+
+# Reinstall all cpanm installed perl modules (i.e. to recompile after server move)
+
+source bash-helpers
+
+INFO "Reinstalling local modules..."
+cpanm-list-locally-installed-modules |
+    sort |
+    cpanm -nq --reinstall
+
+INFO "Done"
 
 ### fatpacked app crontab-setup ################################################
 

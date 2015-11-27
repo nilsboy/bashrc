@@ -3419,7 +3419,7 @@ fi
 
 # Default options for git commands
 
-if [[ ! $PS1 ]] ; then
+if [ -z PS1 ] ; then
     exec alternative-run $0 "$@"
 fi
 
@@ -3453,6 +3453,7 @@ if [[ $1 == "commit" ]] ; then
 fi
 
 exec alternative-run $0 "$@"
+
 
 ### fatpacked app git-env-validate #############################################
 

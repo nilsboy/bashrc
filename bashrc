@@ -5281,6 +5281,7 @@ use strict;
 use warnings;
 no warnings 'uninitialized';
 use Cwd qw(abs_path);
+use POSIX qw(strftime);
 
 use Capture::Tiny ':all';
 
@@ -5301,7 +5302,7 @@ if ($stderr) {
 }
 
 my $exit_code_message;
-if ($exit_code) {
+if (defined $exit_code) {
     $exit_code_message
         = "--- EXITED WITH " . ( "-" x 64 ) . "\n" . $exit_code . "\n";
 }
@@ -5313,6 +5314,9 @@ my $output
     . "--- LAUNCHED FROM "
     . ( "-" x 62 ) . "\n"
     . abs_path() . "\n"
+    . "--- LAUNCHED AT "
+    . ( "-" x 64 ) . "\n"
+    . strftime("%F %T", localtime) . "\n"
     . $exit_code_message
     . $stdout
     . $stderr
@@ -5321,6 +5325,7 @@ my $output
 print STDOUT $output;
 
 exit $exit_code;
+
 
 ### fatpacked app run-or-test ##################################################
 

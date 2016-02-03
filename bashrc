@@ -944,6 +944,9 @@ ssh-no-check:
     SSH without host key checks
 ssh-persistent-reverse-tunnel-setup:
     Setup a persistent reverse tunnel
+ssh-server-turn-off-password-authentication:
+    Change local sshd config to disallow password authentication and
+    restart sshd
 ssh-with-reverse-proxy:
     Proxy traffic of a remote host through localhost
 ssl-create-self-signed-certificate:
@@ -5809,6 +5812,24 @@ INFO "Starting tunnel now..."
 echo $CMD | bash
 
 INFO "done."
+
+### fatpacked app ssh-server-turn-off-password-authentication ##################
+
+#!/bin/bash
+# Change local sshd config to disallow password authentication and restart sshd
+
+set -e
+
+gotroot
+
+cat << EOF >> /etc/ssh/sshd_config
+# added by ssh-server-turn-off-password-authentication
+ChallengeResponseAuthentication no
+PasswordAuthentication no
+UsePAM no
+EOF
+
+service ssh restart
 
 ### fatpacked app ssh-with-reverse-proxy #######################################
 

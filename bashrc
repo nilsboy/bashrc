@@ -5717,6 +5717,7 @@ perl -n -e '$x = $_; $x =~ tr%/%%cd; print length($x), " $_";' \
 
 # Remove connection to ssh-agent
 
+echo "# this has to be sourced from within the current shell"
 ssh-agent-env-grab \
     && unset SSH_AUTH_SOCK SSH_CLIENT SSH_CONNECTION SSH_TTY
 

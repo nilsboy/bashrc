@@ -1141,10 +1141,13 @@ dpkg --get-selections $package_name
 
 # Install packages listed in a file
 
-set -e
+source bash-helpers
+
+INFO "FYI - this will install outstanding upgrades too."
 
 file=${1?file name?}
-dpkg --set-selections < $file
+perl -pe 's/^(.+)$/$1 install/g' $file | dpkg --set-selections
+apt-get dselect-upgrade
 
 ### fatpacked app apt-popularity ###############################################
 

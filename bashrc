@@ -831,6 +831,8 @@ man-online:
     Lookup a man page on the internet
 markdown-view:
     View markdown in the terminal
+mem-empty-swap-to-ram:
+    Empty swap back to ram if possible
 mysql:
     Fix mysql prompt to show real hostname - NEVER localhost
 net-find-free-port:
@@ -4297,6 +4299,30 @@ marked.setOptions({
 console.log(marked(fs.readFileSync(process.argv[2])
     .toString()));
 
+### fatpacked app mem-empty-swap-to-ram ########################################
+
+#!/bin/bash
+
+# Empty swap back to ram if possible
+
+# based on https://help.ubuntu.com/community/SwapFaq
+
+source bash-helpers
+
+gotroot
+
+mem=$(LC_ALL=C free  | awk '/Mem:/ {print $4}')
+swap=$(LC_ALL=C free | awk '/Swap:/ {print $3}')
+
+if [ $mem -lt $swap ]; then
+    DIE "Not enough RAM to write swap back, nothing done."
+fi
+
+swapoff -a && 
+swapon -a
+
+INFO "Done"
+
 ### fatpacked app mysql ########################################################
 
 #!/bin/bash
@@ -4411,7 +4437,7 @@ source bash-helpers
 node_dst=~/opt/node
 node_bin=~/opt/bin/node
 npm_bin=~/opt/bin/npm
-backup=$node_dst.backup.$(date +%Y%m%d_%H%M%S)
+backup=~/opt/node-install.backup.$(date +%Y%m%d_%H%M%S)
 
 if [[ -e $node_dst || -h $node_dst || -e $node_bin || -h $node_bin || -e $npm_bin || -h $npm_bin ]] ; then
 
@@ -4447,10 +4473,12 @@ mkdir -p ~/opt/bin
 
 node_dst_versioned=~/opt/$dir
 
-mv $node_dst $backup/ || true
-mv $node_dst_versioned $backup/ || true
-mv $node_bin $backup/ || true
-mv $npm_bin $backup/ || true
+for file in $node_dst $node_dst_versioned $node_bin $npm_bin ; do
+    if [ -e $file ] || [ -d $file ] || [ -L $file ] ; then
+        INFO "Backing up $file to $backup/..."
+        mv $file $backup/
+    fi
+done
 
 mv $dir $node_dst_versioned
 
@@ -4459,9 +4487,11 @@ ln -s $dir node
 
 cd ~/opt/bin
 ln -s ../node/bin/node .
-ln -s ../node/bin/npm .
 
 npm-set-global-modules-dir
+
+INFO "Installing newest npm via npm"
+../node/bin/npm install -g npm >/dev/null
 
 INFO "Done."
 

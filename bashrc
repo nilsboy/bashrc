@@ -833,6 +833,8 @@ markdown-view:
     View markdown in the terminal
 mem-empty-swap-to-ram:
     Empty swap back to ram if possible
+mem-swap-per-process:
+    Show swap usage per process
 mysql:
     Fix mysql prompt to show real hostname - NEVER localhost
 net-find-free-port:
@@ -4322,6 +4324,15 @@ swapoff -a &&
 swapon -a
 
 INFO "Done"
+
+### fatpacked app mem-swap-per-process #########################################
+
+#!/bin/bash
+
+# Show swap usage per process
+# see also http://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
+
+smem "$@"
 
 ### fatpacked app mysql ########################################################
 

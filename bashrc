@@ -1147,8 +1147,6 @@ dpkg --get-selections $package_name
 
 source bash-helpers
 
-INFO "FYI - this will install outstanding upgrades too."
-
 file=${1?file name?}
 # perl -pe 's/^(.+)$/$1 install/g' $file | dpkg --set-selections
 # apt-get -u dselect-upgrade
@@ -1159,7 +1157,8 @@ exit 0
 
 # apt-get within while breaks while after the first package was installed
 
-set +e
+INFO "FYI - this will install outstanding upgrades too."
+
 while read package ; do
     INFO "Installing package: $package..."
     (apt-get install -y $package) || ERROR "Cannot install $package"

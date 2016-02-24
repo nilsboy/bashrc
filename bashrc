@@ -6876,7 +6876,7 @@ ssh $user@localhost
 
 # vi alias for vim
 
-vim "$@"
+exec vim "$@"
 
 
 ### fatpacked app vi-choose-file-from-list #####################################
@@ -7111,7 +7111,8 @@ if [[ $1 =~ @ ]] && [[ $1 =~ : ]] ; then
     args="$args "$(vim-url $1)
 fi
 
-alternative-run $0 $args "$@"
+exec alternative-run $0 $args "$@"
+
 
 ### fatpacked app vim-setup ####################################################
 

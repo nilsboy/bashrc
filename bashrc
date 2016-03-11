@@ -811,6 +811,8 @@ iptables-port-redirect:
     Forward an incoming port to a different port
 java-decompile-jar:
     Recursively decompile a jar including contained jars
+java-install-oracle-java-v8:
+    Install oracle java 8
 js-format-using-prettydiff:
     Javascript formatter using "npm install prettydiff"
 json-tidy:
@@ -3953,6 +3955,22 @@ for class in `find . -name '*.class'`; do
     fi
 
 done
+
+### fatpacked app java-install-oracle-java-v8 ##################################
+
+#!/bin/bash
+# Install oracle java 8
+
+source bash-helpers
+
+gotroot
+
+INFO "For more info see: http://www.webupd8.org/2012/09/install-oracle-java-8-in-ubuntu-via-ppa.html"
+
+add-apt-repository ppa:webupd8team/java
+apt-get update
+
+apt-get install oracle-java8-installer
 
 ### fatpacked app js-format-using-prettydiff ###################################
 

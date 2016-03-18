@@ -959,6 +959,8 @@ ssl-create-self-signed-certificate:
     Create a self signed certificate
 ssl-strip:
     Remove ssl encryption from https and other protocols
+text-from-any:
+    Convert any file to text
 text-quote:
     Quote text
 text-remove-comments:
@@ -5978,6 +5980,49 @@ fi
 cmd="sudo stunnel -c -d $in -r $out -f"
 INFO "running: $cmd"
 xtitle "ssl-strip $cmd" && $cmd
+
+### fatpacked app text-from-any ################################################
+
+#!/bin/bash
+# Convert any file to text
+
+source bash-helpers
+
+file="$@"
+
+INFO "Converting file $file"
+
+extension=$(extension $file)
+
+if [[ "$extension" = "txt" ]] ; then
+    RETURN
+fi
+
+if [[ "$extension" = "csv" ]] ; then
+    RETURN
+fi
+
+if [[ "$extension" = "pdf" ]] ; then
+    pdftotext "$file" "$file".txt
+    RETURN
+fi
+
+if [[ "$extension" = "xlsx" ]] ; then
+    xlsx2csv -s 0 "$file" "$file".csv
+    RETURN
+fi
+
+if [[ "$extension" = "docx" ]] ; then
+    docx2txt "$file" "$file".txt
+    RETURN
+fi
+
+if [[ "$extension" = "doc" ]] ; then
+    catdoc "$file" > "$file".txt
+    RETURN
+fi
+
+DIE "Unknown file extension: $extension for $file"
 
 ### fatpacked app text-quote ###################################################
 

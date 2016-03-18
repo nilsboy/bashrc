@@ -6174,7 +6174,7 @@ $o{warnings} = 1 if !defined $o{warnings};
 $o{mounted}  = 0 if !defined $o{mounted};
 $o{colors}   = 1 if !defined $o{colors};
 if ($o{"scm-exclude"} && !$o{a}) {
-    $o{exclude} = qr/.(git|csv|svn|node_modules|bower_components)/;
+    $o{exclude} = qr/^((\.(git|cvs|svn))|node_modules|bower_components)/;
 }
 
 if ($ENV{LANG} !~ /utf/i) {
@@ -6782,6 +6782,7 @@ sub size {
         . " - ${red}$done\%"
         . $gray;
 }
+
 
 ### fatpacked app ubuntu-setup #################################################
 

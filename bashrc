@@ -690,6 +690,8 @@ bashrc-helper-hostname:
     Format hostname for bash prompt usage
 bashrc-helper-login-name:
     Format login for bash prompt usage
+bashrc-install-tools:
+    Install tools via npm
 bashrc-linux-distribution-fix-suse:
     Script to run when logging into suse machine
 bashrc-pack:
@@ -2195,6 +2197,22 @@ if [[ $skip_non_root ]] ; then
 fi
 
 RETURN $USER
+
+### fatpacked app bashrc-install-tools #########################################
+
+#!/bin/bash
+# Install tools via npm
+
+source bash-helpers
+
+for module in \
+    diff-so-fancy
+do
+    INFO "Installing $module..."
+    npm install -g $module
+done
+
+INFO "Done"
 
 ### fatpacked app bashrc-linux-distribution-fix-suse ###########################
 

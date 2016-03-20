@@ -748,6 +748,8 @@ file-add-line-if-new:
     Add a line to a file if a line matching regex is not found
 file-compress-if-size-reaches:
     Compress a file depending on size
+file-public-upload:
+    Share a file on a public space
 file-template-filler:
     Create a file from a template
 find-and:
@@ -3335,6 +3337,42 @@ system(qq{zip "$file.zip" "$file" >/dev/null})
     && die "Error ziping $file: " . $!;
 
 print "$file.zip";
+
+### fatpacked app file-public-upload ###########################################
+
+#!/bin/bash
+# Share a file on a public space
+
+source bash-helpers
+
+file="$@"
+
+tmpfile=$( mktemp -t transferXXX )
+
+if ! [[ $file ]] ; then
+    if tty -s ; then
+        DIE Specify file}
+    else
+        file=$tmpfile
+        cat - > $tmpfile
+        dst="file.txt"
+    fi
+else
+    dst=$(basename "$file" | perl -pe 's/[^a-zA-Z0-9._-]+/_/g ; s/_+/_/g ; s/_+$//g')
+fi
+
+client="wget -q -O - --method PUT --body-file="
+if [[ $(type -t curl) ]] ; then
+    client="curl --progress-bar --upload-file "
+fi
+
+dst=https://transfer.sh/$dst
+
+INFO "Uploading using: $client$file $dst (5GB max)..."
+$client"${file}" $dst
+INFO "Done"
+
+trap 'rm $tmpfile' ERR EXIT
 
 ### fatpacked app file-template-filler #########################################
 

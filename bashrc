@@ -2208,7 +2208,8 @@ RETURN $USER
 source bash-helpers
 
 for module in \
-    diff-so-fancy
+    diff-so-fancy \
+    shelljs
 do
     INFO "Installing $module..."
     npm install -g $module

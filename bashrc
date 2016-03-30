@@ -963,6 +963,8 @@ ssl-create-self-signed-certificate:
     Create a self signed certificate
 ssl-strip:
     Remove ssl encryption from https and other protocols
+text-context-grep:
+    Grep for a regex and display matches with context
 text-from-any:
     Convert any file to text
 text-quote:
@@ -1298,6 +1300,13 @@ var parser = mm(fs.createReadStream(src), function (err, metadata) {
 
 source bash-helpers
 
+dst_type=ogg
+
+if [[ "$1" = "-m" ]] ; then
+    dst_type=mp3
+    shift
+fi
+
 file="$@" 
 
 if [[ ! $file ]] ; then
@@ -1309,44 +1318,66 @@ file=$(abs $file)
 file_prefix=$(filename $file)
 file_type=$(extension $file)
 
+perl -e 'exit 1 if "'$file_type'" !~ /(ogg|mp3|flac|wav|mp4)$/i' \
+    || RETURN "Unknown music file format for $file - skipping\n"
+
+INFO "Converting to $dst_type"
+
 tmp=$(mktemp -d)/transcode.flac
 
-trap 'rm -f $tmp' ERR EXIT
+trap 'rm -f "$out_file"' ERR
+# trap 'rm -f "$tmp"' ERR EXIT
 
-INFO "Transcoding file: $file / type: $file_type to ogg"
+INFO "Transcoding file: $file / type: $file_type to $dst_type"
 DEBUG "Using temp file: $tmp"
 
 # pipe does not save the tags
 # sox $file -t wav - | oggenc -q6 -o $x.ogg -
 
-# save to flac first to keep the tags
-if [[ $file_type = ogg ]] ; then
-    RETURN "File is already an ogg file"
+if [[ $file_type = $dst_type ]] ; then
+    RETURN "File is already an $dst_type file"
 fi
 
-ogg_file="$file".ogg
+out_file="$file".$dst_type
 
+# save to flac first to keep the tags
 # cannot convert to ogg directly because I don't know 
 # how to specify the ogg quality level with avconv
-if [[ $file_type != flac ]] ; then
-    DEBUG "Transcoding $file to flac"
-    # sox $file -t flac $tmp
-    avconv -i "$file" $tmp
-else
-    ln -s "$file" $tmp
-fi
+# if [[ $file_type != flac ]] ; then
+#     DEBUG "Transcoding $file to flac"
+#     # sox $file -t flac $tmp
+#     avconv -i "$file" $tmp
+# else
+#     ln -s "$file" $tmp
+# fi
 
 # remove old extension if old format was lossless
 # if [[ $file_type = flac || $file_type = ape ]] ; then
-#   ogg_file="$file_prefix".ogg
+#   out_file="$file_prefix".ogg
 # fi
 
-DEBUG "Transcoding $file to ogg"
-oggenc -q6 -o "$file.ogg" "$tmp"
+DEBUG "Transcoding $file to $dst_type"
+
+if [[ $dst_type = ogg ]] ; then
+    oggenc -q6 -o "$out_file" "$file"
+else
+    # sox does not copy tags
+    # sox "$tmp" -C192 "$file.$dst_type"
+
+    # cannot read flac
+    # lame -h "$tmp" "$file.$dst_type"
+
+    # avconv -i "$file" -c:a libmp3lame -b:a 192k -id3v2_version 3 -write_id3v1 1 "$file.$dst_type"
+    # the -map_metadata is used to copy the tag!?!:
+    # https://stackoverflow.com/questions/21489719/avconv-flac-to-ogg-conversion-with-metadata-kept
+    avconv -loglevel quiet -i "$file" -vn -c:a libmp3lame -b:a 192k -map_metadata 0:s:0 "$out_file"
+fi
+
 rm "$file"
-rm $tmp
+# rm $tmp
 
 DEBUG "Done"
+
 
 ### fatpacked app audio-split-by-cue ###########################################
 
@@ -6037,6 +6068,73 @@ fi
 cmd="sudo stunnel -c -d $in -r $out -f"
 INFO "running: $cmd"
 xtitle "ssl-strip $cmd" && $cmd
+
+### fatpacked app text-context-grep ############################################
+
+#!/usr/bin/perl
+
+# Grep for a regex and display matches with context
+
+# TODO limit match count
+# TODO limit input
+
+use strict;
+use warnings;
+use Data::Dumper;
+no warnings 'uninitialized';
+
+$/ = undef;
+my $data = <STDIN>;
+my $pattern = $ARGV[0];
+
+my $gray     = "\x1b[38;5;243m";
+my $green    = "\x1b[32;5;250m";
+my $red      = "\x1b[38;5;124m";
+my $no_color = "\x1b[33;0m";
+
+my $positions = match_all_positions($pattern, $data);
+
+my $context = 100;
+my $max_width = 70;
+my $prefix = "    ";
+my $separator = "\n$prefix" . "_" x $max_width . "\n\n";
+
+my @wrapped_matches;
+foreach my $pos (@$positions) {
+    my ($start, $end) = @$pos;
+
+    my $context_start = $start - $context < 0 ? 0 : $start - $context;
+    my $pre   = substr($data, $context_start, $start - $context_start);
+    my $match = substr($data, $start, $end - $start);
+    my $post  = substr($data, $end, $context);
+    my $all   = $pre . $match . $post;
+
+    my $wrapped = join("\n", unpack("(A$max_width)*", $all));
+
+    my $pre_wrapped   = substr($wrapped, 0, length($pre));
+    my $match_wrapped = $red
+        . substr($wrapped, length($pre), length($match))
+        . $no_color;
+    my $post_wrapped  = substr($wrapped, length($pre) + length($match));
+
+    my $all_wrapped = $pre_wrapped . $match_wrapped . $post_wrapped;
+
+    $all_wrapped =~ s/^/$prefix/gm;
+    $all_wrapped =~ s/\n+$/\n/gm;
+
+    push(@wrapped_matches, $all_wrapped);
+}
+
+print $separator . join($separator, @wrapped_matches) . $separator;
+
+sub match_all_positions {
+    my ($regex, $string) = @_;
+    my @ret;
+    while ($string =~ /$regex/igm) {
+        push @ret, [ $-[0], $+[0] ];
+    }
+    return \@ret
+}
 
 ### fatpacked app text-from-any ################################################
 

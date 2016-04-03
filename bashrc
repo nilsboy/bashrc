@@ -4567,7 +4567,6 @@ if [[ -e $node_dst || -h $node_dst || -e $node_bin || -h $node_bin || -e $npm_bi
     mkdir -p $backup
 fi
 
-
 wd=$(mktemp -d)
 cd $wd
 
@@ -4606,12 +4605,14 @@ ln -s $dir node
 cd ~/opt/bin
 ln -s ../node/bin/node .
 
+PATH=$PATH:~/opt/$dir/bin
 npm-set-global-modules-dir
 
 INFO "Installing newest npm via npm"
-../node/bin/npm install -g npm >/dev/null
+npm install -g npm@latest >/dev/null
 
 INFO "Done."
+
 
 ### fatpacked app note #########################################################
 

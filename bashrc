@@ -4828,7 +4828,12 @@ fs.createReadStream(readme).pipe(process.stdout)
 
 # Make npm use local dir for modules
 
-npm config set prefix=~/node_modules
+source bash-helpers
+dir=~/node_modules
+
+INFO "Setting global node_modules dir to $dir"
+npm config set prefix=$dir
+
 
 ### fatpacked app npm-set-proxy-from-environment ###############################
 

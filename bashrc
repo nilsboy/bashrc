@@ -996,6 +996,10 @@ unix2dos:
     Convert line endings from unix to dos
 url:
     Print absolute SSH url of a file or directory
+url-decode:
+    Decode a string from URL notation
+url-encode:
+    Encode a string to URL notation
 user-add:
     Add a new user to the system without hassle
 vi:
@@ -7090,6 +7094,24 @@ my $rel = qx{rel "@ARGV"};
 $rel =~ s/\n$//g;
 $rel = "\"$rel\"" if $rel =~ /\s|;/;
 print "$ENV{USER}\@" . $hostname . ":$rel\n"
+
+### fatpacked app url-decode ###################################################
+
+#!/bin/bash
+
+# Decode a string from URL notation
+# https://stackoverflow.com/questions/296536/how-to-urlencode-data-for-curl-command
+
+echo -n "$@" | perl -pe 's/\%(\w\w)/chr hex $1/ge'
+
+### fatpacked app url-encode ###################################################
+
+#!/bin/bash
+
+# Encode a string to URL notation
+# https://stackoverflow.com/questions/296536/how-to-urlencode-data-for-curl-command
+
+echo -n "$@" | perl -pe 's/(\W)/sprintf("%%%02X", ord($1))/ge'
 
 ### fatpacked app user-add #####################################################
 

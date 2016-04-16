@@ -984,6 +984,8 @@ tmux-session:
     Start a named tmux session with 10 tabs
 top-mem:
     View top ordered by memory usage
+trash:
+    Move a file to a trash dir at the files location
 tree:
     List a directory as a tree
 ubuntu-setup:
@@ -6353,6 +6355,26 @@ tmux select-window -t $session:1
 # View top ordered by memory usage
 
 exec top -c -o '%MEM'
+
+### fatpacked app trash ########################################################
+
+#!/bin/bash
+
+# Move a file to a trash dir at the files location
+
+source bash-helpers
+
+file="$@"
+
+if [[ ! "$file" ]] ; then
+    DIE "Specify file"
+fi
+
+dir=$(dirname "$file")
+trash="$dir/.trash"
+mkdir -p "$trash"
+
+mv "$file" "$trash/"
 
 ### fatpacked app tree #########################################################
 

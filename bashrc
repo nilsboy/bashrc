@@ -809,6 +809,9 @@ grep-or:
 groups-reload-memberships:
     Start new shell to "reload" changes to the list of groups the user
     belongs to
+hd-set-spin-timout:
+    Activate spindown and set spindown timeout on (buggy - i.e.
+    Seagate) hard drives that don't do it themselfes
 html-strip:
     Strip HTML of tags and entities
 iptables-port-redirect:
@@ -3975,6 +3978,30 @@ exit 1 if ! $matches;
 # Start new shell to "reload" changes to the list of groups the user belongs to
 
 exec su -l $USER
+
+### fatpacked app hd-set-spin-timout ###########################################
+
+#!/bin/bash
+# Activate spindown and set spindown timeout on (buggy - i.e. Seagate) hard drives that don't do it themselfes
+
+# See http://howtoeverything.net/linux/hardware/why-some-hard-disks-wont-spin-down-hdparm
+
+source bash-helpers
+
+# list spindown timeout on all hds
+# sudo hdparm -B /dev/sd?
+
+# test if spindown works
+# sudo hdparm -y /dev/sdb
+
+label=${1?Specify drive label}
+path=/dev/disk/by-label/$label
+
+# set workaround mode for buggy drives
+sudo hdparm -B255 $path
+
+# set timeout specified in multiples of 5s
+sudo hdparm -S180 $path
 
 ### fatpacked app html-strip ###################################################
 

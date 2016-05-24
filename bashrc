@@ -809,7 +809,7 @@ grep-or:
 groups-reload-memberships:
     Start new shell to "reload" changes to the list of groups the user
     belongs to
-hd-set-spin-timout:
+hd-set-spin-timeout:
     Activate spindown and set spindown timeout on (buggy - i.e.
     Seagate) hard drives that don't do it themselfes
 html-strip:
@@ -3979,7 +3979,7 @@ exit 1 if ! $matches;
 
 exec su -l $USER
 
-### fatpacked app hd-set-spin-timout ###########################################
+### fatpacked app hd-set-spin-timeout ##########################################
 
 #!/bin/bash
 # Activate spindown and set spindown timeout on (buggy - i.e. Seagate) hard drives that don't do it themselfes

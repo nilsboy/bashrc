@@ -273,6 +273,10 @@ export MANWIDTH=80
 
 # Get parent process id
 function parent() {
+    # ps can not deal with PID 0 which might be set when running inside docker
+    if [[ $PPID = 0 ]] ; then
+        return
+    fi
     echo $(ps -p $PPID -o comm=)
 }
 
@@ -4264,6 +4268,29 @@ date=$(sudo debugfs -R "stat <$inode>" $filesystem 2>/dev/null \
 
 formatted_date=$(date -d "$date" +"%F %T %a")
 echo $formatted_date $file
+
+### fatpacked app lxd-lts ######################################################
+
+#!/bin/bash
+# Start a vanilla lts inside lxd
+
+source bash-helpers
+
+lxc launch ubuntu:16.04 lts
+lxc exec lts bash
+
+### fatpacked app lxd-setup ####################################################
+
+#!/bin/bash
+# Setup lxd
+
+# https://linuxcontainers.org/lxd/getting-started-cli/
+
+source bash-helpers
+
+sudo apt-get -t trusty-backports install lxd
+newgrp lxd
+sudo lxd init
 
 ### fatpacked app man-explain-options ##########################################
 

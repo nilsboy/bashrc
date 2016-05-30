@@ -1515,7 +1515,6 @@ RETURN " ${color}$total${NO_COLOR}"
 use strict;
 use warnings;
 no warnings 'uninitialized';
-use Data::Dumper;
 use Getopt::Long;
 use Cwd;
 

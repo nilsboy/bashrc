@@ -1203,7 +1203,6 @@ EOF
 use strict;
 use warnings;
 no warnings 'uninitialized';
-use Data::Dumper;
 use autodie;
 use File::stat;
 
@@ -1812,7 +1811,6 @@ function extension() {
 use strict;
 use warnings;
 no warnings 'uninitialized';
-use Data::Dumper;
 
 my $black     = "\x1b[38;5;0m";
 my $gray      = "\x1b[38;5;250m";
@@ -2678,7 +2676,6 @@ crontab -l
 
 use warnings;
 no warnings qw{uninitialized};
-use Data::Dumper;
 
 use Getopt::Long;
 use Encode;
@@ -3176,7 +3173,6 @@ line-print
 use strict;
 use warnings;
 no warnings 'uninitialized';
-use Data::Dumper;
 
 use Docopt;
 use JSON;
@@ -3451,7 +3447,6 @@ trap 'rm $tmpfile' ERR EXIT
 
 use strict;
 use warnings;
-use Data::Dumper;
 
 use File::Copy;
 
@@ -3873,7 +3868,6 @@ fi
 
 use strict;
 use warnings;
-use Data::Dumper;
 
 use Getopt::Long;
 Getopt::Long::Configure("bundling");
@@ -4316,7 +4310,6 @@ echo $formatted_date $file
 use strict;
 use warnings;
 no warnings 'uninitialized';
-use Data::Dumper;
 
 my $cl = join( " ", @ARGV ) || die "Specify command line.";
 my ( $command, $options ) = $cl =~ /^(\S+) (.+)$/;
@@ -5428,7 +5421,6 @@ abs "$@" | perl -pe "s#^('|)($HOME/)#\$1#g"
 use strict;
 use warnings;
 no warnings 'uninitialized';
-use Data::Dumper;
 use Getopt::Long;
 
 my $red      = "\x1b[38;5;124m";
@@ -6167,7 +6159,6 @@ xtitle "ssl-strip $cmd" && $cmd
 
 use strict;
 use warnings;
-use Data::Dumper;
 no warnings 'uninitialized';
 
 $/ = undef;
@@ -7704,7 +7695,6 @@ ssh -X $1 x2x -east -to $DISPLAY
 use strict;
 use warnings;
 no warnings 'uninitialized';
-use Data::Dumper;
 
 use File::Basename;
 use File::Copy qw(mv);

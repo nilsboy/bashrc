@@ -41,6 +41,10 @@ if [ -d $REMOTE_HOME/.bashrc.d ] ; then
     done
 fi
 
+### Checking if running inside docker ##########################################
+
+grep docker /proc/1/cgroup &>/dev/null && BASHRC_INSIDE_DOCKER=1
+
 ### Return if not an interactive shell #########################################
 
 [[ $PS1 ]] || return
@@ -1645,6 +1649,7 @@ if [[ $BASHRC_PROMPT_COLORS ]] ; then
        GREEN='\[\e[38;5;2m\]'
       ORANGE='\[\e[38;5;3m\]'
          RED='\[\e[38;5;9m\]'
+     DARKRED='\[\e[38;5;1m\]'
 else
     NO_COLOR=$(echo -e '\x1b[33;0;m')
         GRAY=$(echo -e '\x1b[38;5;243m')
@@ -1652,6 +1657,7 @@ else
        GREEN=$(echo -e '\x1b[38;5;2m')
       ORANGE=$(echo -e '\x1b[38;5;3m')
          RED=$(echo -e '\x1b[38;5;9m')
+     DARKRED=$(echo -e '\x1b[38;5;1m')
 fi
 
 function _LOG() {
@@ -2226,7 +2232,12 @@ echo "$line" >> $HISTFILE_ETERNAL
 
 source bash-helpers
 
-echo -n $GREEN${HOSTNAME}$NO_COLOR
+COLOR=$GREEN
+if [[ $BASHRC_INSIDE_DOCKER ]] ; then
+    COLOR=$DARKRED
+fi
+
+echo -n $COLOR${HOSTNAME}$NO_COLOR
 
 ### fatpacked app bashrc-helper-login-name #####################################
 

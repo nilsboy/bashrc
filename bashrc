@@ -2246,6 +2246,10 @@ source bash-helpers
 
 skip_non_root=$1
 
+if [[ ! $USER && $BASHRC_INSIDE_DOCKER ]] ; then
+    USER=root
+fi
+
 if [[ $USER = "root" ]] ; then
     RETURN "${RED}$USER${NO_COLOR}"
 fi
@@ -2255,6 +2259,7 @@ if [[ $skip_non_root ]] ; then
 fi
 
 RETURN $USER
+
 
 ### fatpacked app bashrc-install-tools #########################################
 

@@ -740,6 +740,8 @@ dir-diff:
     Diff two directory structures
 dir-name-prettifier:
     shorten prompt dir to max 15 chars
+docker-ls:
+    List some docker information
 docopt-convert:
     Convert a docopt specification
 dos2unix:
@@ -834,6 +836,9 @@ keyboard-disable-caps-lock-xwindows:
     Map caps lock to escape for X
 keyboard-reset:
     Reset keyboard settings
+line-print:
+    Draw a line on the terminal spanning the whole width optionally
+    including a message
 ls-creation-time:
     List the creation time of a file
 man-explain-options:
@@ -3145,6 +3150,26 @@ fi
 
 RETURN $dir
 
+### fatpacked app docker-ls ####################################################
+
+#!/bin/bash
+# List some docker information
+
+echo
+
+line-print Containers
+sudo docker ps -a
+echo
+
+line-print Images
+sudo docker images
+echo
+
+line-print Volumes
+sudo docker volume ls
+echo
+line-print
+
 ### fatpacked app docopt-convert ###############################################
 
 #!/usr/bin/env perl
@@ -4249,6 +4274,20 @@ my $cmd =
 print STDERR "Running: $cmd\n";
 print `$cmd`;
 
+### fatpacked app line-print ###################################################
+
+#!/usr/bin/env perl
+# Draw a line on the terminal spanning the whole width optionally including a message
+
+use strict;
+no warnings 'uninitialized';
+
+my $msg;
+if(@ARGV) {
+    $msg = " " . join(" ", @ARGV) . " ";
+}
+print "---", $msg , q{-} x ($ENV{COLUMNS} - 3 - length($msg)), "\n\n";
+
 ### fatpacked app ls-creation-time #############################################
 
 # List the creation time of a file
@@ -4268,29 +4307,6 @@ date=$(sudo debugfs -R "stat <$inode>" $filesystem 2>/dev/null \
 
 formatted_date=$(date -d "$date" +"%F %T %a")
 echo $formatted_date $file
-
-### fatpacked app lxd-lts ######################################################
-
-#!/bin/bash
-# Start a vanilla lts inside lxd
-
-source bash-helpers
-
-lxc launch ubuntu:16.04 lts
-lxc exec lts bash
-
-### fatpacked app lxd-setup ####################################################
-
-#!/bin/bash
-# Setup lxd
-
-# https://linuxcontainers.org/lxd/getting-started-cli/
-
-source bash-helpers
-
-sudo apt-get -t trusty-backports install lxd
-newgrp lxd
-sudo lxd init
 
 ### fatpacked app man-explain-options ##########################################
 

@@ -745,6 +745,10 @@ dir-name-prettifier:
     shorten prompt dir to max 15 chars
 docker-ls:
     List some docker information
+docker-ubuntu:
+    Start a volatile ubuntu docker container
+docker-ubuntu-persistent:
+    Start a persistent ubuntu docker container
 docopt-convert:
     Convert a docopt specification
 dos2unix:
@@ -3180,6 +3184,74 @@ line-print Volumes
 sudo docker volume ls
 echo
 line-print
+
+### fatpacked app docker-ubuntu ################################################
+
+#!/bin/bash
+# Start a volatile ubuntu docker container
+
+source bash-helpers
+
+cmd="$@"
+
+if ! [[ $1 ]] ; then
+  cmd=bash
+fi
+
+image=ubuntu:16.04
+container=ubuntu-test
+remove=--rm
+
+if [[ $IMAGE ]] ; then
+    image=$IMAGE
+fi
+
+if [[ $CONTAINER ]] ; then
+    container=$CONTAINER
+    unset remove
+fi
+
+mount=~/tmp/docker-home
+mkdir -p $mount
+
+docker_home=/root/
+
+sudo docker run $remove --name $container \
+    -v $HOME/.bashrc:$docker_home/.bashrc \
+    -v $mount:$docker_home \
+    -ti $image "$cmd"
+
+### fatpacked app docker-ubuntu-persistent #####################################
+
+#!/bin/bash
+# Start a persistent ubuntu docker container
+
+source bash-helpers
+
+cmd="$@"
+
+if ! [[ $1 ]] ; then
+  cmd=bash
+fi
+
+container=ubuntu-test-persistent
+
+set +e
+sudo docker ps -a -f name=$container 2> /dev/null | grep $container &>/dev/null && found=1
+set -e
+
+if [[ $found ]] ; then
+    INFO "Commiting and reusing existing container with name $container."
+    INFO "Commiting may be limited to 127 times by docker."
+
+    sudo docker commit $container $container > /dev/null
+    sudo docker rm $container > /dev/null
+
+    image=$container
+fi
+
+sudo PATH=$PATH IMAGE=$image CONTAINER=$container $(type -p docker-ubuntu) "$cmd"
+
 
 ### fatpacked app docopt-convert ###############################################
 

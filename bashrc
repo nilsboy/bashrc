@@ -819,6 +819,8 @@ grep-list:
     Grep for a list of values
 grep-or:
     or-grep list matching lines
+grep-or-with-header:
+    or-grep and print paragraph headers
 groups-reload-memberships:
     Start new shell to "reload" changes to the list of groups the user
     belongs to
@@ -4081,6 +4083,68 @@ while ( my $line = <STDIN> ) {
 }
 
 exit 1 if ! $matches;
+
+### fatpacked app grep-or-with-header ##########################################
+
+#!/usr/bin/env perl
+# or-grep and print paragraph headers
+
+use strict;
+use warnings;
+
+my @regexes = @ARGV;
+my $matches;
+my $last_blank;
+my $last_header;
+while ( my $line = <STDIN> ) {
+
+    my $is_header = 0;
+    my $first = $. == 1;
+
+    if($line =~ /^\s*$/) {
+        $last_blank = 1;
+    } else {
+        if($last_blank || $first) {
+            $last_blank = 0;
+            $is_header = 1;
+            $last_header = $line;
+        }
+    }
+
+    if(matches_any($line)) {
+        $matches++;
+
+        if($is_header) {
+            $last_header = "";
+        }
+
+        if($last_header) {
+            # Check for pipe
+            if(-t STDOUT && $matches > 1) {
+                print "\n";
+            }
+            print $last_header;
+            $last_header = "";
+        }
+
+        print $line;
+        next;
+    }
+
+}
+
+exit 1 if ! $matches;
+
+sub matches_any {
+    my $line = shift;
+
+    foreach my $regex (@regexes) {
+        return 1 if $line =~ /$regex/i;
+    }
+
+    return 0;
+}
+
 
 ### fatpacked app groups-reload-memberships ####################################
 

@@ -3175,15 +3175,15 @@ RETURN $dir
 echo
 
 line-print Containers
-sudo docker ps -a
+docker ps -a
 echo
 
 line-print Images
-sudo docker images
+docker images
 echo
 
 line-print Volumes
-sudo docker volume ls
+docker volume ls
 echo
 line-print
 

@@ -33,6 +33,18 @@ if [[ $REMOTE_HOME != $HOME ]] ; then
     export PATH=$REMOTE_HOME/.bin:$REMOTE_HOME/bin:$PATH
 fi
 
+# Replace proxy env when using a tunneled ssh proxy
+if [[ $ssh_remote_proxy ]] ; then
+
+    http_proxy=http://$ssh_remote_proxy
+    https_proxy=https://$ssh_remote_proxy
+    ftp_proxy=ftp://$ssh_remote_proxy
+
+    HTTP_PROXY=http://$ssh_remote_proxy
+    HTTPS_PROXY=https://$ssh_remote_proxy
+    FTP_PROXY=ftp://$ssh_remote_proxy
+fi
+
 ### Run local rc scripts #######################################################
 
 if [ -d $REMOTE_HOME/.bashrc.d ] ; then
@@ -6249,13 +6261,19 @@ set -e
 host=${1?specify host}
 port=${2:-59347}
 
-proxyserver $port
+# proxyserver $port
+nproxy start -p $port
 
 ssh -A -t $host -R $port:localhost:$port \
     http_proxy=http://localhost:$port \
     https_proxy=https://localhost:$port \
     ftp_proxy=ftp://localhost:$port \
+    HTTP_PROXY=http://localhost:$port \
+    HTTPS_PROXY=https://localhost:$port \
+    FTP_PROXY=ftp://localhost:$port \
+    ssh_remote_proxy=localhost:$port \
     bash -i
+
 
 ### fatpacked app ssl-create-self-signed-certificate ###########################
 

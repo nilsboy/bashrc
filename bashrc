@@ -5064,13 +5064,18 @@ npm config set prefix=$dir
 
 # Set proxy from environment
 
+source bash-helpers
+
 if [[ $http_proxy ]] ; then
-	npm config set proxy $http_proxy
+    INFO "Setting npm proxy to $http_proxy"
+    npm config set proxy $http_proxy
 fi
 
 if [[ $https_proxy ]] ; then
-	npm config set https-proxy $https_proxy
+    INFO "Setting npm https-proxy to $https_proxy"
+    npm config set https-proxy $https_proxy
 fi
+
 
 ### fatpacked app once #########################################################
 

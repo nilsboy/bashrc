@@ -37,11 +37,11 @@ fi
 if [[ $ssh_remote_proxy ]] ; then
 
     http_proxy=http://$ssh_remote_proxy
-    https_proxy=https://$ssh_remote_proxy
+    https_proxy=http://$ssh_remote_proxy
     ftp_proxy=ftp://$ssh_remote_proxy
 
     HTTP_PROXY=http://$ssh_remote_proxy
-    HTTPS_PROXY=https://$ssh_remote_proxy
+    HTTPS_PROXY=http://$ssh_remote_proxy
     FTP_PROXY=ftp://$ssh_remote_proxy
 fi
 
@@ -6266,10 +6266,10 @@ nproxy start -p $port
 
 ssh -A -t $host -R $port:localhost:$port \
     http_proxy=http://localhost:$port \
-    https_proxy=https://localhost:$port \
+    https_proxy=http://localhost:$port \
     ftp_proxy=ftp://localhost:$port \
     HTTP_PROXY=http://localhost:$port \
-    HTTPS_PROXY=https://localhost:$port \
+    HTTPS_PROXY=http://localhost:$port \
     FTP_PROXY=ftp://localhost:$port \
     ssh_remote_proxy=localhost:$port \
     bash -i

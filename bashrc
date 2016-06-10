@@ -3186,16 +3186,16 @@ RETURN $dir
 
 echo
 
-line-print Containers
-docker ps -a
+line-print Volumes
+docker volume ls
 echo
 
 line-print Images
 docker images
 echo
 
-line-print Volumes
-docker volume ls
+line-print Containers
+docker ps -a
 echo
 line-print
 

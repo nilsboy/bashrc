@@ -777,6 +777,8 @@ file-public-upload:
     Share a file on a public space
 file-template-filler:
     Create a file from a template
+files-replace-from-env:
+    Replace files with content from environment variables
 find-and:
     Find files excluding dotfiles optional matching several strings
 find-and-limit:
@@ -3584,6 +3586,41 @@ print $tempf $data;
 close($tempf);
 
 move($temp, $file) || die $!;
+
+### fatpacked app files-replace-from-env #######################################
+
+#!/bin/bash
+# Replace files with content from environment variables
+#
+# Example:
+# OVERLAY_FILE_1_NAME="la/le/lu.conf"
+# OVERLAY_FILE_1_DATA=$(<settings_local.py)
+#
+# OVERLAY_FILE_2_NAME="la/le li/lu.conf"
+# OVERLAY_FILE_2_DATA="my new data"
+
+set -e
+
+IFS='<newline>'
+
+for file_env in ${!OVERLAY_FILE_*} ; do
+
+    if [[ ! $file_env =~ _NAME$ ]] ; then
+        continue;
+    fi
+
+    data_env=${file_env%%_NAME}_DATA
+
+    file=${!file_env}
+    data=${!data_env}
+
+    echo "Replacing $file with \$$data_env" >&2
+    dirname=$(dirname "$file")
+
+    mkdir -p "$dirname"
+    echo "$data" > "$file"
+done
+
 
 ### fatpacked app find-and #####################################################
 

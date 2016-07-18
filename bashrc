@@ -4432,6 +4432,12 @@ else {
 
 # Map caps lock to escape for X
 
+dconf write /org/gnome/desktop/input-sources/xkb-options "['caps:escape']"
+
+exit
+
+" Deprecated since Ubuntu 14.04:
+
 if [[ $(xmodmap -pke | grep -i caps) ]] ; then
     xmodmap -e "remove lock = Caps_Lock" -e "keysym Caps_Lock = Escape"
 fi

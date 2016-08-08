@@ -723,6 +723,8 @@ bytes-from-human:
     Convert a size from human friendly to bytes
 bytes-to-human:
     Convert a size of bytes to human friendly
+chroot-fully-working:
+    Setup fully working change root
 clear-with-scrollback:
     Clear screen including scrollback buffer
 command-knows-switch:
@@ -2478,6 +2480,26 @@ else {
 $human =~ s/\.0//g;
 
 print $human;
+
+### fatpacked app chroot-fully-working #########################################
+
+#/usr/bin/env bash
+# Setup fully working change root
+
+source bash-helpers
+
+root=${1?Specify new root dir}
+
+for dir in dev proc sys ; do
+    sudo mount --bind /$dir $root/$dir
+done
+
+chroot $root
+
+INFO "Possible next steps:"
+INFO "Setup networking (i.e. dhclient eth1)"
+INFO "Update grub (i.e. fdisk -l ; grub-install /dev/sda)"
+INFO "Update grub2 (i.e. update-grub)"
 
 ### fatpacked app clear-with-scrollback ########################################
 

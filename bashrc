@@ -932,6 +932,9 @@ perl-profile:
     Profile a perl app and display the html results
 perl-upgrade-outdated-modules:
     Upgrade installed perl modules if a new version is available
+pipe-wrapper:
+    Emulate a pipe for a program that does not support one itself like
+    eslint
 prompt-dir:
     Prompt containing only the prettified current directory
 prompt-dir-full:
@@ -5387,6 +5390,22 @@ see $dir/index.html
 # Upgrade installed perl modules if a new version is available
 
 perlbrew list-modules | cpanm
+
+### fatpacked app pipe-wrapper #################################################
+
+#!/usr/bin/env bash
+
+# Emulate a pipe for a program that does not support one itself like eslint
+
+source bash-helpers
+
+file=$(tempfile)
+
+trap 'test -e $file && rm $file' ERR EXIT
+
+cat > $file
+"$@" $file
+cat $file
 
 ### fatpacked app prompt-dir ###################################################
 

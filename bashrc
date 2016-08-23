@@ -3653,9 +3653,27 @@ done
 
 # Find files excluding dotfiles optional matching several strings
 
+source bash-helpers
+
+if [[ $1 = '--abs' ]] ; then
+    abs=1
+    shift
+fi
+
 if [[ $abs ]] ; then
     export abs=$(abs)
 fi
+
+if [[ $1 = '--project' ]] ; then
+    gitroot=$(git-root)
+    if [[ $gitroot ]] ; then
+        cd $gitroot
+    else
+        DIE No project root found
+    fi
+    shift
+fi
+
 
 find -H * -mount \
     -type f \
@@ -3665,6 +3683,7 @@ find -H * -mount \
     | perl -ne 'print if ! m#(^|/)bower_components/#' \
     | perl -ne 'print if ! m#(^|/)classes/#' \
     | grep-and -e $@
+
 
 
 ### fatpacked app find-and-limit ###############################################
@@ -7469,6 +7488,14 @@ echo -n "$@" | perl -pe 's/\%(\w\w)/chr hex $1/ge'
 # https://stackoverflow.com/questions/296536/how-to-urlencode-data-for-curl-command
 
 echo -n "$@" | perl -pe 's/(\W)/sprintf("%%%02X", ord($1))/ge'
+
+### fatpacked app usb-stick-boot ###############################################
+
+#!/usr/bin/env bash
+
+# Boot a bootable usb stick
+
+sudo qemu-system-x86_64 -hdb /dev/sdb1
 
 ### fatpacked app user-add #####################################################
 

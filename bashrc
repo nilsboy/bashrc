@@ -709,6 +709,8 @@ bashrc-helper-hostname:
     Format hostname for bash prompt usage
 bashrc-helper-login-name:
     Format login for bash prompt usage
+bashrc-install:
+    Install and run specified installer_command
 bashrc-install-tools:
     Install tools via npm
 bashrc-linux-distribution-fix-suse:
@@ -855,6 +857,8 @@ js-format-using-prettydiff:
     Javascript formatter using "npm install prettydiff"
 json-tidy:
     Tidy a json file and sort hash keys to make the output diffable
+json2yaml:
+    Install json2yaml
 keyboard-disable-caps-lock-console:
     Map caps lock to escape for consoles
 keyboard-disable-caps-lock-xwindows:
@@ -2285,6 +2289,38 @@ fi
 
 RETURN $USER
 
+
+### fatpacked app bashrc-install ###############################################
+
+#!/usr/bin/env bash
+
+# Install and run specified installer_command
+
+# Can not be run from within ~/.bin!?!
+
+source bash-helpers
+
+app=${1?Specify app}
+shift
+nothing=${1?Specify installer_command}
+installer_command="$@"
+
+if [[ $app =~ / ]] ; then
+  app=$(basename $app)
+fi
+
+abs_app="$REMOTE_HOME/.bin/$app"
+
+set +e
+already_exists=$(type -a $app 2>/dev/null | grep -v $abs_app)
+set -e
+
+if [[ "$already_exists" = "" ]] ; then
+  INFO "Installing $app via '$installer_command'..."
+  $installer_command
+fi
+
+exec alternative-run $abs_app
 
 ### fatpacked app bashrc-install-tools #########################################
 
@@ -4476,6 +4512,14 @@ else {
     )->encode($in);
 }
 
+
+### fatpacked app json2yaml ####################################################
+
+#!/usr/bin/env bash
+
+# Install json2yaml
+
+exec bashrc-install "$0" npm install -g json2yaml
 
 ### fatpacked app keyboard-disable-caps-lock-console ###########################
 

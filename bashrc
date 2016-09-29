@@ -711,8 +711,6 @@ bashrc-helper-login-name:
     Format login for bash prompt usage
 bashrc-install:
     Install and run specified installer_command
-bashrc-install-tools:
-    Install tools via npm
 bashrc-linux-distribution-fix-suse:
     Script to run when logging into suse machine
 bashrc-pack:
@@ -755,6 +753,8 @@ dev-bin-generate-readme:
     Generate README with descriptions for bin scripts
 df:
     Cleaned up df version
+diff-so-fancy:
+    Install diff-so-fancy
 dir-diff:
     Diff two directory structures
 dir-name-prettifier:
@@ -2322,23 +2322,6 @@ fi
 
 exec alternative-run $abs_app
 
-### fatpacked app bashrc-install-tools #########################################
-
-#!/bin/bash
-# Install tools via npm
-
-source bash-helpers
-
-for module in \
-    diff-so-fancy \
-    shelljs
-do
-    INFO "Installing $module..."
-    npm install -g $module
-done
-
-INFO "Done"
-
 ### fatpacked app bashrc-linux-distribution-fix-suse ###########################
 
 # Script to run when logging into suse machine
@@ -3181,6 +3164,15 @@ alternative-run $0 -h \
     | perl -0777 -pe 's/^(\S+)\n/$1/gm' \
     | csvview \
     | less -S
+
+### fatpacked app diff-so-fancy ################################################
+
+#!/usr/bin/env bash
+
+# Install diff-so-fancy
+
+exec bashrc-install "$0" npm install -g diff-so-fancy
+
 
 ### fatpacked app dir-diff #####################################################
 

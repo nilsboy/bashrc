@@ -1102,12 +1102,27 @@ xtitle:
 # Print the absolute path of a file or dir
 
 use Cwd;
-my $file = join(" ", @ARGV) || ".";
-my $abs = Cwd::abs_path($file);
-$abs .= "/" if -d $file;
-$abs = "'$abs'" if $abs =~ /\s/;
-$abs =~ s/;/\\;/g;
-print "$abs\n";
+
+abss(@ARGV) if @ARGV;
+
+if(!-t STDIN) {
+  while(<STDIN>) {
+    s/\n$//g;
+    abss($_);
+  }
+}
+else {
+  abss('.') if !@ARGV;
+}
+
+sub abss {
+  my $file = join(" ", @_);
+  my $abs = Cwd::abs_path($file);
+  $abs .= "/" if -d $file;
+  $abs = "'$abs'" if $abs =~ /\s/;
+  $abs =~ s/;/\\;/g;
+  print "$abs\n";
+}
 
 ### fatpacked app alternative ##################################################
 
@@ -3942,7 +3957,8 @@ git checkout .
 
 # Print git project root
 
-git rev-parse --show-toplevel
+git rev-parse --show-toplevel 2>/dev/null || abs .
+
 
 ### fatpacked app git-setup ####################################################
 

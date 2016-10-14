@@ -861,8 +861,8 @@ json2yaml:
     Install json2yaml
 keyboard-disable-caps-lock-console:
     Map caps lock to escape for consoles
-keyboard-disable-caps-lock-xwindows:
-    Map caps lock to escape for X
+keyboard-remap-keys-xwindows:
+    Map caps lock to escape etc for X
 keyboard-reset:
     Reset keyboard settings
 line-print:
@@ -4524,21 +4524,28 @@ exec bashrc-install "$0" npm install -g json2yaml
     echo keycode 58 = Escape \
 ) | sudo loadkeys -
 
-### fatpacked app keyboard-disable-caps-lock-xwindows ##########################
+### fatpacked app keyboard-remap-keys-xwindows #################################
 
 #!/bin/bash
+# Map caps lock to escape etc for X
 
-# Map caps lock to escape for X
+# See also
+# man xkeyboard-config
+# man setxkbmap
 
-dconf write /org/gnome/desktop/input-sources/xkb-options "['caps:escape']"
+dconf write /org/gnome/desktop/input-sources/xkb-options "['caps:escape','altwin:ctrl_alt_win']"
+
+# dconf write /org/gnome/desktop/input-sources/xkb-options "['ctrl:ctrl_ralt']"
+# dconf write /org/gnome/desktop/input-sources/xkb-options "['ctrl:swap_lalt_lctl']"
 
 exit
 
-" Deprecated since Ubuntu 14.04:
+# Deprecated since Ubuntu 14.04:
 
 if [[ $(xmodmap -pke | grep -i caps) ]] ; then
     xmodmap -e "remove lock = Caps_Lock" -e "keysym Caps_Lock = Escape"
 fi
+
 
 ### fatpacked app keyboard-reset ###############################################
 

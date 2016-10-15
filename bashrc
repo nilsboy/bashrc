@@ -7565,6 +7565,14 @@ echo -n "$@" | perl -pe 's/\%(\w\w)/chr hex $1/ge'
 
 echo -n "$@" | perl -pe 's/(\W)/sprintf("%%%02X", ord($1))/ge'
 
+### fatpacked app usb-stick-boot ###############################################
+
+#!/usr/bin/env bash
+
+# Boot a bootable usb stick
+
+sudo qemu-system-x86_64 -hdb /dev/sdb1
+
 ### fatpacked app user-add #####################################################
 
 #!/bin/bash
@@ -7843,9 +7851,21 @@ source bash-helpers
 INFO "Setting up vim config..."
 
 VIM_DIR=$REMOTE_HOME/.vim/
+VIM_ETC=$VIM_DIR/etc
 
 mkdir -p $VIM_DIR
 cd $VIM_DIR
+
+if [[ -e $VIM_ETC ]] ; then
+
+    INFO "Updating existing setup..."
+
+    cd $VIM_ETC
+    git-reset-origin
+    git pull
+
+    exit 0
+fi
 
 INFO "Cloning git dotvim repo..."
 

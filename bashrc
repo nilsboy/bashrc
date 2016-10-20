@@ -3744,7 +3744,7 @@ find \
     | grep-and -e $@ \
     | head -101 \
     | sort-by-path-depth \
-    | $head_warn -100
+    | $head_warn
 
 exit 0
 

@@ -3727,21 +3727,26 @@ if [[ $1 = '--no-limit' ]] ; then
     head_warn=cat
 fi
 
-
 cd /
+
+set +e
 
 find \
     -H \
     $path \
     -mount \
     -type f \
+    | perl -ne 'print if ! m#/\.git/#' \
     | perl -ne 'print if ! m#'$path'/*\.#' \
     | perl -ne 'print if ! m#(^|/)node_modules/#' \
     | perl -ne 'print if ! m#(^|/)bower_components/#' \
     | perl -ne 'print if ! m#(^|/)classes/#' \
     | grep-and -e $@ \
+    | head -101 \
     | sort-by-path-depth \
-    | $head_warn
+    | $head_warn -100
+
+exit 0
 
 ### fatpacked app find-and-limit ###############################################
 

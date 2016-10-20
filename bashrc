@@ -845,6 +845,8 @@ groups-reload-memberships:
 hd-set-spin-timeout:
     Activate spindown and set spindown timeout on (buggy - i.e.
     Seagate) hard drives that don't do it themselfes
+head-warn:
+    Limit input lines and warn if more lines are left
 html-strip:
     Strip HTML of tags and entities
 iptables-port-redirect:
@@ -3694,18 +3696,17 @@ done
 
 #!/bin/bash 
 
-# Find files excluding dotfiles optional matching several strings
+# Find files excluding dotfiles optionally matching several strings
 
 source bash-helpers
 
-if [[ $1 = '--fallback-to-cwd' ]] ; then
-    shift
-    fallback=1
-fi
+head_warn="head-warn"
+
+path=$(abs .)
 
 if [[ $1 = '--dir' ]] ; then
     shift
-    cd $1
+    path=$1
     shift
 fi
 
@@ -3713,38 +3714,34 @@ if [[ $1 = '--project' ]] ; then
     shift
 
     set +e
-    gitroot=$(git-root)
+    git_root=$(git-root)
     set -e
 
-    if [[ $gitroot ]] ; then
-        cd $gitroot
-    else
-      if [[ ! $fallback ]] ; then
-        DIE No project root found
-      fi
+    if [[ $git_root ]] ; then
+        path=$git_root
     fi
 fi
 
-if [[ $1 = '--abs' ]] ; then
+if [[ $1 = '--no-limit' ]] ; then
     shift
-    abs=1
-fi
-
-if [[ $abs ]] ; then
-    export abs=$(abs)
+    head_warn=cat
 fi
 
 
-find -H * -mount \
+cd /
+
+find \
+    -H \
+    $path \
+    -mount \
     -type f \
-    | perl -ne 'print if ! m#/\.#' \
-    | perl -pe 's#^#$ENV{abs}# if $ENV{abs}' \
+    | perl -ne 'print if ! m#'$path'/*\.#' \
     | perl -ne 'print if ! m#(^|/)node_modules/#' \
     | perl -ne 'print if ! m#(^|/)bower_components/#' \
     | perl -ne 'print if ! m#(^|/)classes/#' \
-    | grep-and -e $@
-
-
+    | grep-and -e $@ \
+    | sort-by-path-depth \
+    | $head_warn
 
 ### fatpacked app find-and-limit ###############################################
 
@@ -3803,10 +3800,11 @@ find . -type f -ctime +$1 | less
 # Find a file or grep stdin
 
 if [[ -t 0 ]] ; then
-    find-and | while read i; do grep-and -epf "$i" "$@" ; done
+    find-and --no-limit | while read i; do grep-and -epf "$i" "$@" ; done
 else
     grep-and -e $@
 fi
+
 
 ### fatpacked app git ##########################################################
 
@@ -4330,6 +4328,46 @@ sudo hdparm -B255 $path
 
 # set timeout specified in multiples of 5s
 sudo hdparm -S180 $path
+
+### fatpacked app head-warn ####################################################
+
+#!/usr/bin/perl
+# Limit input lines and warn if more lines are left
+
+use strict;
+use warnings;
+no warnings 'uninitialized';
+
+my $count = 0;
+my $limit = 100;
+
+if($ARGV[0] =~ /-(\d+)/) {
+  $limit = $1;
+}
+
+my $red      = "\x1b[38;5;124m";
+my $no_color = "\x1b[33;0m";
+
+if (!-t STDOUT) {
+    $red = $no_color = "";
+}
+
+my $last;
+while(<STDIN>) {
+  $count++;
+
+  if($count == $limit + 1) {
+    print $last;
+    print STDERR $red . "### Limit of $limit exceeded. ###" . $no_color . "\n";
+    exit 0;
+  }
+
+  print $last if $last;
+
+  $last = $_;
+}
+
+print $last;
 
 ### fatpacked app html-strip ###################################################
 
@@ -7564,14 +7602,6 @@ echo -n "$@" | perl -pe 's/\%(\w\w)/chr hex $1/ge'
 # https://stackoverflow.com/questions/296536/how-to-urlencode-data-for-curl-command
 
 echo -n "$@" | perl -pe 's/(\W)/sprintf("%%%02X", ord($1))/ge'
-
-### fatpacked app usb-stick-boot ###############################################
-
-#!/usr/bin/env bash
-
-# Boot a bootable usb stick
-
-sudo qemu-system-x86_64 -hdb /dev/sdb1
 
 ### fatpacked app user-add #####################################################
 

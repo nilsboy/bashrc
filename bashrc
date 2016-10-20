@@ -606,7 +606,7 @@ function bashrc-unpack() {
         print STDERR "Exporting apps to $dst_dir...\n";
 
         my $export_count = 0;
-        while ($bashrc =~ /^### fatpacked app ([\w-]+) #*$(.+?)(?=^###)/igsm) {
+        while ($bashrc =~ /^### fatpacked app ([\w-]+) #*$(.+?)(?=\n^###)/igsm) {
 
             my $app_name = $1;
             my $app_data = $2;
@@ -1096,6 +1096,7 @@ xmv:
     Rename files by perl expression
 xtitle:
     Change the title of a x window
+
 ### fatpacked app abs ##########################################################
 
 #!/usr/bin/env perl
@@ -1124,6 +1125,7 @@ sub abss {
   $abs =~ s/;/\\;/g;
   print "$abs\n";
 }
+
 ### fatpacked app alternative ##################################################
 
 #!/bin/bash
@@ -1165,6 +1167,7 @@ done <<EOF
 EOF
 
 DIE "No alternative found for $base ($app)"
+
 ### fatpacked app alternative-run ##############################################
 
 #!/bin/bash
@@ -1184,6 +1187,7 @@ fi
 alternative=$(alternative $app)
 
 exec $alternative "$@"
+
 ### fatpacked app apt-dump-installed-packages ##################################
 
 #!/bin/bash
@@ -1198,6 +1202,7 @@ comm -23 <(apt-mark showmanual | sort -u) <(gzip -dc /var/log/installer/initial-
     > installed_packages_on_host_$HOSTNAME
 
 WARN 'This list may contain some extra packages - please recheck!'
+
 ### fatpacked app apt-hold-package #############################################
 
 #!/bin/bash
@@ -1210,6 +1215,7 @@ package_name=${1?package name?}
 dpkg --get-selections $package_name
 echo $package_name hold | sudo dpkg --set-selections
 dpkg --get-selections $package_name
+
 ### fatpacked app apt-install-packages-from-file ###############################
 
 #!/bin/bash
@@ -1236,6 +1242,7 @@ while read package ; do
 done <<-EOF
     $(cat $file)
 EOF
+
 ### fatpacked app apt-popularity ###############################################
 
 #!/usr/bin/env perl
@@ -1297,6 +1304,7 @@ foreach my $rank ( sort { $a <=> $b } keys %ranks ) {
     my $header = "### $app " . ( "#" x ( $ENV{COLUMNS} - length($app) - 5 ) );
     print "$header\n\n$desc\n\n";
 }
+
 ### fatpacked app apt-unhold-package ###########################################
 
 #!/bin/bash
@@ -1308,6 +1316,7 @@ package_name=${1?package name?}
 dpkg --get-selections $package_name
 echo $package_name install | sudo dpkg --set-selections
 dpkg --get-selections $package_name
+
 ### fatpacked app archive ######################################################
 
 #!/bin/bash
@@ -1326,6 +1335,7 @@ bak=$REMOTE_HOME/backup/"$bak""_"$(date +%Y%m%d_%H%M%S)
 INFO "Archiving to: $file -> $bak"
 
 mv "$file" "$bak"
+
 ### fatpacked app audio-file-prefix-track-number ###############################
 
 #!/usr/bin/env node
@@ -1346,6 +1356,7 @@ var parser = mm(fs.createReadStream(src), function (err, metadata) {
     fs.renameSync(src, dst)
   }
 )
+
 
 ### fatpacked app audio-ogg-from-any ###########################################
 
@@ -1433,6 +1444,7 @@ rm "$file"
 
 DEBUG "Done"
 
+
 ### fatpacked app audio-split-by-cue ###########################################
 
 #!/bin/bash
@@ -1477,6 +1489,7 @@ rm $audio_file
 
 INFO "Done"
 
+
 ### fatpacked app bak ##########################################################
 
 #!/bin/bash
@@ -1503,6 +1516,7 @@ if [ -d $file ] ; then
 else
     cp $file $bak
 fi
+
 ### fatpacked app bash-background-jobs-count ###################################
 
 # Display one colored count for background jobs running and stopped
@@ -1538,6 +1552,7 @@ if [[ $total == 0 ]] ; then
 fi
 
 RETURN " ${color}$total${NO_COLOR}"
+
 
 ### fatpacked app bash-eternal-history-search ##################################
 
@@ -1661,6 +1676,7 @@ ENTRY: while (<F>) {
 }
 
 map { print $_ } reverse @to_show;
+
 ### fatpacked app bash-helpers #################################################
 
 #!/bin/bash
@@ -1834,6 +1850,7 @@ function extension() {
     local file="$@"
     echo ${file##*.}
 }
+
 ### fatpacked app bash-jobs ####################################################
 
 #!/usr/bin/env perl
@@ -1978,6 +1995,7 @@ foreach my $jid ( sort keys %cmds ) {
     print $fg;
     printf( "%-3s %s %s %s\n", $jid, $cmd, $last_arg, $gray . $args . $black );
 }
+
 ### fatpacked app bash-print-on-error ##########################################
 
 # Print error code of last command on failure
@@ -1992,6 +2010,7 @@ for item in $pipe_status ; do
     fi
 
 done
+
 ### fatpacked app bash-setup-multi-user-environment ############################
 
 #!/bin/bash
@@ -2182,6 +2201,7 @@ if [[ -e $REMOTE_BASHRC ]] ; then
         echo "source $REMOTE_BASHRC"
     fi
 fi
+
 ### fatpacked app bashrc-eternal-history-add ###################################
 
 # Add entry to the eternal bash history
@@ -2218,6 +2238,7 @@ line="$line \"$bashrc_last_return_values\""
 line="$line $cmd"
 echo "$line" >> $HISTFILE_ETERNAL
 
+
 ### fatpacked app bashrc-eternal-history-add-simple ############################
 
 #!/bin/bash
@@ -2249,6 +2270,7 @@ line="$line \"0\""
 line="$line $cmd"
 echo "$line" >> $HISTFILE_ETERNAL
 
+
 ### fatpacked app bashrc-helper-hostname #######################################
 
 # Format hostname for bash prompt usage
@@ -2261,6 +2283,7 @@ if [[ $BASHRC_INSIDE_DOCKER ]] ; then
 fi
 
 echo -n $COLOR${HOSTNAME}$NO_COLOR
+
 ### fatpacked app bashrc-helper-login-name #####################################
 
 # Format login for bash prompt usage
@@ -2282,6 +2305,7 @@ if [[ $skip_non_root ]] ; then
 fi
 
 RETURN $USER
+
 
 ### fatpacked app bashrc-install ###############################################
 
@@ -2314,11 +2338,13 @@ if [[ "$already_exists" = "" ]] ; then
 fi
 
 exec alternative-run $abs_app
+
 ### fatpacked app bashrc-linux-distribution-fix-suse ###########################
 
 # Script to run when logging into suse machine
 
 unalias crontab
+
 ### fatpacked app bashrc-pack ##################################################
 
 #!/usr/bin/env perl
@@ -2349,7 +2375,7 @@ foreach my $bin (sort (path(".")->children)) {
     $bashrc_phat->append("### ", $description, " ",
         "#" x (80 - length($description) - 5) . "\n\n");
 
-    $bashrc_phat->append($bin->slurp);
+    $bashrc_phat->append($bin->slurp, "\n");
 
     $apps_count++;
 }
@@ -2357,6 +2383,7 @@ foreach my $bin (sort (path(".")->children)) {
 $bashrc_phat->append("### END fatpacked apps ", "#" x 57, "\n");
 
 print "Done - apps packed: $apps_count\n";
+
 ### fatpacked app bashrc-unpack-and-run ########################################
 
 #!/usr/bin/env perl
@@ -2400,6 +2427,7 @@ else {
 
     die "App $app not found.";
 }
+
 ### fatpacked app bashrc-upload ################################################
 
 #!/bin/bash
@@ -2422,6 +2450,7 @@ cd ~/src/bashrc
 git add bashrc
 git commit -m "repackage bashrc"
 git push
+
 ### fatpacked app bytes-from-human #############################################
 
 #!/usr/bin/env perl
@@ -2445,6 +2474,7 @@ foreach my $unit (qw(k m g t)) {
 }
 
 print eval $human;
+
 ### fatpacked app bytes-to-human ###############################################
 
 #!/usr/bin/env perl
@@ -2486,6 +2516,7 @@ else {
 $human =~ s/\.0//g;
 
 print $human;
+
 ### fatpacked app chroot-fully-working #########################################
 
 #/usr/bin/env bash
@@ -2505,11 +2536,13 @@ INFO "Possible next steps:"
 INFO "Setup networking (i.e. dhclient eth1)"
 INFO "Update grub (i.e. fdisk -l ; grub-install /dev/sda)"
 INFO "Update grub2 (i.e. update-grub)"
+
 ### fatpacked app clear-with-scrollback ########################################
 
 # Clear screen including scrollback buffer
 
 printf "\33[2J"
+
 ### fatpacked app command-knows-switch #########################################
 
 #!/usr/bin/env perl
@@ -2527,6 +2560,7 @@ my $output = `$app --help 2>&1`;
 exit 0 if $output =~ /^\s*$switch/ms;
 
 exit 1;
+
 ### fatpacked app cp-merge-directories #########################################
 
 #!/bin/bash
@@ -2559,6 +2593,7 @@ fi
 
 cp -rnl "$src"/* "$dst"/
 
+
 ### fatpacked app cpanm ########################################################
 
 #!/usr/bin/env perl
@@ -2570,6 +2605,7 @@ map { s/\//\:\:/g ; s/\.pm$//g } $ARGV[$#ARGV];
 my @local_lib = ( "--local-lib", "$ENV{REMOTE_HOME}/perl5" );
 
 system("alternative-run", "$0", "-nq", @local_lib , @ARGV) && exit 1;
+
 ### fatpacked app cpanm-install ################################################
 
 #!/bin/bash
@@ -2669,6 +2705,7 @@ echo "BASH_ENV=$bashrc"
 echo
 echo "Please logout and back in for the changes to take effect."
 echo
+
 ### fatpacked app cpanm-list-locally-installed-modules #########################
 
 #!/usr/bin/env perl
@@ -2680,6 +2717,7 @@ my $instmod = ExtUtils::Installed->new();
 foreach my $module ($instmod->modules()) {
     print "$module\n";
 }
+
 ### fatpacked app cpanm-reinstall-local-modules ################################
 
 #!/bin/bash
@@ -2694,6 +2732,7 @@ cpanm-list-locally-installed-modules |
     cpanm -nq --reinstall
 
 INFO "Done"
+
 ### fatpacked app crontab-setup ################################################
 
 #!/bin/bash
@@ -2724,6 +2763,7 @@ BASH_ENV=~/.bashrc
 EOF
 crontab -l
 ) | crontab -
+
 ### fatpacked app csvview ######################################################
 
 #!/usr/bin/env perl
@@ -3014,6 +3054,7 @@ END {
         unlink($file) if -e $file;
     }
 }
+
 ### fatpacked app ctags-index-sources ##########################################
 
 #!/bin/bash
@@ -3029,6 +3070,7 @@ cd /
 
 ctags -f ~/.vim/var/tags -R ~/src
 # $(perl -e 'print join(" ",  grep(!/^\./, @INC))')
+
 ### fatpacked app ctags-setup ##################################################
 
 #!/bin/bash
@@ -3078,6 +3120,7 @@ exit 0
 --regex-perl='/^\=head1\s+(.+)/\1/p,pod,Plain Old Documentation/' \
 --regex-perl='/^\=head2\s+(.+)/-- \1/p,pod,Plain Old Documentation/' \
 --regex-perl='/^\=head[3-5]\s+(.+)/---- \1/p,pod,Plain Old Documentation/' \
+
 ### fatpacked app dev-bin-generate-readme ######################################
 
 #!/usr/bin/env perl
@@ -3119,6 +3162,7 @@ foreach my $app (sort(path(".")->children)) {
 
     $readme->append("$app:\n$description\n");
 }
+
 ### fatpacked app df ###########################################################
 
 #!/bin/bash
@@ -3137,6 +3181,7 @@ alternative-run $0 -h \
     | perl -0777 -pe 's/^(\S+)\n/$1/gm' \
     | csvview \
     | less -S
+
 ### fatpacked app diff-so-fancy ################################################
 
 #!/usr/bin/env bash
@@ -3144,6 +3189,7 @@ alternative-run $0 -h \
 # Install diff-so-fancy
 
 exec bashrc-install "$0" npm install -g diff-so-fancy
+
 
 ### fatpacked app dir-diff #####################################################
 
@@ -3164,6 +3210,7 @@ $diff -y \
     <(tree --no-colors --ascii $@ "$left") \
     <(tree --no-colors --ascii $@ "$right") \
     | less
+
 ### fatpacked app dir-name-prettifier ##########################################
 
 # shorten prompt dir to max 15 chars
@@ -3203,6 +3250,7 @@ else
 fi
 
 RETURN $dir
+
 ### fatpacked app docker-ls ####################################################
 
 #!/bin/bash
@@ -3222,6 +3270,7 @@ line-print Containers
 docker ps -a
 echo
 line-print
+
 ### fatpacked app docker-ubuntu ################################################
 
 #!/bin/bash
@@ -3257,6 +3306,7 @@ sudo docker run $remove --name $container \
     -v $HOME/.bashrc:$docker_home/.bashrc \
     -v $mount:$docker_home \
     -ti $image "$cmd"
+
 ### fatpacked app docker-ubuntu-persistent #####################################
 
 #!/bin/bash
@@ -3287,6 +3337,7 @@ if [[ $found ]] ; then
 fi
 
 sudo PATH=$PATH IMAGE=$image CONTAINER=$container $(type -p docker-ubuntu) "$cmd"
+
 
 ### fatpacked app docopt-convert ###############################################
 
@@ -3408,6 +3459,7 @@ docopt-convert - Convert a docopt specification
     --env         Output environment variables for eval
     -p --pretty   Pretty print JSON
 
+
 ### fatpacked app dos2unix #####################################################
 
 #!/bin/bash
@@ -3415,11 +3467,13 @@ docopt-convert - Convert a docopt specification
 # Convert line endings from dos to unix
 
 perl -i -pe 's/\r//g' "$@"
+
 ### fatpacked app env-grep #####################################################
 
 # Grep environment
 
 env | grep -i "$@"
+
 ### fatpacked app env-show #####################################################
 
 #!/bin/bash
@@ -3459,6 +3513,7 @@ if [[ $ubuntu_version ]] ; then
 else
     SHOW Linux $(cat /etc/issue.net)
 fi
+
 ### fatpacked app file-add-line-if-new #########################################
 
 #!/usr/bin/env perl
@@ -3489,6 +3544,7 @@ local $/;
 open(F, ">", $file);
 print F join("", @out);
 close(F);
+
 ### fatpacked app file-compress-if-size-reaches ################################
 
 #!/usr/bin/env perl
@@ -3519,6 +3575,7 @@ system(qq{zip "$file.zip" "$file" >/dev/null})
     && die "Error ziping $file: " . $!;
 
 print "$file.zip";
+
 ### fatpacked app file-public-upload ###########################################
 
 #!/bin/bash
@@ -3554,6 +3611,7 @@ $client"${file}" $dst
 INFO "Done"
 
 trap 'rm $tmpfile' ERR EXIT
+
 ### fatpacked app file-template-filler #########################################
 
 #!/usr/bin/env perl
@@ -3598,6 +3656,7 @@ print $tempf $data;
 close($tempf);
 
 move($temp, $file) || die $!;
+
 ### fatpacked app files-replace-from-env #######################################
 
 #!/bin/bash
@@ -3631,6 +3690,7 @@ for file_env in ${!OVERLAY_FILE_*} ; do
     mkdir -p "$dirname"
     echo "$data" > "$file"
 done
+
 
 ### fatpacked app find-and #####################################################
 
@@ -3682,18 +3742,21 @@ find \
     | grep-and -e $@ \
     | sort-by-path-depth \
     | $head_warn
+
 ### fatpacked app find-and-limit ###############################################
 
 #!/bin/bash
 # find-and with a limit
 
 find-and "$@" | sort-by-path-depth | head -100
+
 ### fatpacked app find-from-date ###############################################
 
 # Find files newer than date
 
 find -maxdepth 1 -type f -printf "%CF %CH:%CM %h/%f\n" \
     | perl -ne 'print substr($_, 17) if m#^\Q'$@'\E#'
+
 ### fatpacked app find-largest-directories #####################################
 
 #!/bin/bash
@@ -3704,6 +3767,7 @@ find . -mount -type d \
     | xargs -I {} du -sh {} \
     | sort -rh \
     | less
+
 
 ### fatpacked app find-largest-files ###########################################
 
@@ -3716,16 +3780,19 @@ find . -mount -type f -printf "%k %p\n" \
     | cut -d \  -f 2- \
     | xargs -I {} du -sh {} \
     | less
+
 ### fatpacked app find-newest ##################################################
 
 # Recursively find newest files
 
 find -type f -printf "%CF %CH:%CM %h/%f\n" | sort | tac | less
+
 ### fatpacked app find-older-than-days #########################################
 
 # Recursively find files oder than days
 
 find . -type f -ctime +$1 | less
+
 ### fatpacked app find-or-grep #################################################
 
 #!/bin/bash
@@ -3737,6 +3804,7 @@ if [[ -t 0 ]] ; then
 else
     grep-and -e $@
 fi
+
 
 ### fatpacked app git ##########################################################
 
@@ -3779,6 +3847,7 @@ fi
 
 exec alternative-run $0 "$@"
 
+
 ### fatpacked app git-env-validate #############################################
 
 #!/bin/bash
@@ -3793,6 +3862,7 @@ git config --global --get user.name  > /dev/null && DIE 'Global user name set!'
 git config --global --get user.email > /dev/null && DIE 'Global user email set!'
 
 exit 0
+
 ### fatpacked app git-ignore ###################################################
 
 #!/bin/bash
@@ -3814,6 +3884,7 @@ INFO "Fetching gitignore for $environment from $url..."
 wget -qO - $url >> .gitignore
 
 INFO "Appended to .gitignore"
+
 ### fatpacked app git-modified #################################################
 
 #!/bin/sh -e
@@ -3829,11 +3900,13 @@ else
     echo "$FILES" | cut -c 4- | tr '\n' '\0' | xargs -0 find 2> /dev/null
   fi
 fi
+
 ### fatpacked app git-project ##################################################
 
 # Print git project root dir name
 
 basename $(git rev-parse --show-toplevel)
+
 ### fatpacked app git-reset-head ###############################################
 
 #!/bin/bash
@@ -3847,6 +3920,7 @@ source bash-helpers
 git reset HEAD .
 git clean -df
 git checkout .
+
 ### fatpacked app git-reset-head-to ############################################
 
 #!/bin/bash
@@ -3862,6 +3936,7 @@ commit_id=${1?Specify commit id}
 git reset --hard $commit_id
 
 INFO "Push now with: git push origin HEAD --force"
+
 ### fatpacked app git-reset-origin #############################################
 
 #!/bin/bash
@@ -3875,11 +3950,13 @@ source bash-helpers
 git reset origin/master .
 git clean -df
 git checkout .
+
 ### fatpacked app git-root #####################################################
 
 # Print git project root
 
 git rev-parse --show-toplevel 2>/dev/null || abs .
+
 
 ### fatpacked app git-setup ####################################################
 
@@ -3887,6 +3964,7 @@ git rev-parse --show-toplevel 2>/dev/null || abs .
 
 git config --global push.default simple
 # git config --global pull.rebase true
+
 ### fatpacked app gnome-send-to-mail-images ####################################
 
 #!/usr/bin/perl
@@ -3986,6 +4064,7 @@ if ($use_thunderbird) {
     exit 0;
 }
 qx { $evolution_cmd };
+
 ### fatpacked app gnome-send-to-mail-images-setup ##############################
 
 #!/bin/bash
@@ -4010,6 +4089,7 @@ if [[ $LANG =~ de ]] ; then
 fi
 
 echo "OK - script installed"
+
 ### fatpacked app gotroot ######################################################
 
 #!/bin/bash
@@ -4021,6 +4101,7 @@ source bash-helpers
 if [[ $USER != root ]] ; then
     DIE "Please run as root"
 fi
+
 ### fatpacked app grep-and #####################################################
 
 #!/usr/bin/env perl
@@ -4079,6 +4160,7 @@ LINE: while (<$h>) {
         print;
     }
 }
+
 ### fatpacked app grep-before ##################################################
 
 #!/usr/bin/env perl
@@ -4091,6 +4173,7 @@ while (<STDIN>) {
 }
 
 exit 1;
+
 ### fatpacked app grep-from ####################################################
 
 #!/usr/bin/env perl
@@ -4107,6 +4190,7 @@ while (<STDIN>) {
 }
 
 exit 1 if !$found;
+
 ### fatpacked app grep-goo #####################################################
 
 #!/usr/bin/env perl
@@ -4125,11 +4209,13 @@ while ( my $line = <STDIN> ) {
 }
 
 exit 1 if !$matches;
+
 ### fatpacked app grep-list ####################################################
 
 # Grep for a list of values
 
 grep -xFf $@
+
 ### fatpacked app grep-or ######################################################
 
 #!/usr/bin/env perl
@@ -4150,6 +4236,7 @@ while ( my $line = <STDIN> ) {
 }
 
 exit 1 if ! $matches;
+
 ### fatpacked app grep-or-with-header ##########################################
 
 #!/usr/bin/env perl
@@ -4211,11 +4298,13 @@ sub matches_any {
     return 0;
 }
 
+
 ### fatpacked app groups-reload-memberships ####################################
 
 # Start new shell to "reload" changes to the list of groups the user belongs to
 
 exec su -l $USER
+
 ### fatpacked app hd-set-spin-timeout ##########################################
 
 #!/bin/bash
@@ -4239,6 +4328,7 @@ sudo hdparm -B255 $path
 
 # set timeout specified in multiples of 5s
 sudo hdparm -S180 $path
+
 ### fatpacked app head-warn ####################################################
 
 #!/usr/bin/perl
@@ -4278,6 +4368,7 @@ while(<STDIN>) {
 }
 
 print $last;
+
 ### fatpacked app html-strip ###################################################
 
 #!/usr/bin/env perl
@@ -4292,6 +4383,7 @@ use HTML::Strip;
 undef $/;
 
 print HTML::Strip->new()->parse( <> );
+
 ### fatpacked app iptables-port-redirect #######################################
 
 #!/bin/bash
@@ -4305,6 +4397,7 @@ src=${1?Specify incoming port}
 dst=${2?Specify outgoing port}
 
 sudo iptables -t nat -A PREROUTING -p tcp --dport $src -j REDIRECT --to-port $dst
+
 ### fatpacked app java-decompile-jar ###########################################
 
 #!/bin/bash
@@ -4351,6 +4444,7 @@ for class in `find . -name '*.class'`; do
     fi
 
 done
+
 ### fatpacked app java-install-oracle-java-v8 ##################################
 
 #!/bin/bash
@@ -4366,6 +4460,7 @@ add-apt-repository ppa:webupd8team/java
 apt-get update
 
 apt-get install oracle-java8-installer
+
 ### fatpacked app js-format-using-prettydiff ###################################
 
 #!/usr/bin/env node
@@ -4402,6 +4497,7 @@ function beautifyToStdout() {
 
 	process.stdout.write(output.toString());
 }
+
 ### fatpacked app json-tidy ####################################################
 
 #!/usr/bin/env perl
@@ -4462,6 +4558,7 @@ else {
     )->encode($in);
 }
 
+
 ### fatpacked app json2yaml ####################################################
 
 #!/usr/bin/env bash
@@ -4469,6 +4566,7 @@ else {
 # Install json2yaml
 
 exec bashrc-install "$0" npm install -g json2yaml
+
 ### fatpacked app keyboard-disable-caps-lock-console ###########################
 
 #!/bin/bash
@@ -4479,6 +4577,7 @@ exec bashrc-install "$0" npm install -g json2yaml
     echo `dumpkeys | grep -i keymaps` ; \
     echo keycode 58 = Escape \
 ) | sudo loadkeys -
+
 ### fatpacked app keyboard-remap-keys-xwindows #################################
 
 #!/bin/bash
@@ -4500,6 +4599,7 @@ exit
 if [[ $(xmodmap -pke | grep -i caps) ]] ; then
     xmodmap -e "remove lock = Caps_Lock" -e "keysym Caps_Lock = Escape"
 fi
+
 
 ### fatpacked app keyboard-reset ###############################################
 
@@ -4531,6 +4631,7 @@ my $cmd =
 
 print STDERR "Running: $cmd\n";
 print `$cmd`;
+
 ### fatpacked app line-print ###################################################
 
 #!/usr/bin/env perl
@@ -4544,6 +4645,7 @@ if(@ARGV) {
     $msg = " " . join(" ", @ARGV) . " ";
 }
 print "---", $msg , q{-} x ($ENV{COLUMNS} - 3 - length($msg)), "\n\n";
+
 ### fatpacked app ls-creation-time #############################################
 
 # List the creation time of a file
@@ -4563,6 +4665,7 @@ date=$(sudo debugfs -R "stat <$inode>" $filesystem 2>/dev/null \
 
 formatted_date=$(date -d "$date" +"%F %T %a")
 echo $formatted_date $file
+
 ### fatpacked app man-explain-options ##########################################
 
 #!/usr/bin/env perl
@@ -4638,6 +4741,7 @@ foreach my $option (@options) {
 print STDERR "No description found for options: "
     . join( ", ", @unknown_options ) . "\n"
     if @unknown_options;
+
 ### fatpacked app man-multi-lookup #############################################
 
 #!/bin/bash
@@ -4703,6 +4807,7 @@ fi
 
 ) | LESS="-inRgSj.5" less "$arg"
 
+
 ### fatpacked app man-online ###################################################
 
 #!/bin/bash
@@ -4717,6 +4822,7 @@ cmd=$1
         && echo
 
 ) | LESS="-j.5 -inRg" less $arg
+
 ### fatpacked app markdown-view ################################################
 
 #!/usr/bin/env node
@@ -4734,6 +4840,7 @@ marked.setOptions({
 
 console.log(marked(fs.readFileSync(process.argv[2])
     .toString()));
+
 ### fatpacked app mem-empty-swap-to-ram ########################################
 
 #!/bin/bash
@@ -4757,6 +4864,7 @@ swapoff -a &&
 swapon -a
 
 INFO "Done"
+
 ### fatpacked app mem-swap-per-process #########################################
 
 #!/bin/bash
@@ -4765,6 +4873,7 @@ INFO "Done"
 # see also http://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
 
 smem "$@"
+
 ### fatpacked app mysql ########################################################
 
 #!/bin/bash
@@ -4795,6 +4904,7 @@ xtitle "mysql@$host" && \
     MYSQL_HISTFILE=$history_file alternative-run $0 \
         --default-character-set=utf8 \
         --show-warnings --pager="less -FX" "$@"
+
 ### fatpacked app net-find-free-port ###########################################
 
 #!/bin/bash
@@ -4812,6 +4922,7 @@ fi
 
 netstat  -atn \
     | perl -0777 -ne '@ports = /tcp.*?\:(\d+)\s+/imsg ; for $port ('$ports') {if(!grep(/^$port$/, @ports)) { print $port; last } }'
+
 ### fatpacked app net-ip2name ##################################################
 
 #!/usr/bin/env perl
@@ -4853,16 +4964,19 @@ while (<>) {
 
     print;
 }
+
 ### fatpacked app net-open-ports ###############################################
 
 # List all open ports
 
 netstat -tapnu | less -S
+
 ### fatpacked app net-scan-private-network #####################################
 
 # Scan for hosts in private network
 
 nmap -sn 192.168.0.0/16
+
 ### fatpacked app node-install #################################################
 
 #!/bin/bash
@@ -4932,6 +5046,7 @@ INFO "Installing newest npm via npm"
 npm install -g npm@latest >/dev/null
 
 INFO "Done."
+
 
 
 ### fatpacked app note #########################################################
@@ -5117,6 +5232,7 @@ perl -0777 -ne \
 # * fsck encrypted volume
 #    - sudo cryptsetup luksOpen /dev/hda5 mydisk
 #    - fsck /dev/mapper/mydisk
+
 ### fatpacked app npm-readme ###################################################
 
 #!/usr/bin/env node
@@ -5146,6 +5262,7 @@ if (!fs.existsSync(readme)) {
 }
 
 fs.createReadStream(readme).pipe(process.stdout)
+
 ### fatpacked app npm-set-global-modules-dir ###################################
 
 # Make npm use local dir for modules
@@ -5155,6 +5272,7 @@ dir=~/node_modules
 
 INFO "Setting global node_modules dir to $dir"
 npm config set prefix=$dir
+
 
 ### fatpacked app npm-set-proxy-from-environment ###############################
 
@@ -5171,6 +5289,7 @@ if [[ $https_proxy ]] ; then
     INFO "Setting npm https-proxy to $https_proxy"
     npm config set https-proxy $https_proxy
 fi
+
 
 ### fatpacked app once #########################################################
 
@@ -5202,6 +5321,7 @@ print $data;
 open(my $fileh, ">", $file)
     or die "cannot open > $file: $!";
 print $fileh $data;
+
 ### fatpacked app path-grep ####################################################
 
 #!/bin/bash
@@ -5209,11 +5329,13 @@ print $fileh $data;
 # Find an executable in path
 
 compgen -c | sort -u | find-or-grep "$@"
+
 ### fatpacked app perl-force-stacktrace ########################################
 
 # Force stracktrace output from a perl script
 
 perl -Mdiagnostics=-traceonly "$@"
+
 ### fatpacked app perl-install-deps-for-module #################################
 
 #!/bin/bash
@@ -5222,6 +5344,7 @@ perl -Mdiagnostics=-traceonly "$@"
 
 perl-install-module lib::xi
 perl -c -Mlib::xi=-nq "$@"
+
 ### fatpacked app perl-install-latest-stable-perl ##############################
 
 #!/bin/bash
@@ -5240,6 +5363,7 @@ echo "to install all currently installed modues to new version use:"
 echo "    perl-install-modules-into-perl-version (version)"
 echo
 echo "to switch to new version use: perlbrew swith (version)"
+
 ### fatpacked app perl-install-module ##########################################
 
 #!/bin/bash
@@ -5248,6 +5372,7 @@ echo "to switch to new version use: perlbrew swith (version)"
 
 perl -M"$@" -e "1;" 2>/dev/null && exit 0
 cpanm $1
+
 ### fatpacked app perl-install-modules-into-perl-version #######################
 
 #!/bin/bash
@@ -5264,6 +5389,7 @@ if [[ ! $version ]] ; then
 fi
 
 perlbrew list-modules | perlbrew exec --with $version cpanm -nq
+
 ### fatpacked app perl-install-perlbrew ########################################
 
 #!/bin/bash
@@ -5277,6 +5403,7 @@ perlbrew init > /dev/null
 perlbrew install-cpanm > /dev/null
 
 INFO "You have to re-login now for changes to take effect."
+
 ### fatpacked app perl-module-create ###########################################
 
 #!/usr/bin/env perl
@@ -5322,11 +5449,13 @@ if (!$path->exists) {
 }
 
 print $path;
+
 ### fatpacked app perl-module-edit #############################################
 
 # Edit perl module that is located within perls module path
 
 perl-module-find "$@" | vi-choose-file-from-list 1
+
 ### fatpacked app perl-module-find #############################################
 
 #!/bin/bash
@@ -5335,6 +5464,7 @@ perl-module-find "$@" | vi-choose-file-from-list 1
 
 find $(perl -e 'print join (" ", @INC)') -iname "*$@*.pm" 2>/dev/null \
     | cat
+
 ### fatpacked app perl-module-version ##########################################
 
 #!/bin/bash
@@ -5342,6 +5472,7 @@ find $(perl -e 'print join (" ", @INC)') -iname "*$@*.pm" 2>/dev/null \
 # Print version of an installed perl module
 
 perl -M"$@" -e 'print $ARGV[0]->VERSION . "\n"' "$@"
+
 ### fatpacked app perl-named-process ###########################################
 
 #!/bin/bash
@@ -5366,6 +5497,7 @@ if [[ $file ]] ; then
 fi
 
 exec $file $perl "$@"
+
 ### fatpacked app perl-plack-test-server #######################################
 
 #!/bin/bash
@@ -5378,6 +5510,7 @@ clear-with-scrollback
 
 # plackup -L Shotgun --port 5000 ${1?Specify psgi file}
 plackup -R ~/perldev --port 5000 ${1?Specify psgi file}
+
 ### fatpacked app perl-profile #################################################
 
 #!/bin/bash
@@ -5404,6 +5537,7 @@ if [ -e nytprof.out ] ; then
 fi
 
 see $dir/index.html
+
 ### fatpacked app perl-upgrade-outdated-modules ################################
 
 #!/bin/bash
@@ -5411,6 +5545,7 @@ see $dir/index.html
 # Upgrade installed perl modules if a new version is available
 
 perlbrew list-modules | cpanm
+
 ### fatpacked app pipe-wrapper #################################################
 
 #!/usr/bin/env bash
@@ -5436,17 +5571,20 @@ if [[ $error ]]; then
 fi
 
 cat $file
+
 ### fatpacked app prompt-dir ###################################################
 
 # Prompt containing only the prettified current directory
 
 dir-name-prettifier $PWD
 echo -n "> "
+
 ### fatpacked app prompt-dir-full ##############################################
 
 # Prompt containing the current directory ony
 
 echo -n "$PWD> "
+
 ### fatpacked app prompt-helper-git ############################################
 
 #!/usr/bin/env perl
@@ -5550,6 +5688,7 @@ print " "
     . $remote
     . $no_color;
 
+
 ### fatpacked app prompt-host ##################################################
 
 # Prompt containing the current hostname
@@ -5566,6 +5705,7 @@ echo -n ":"
 dir-name-prettifier $PWD
 jobs=$jobs bash-background-jobs-count
 echo -n "> "
+
 ### fatpacked app prompt-local #################################################
 
 # Prompt for local shells - without hostname
@@ -5578,11 +5718,13 @@ prefixif $(bashrc-helper-login-name 1)
 prefixif $(dir-name-prettifier $PWD)
 jobs=$jobs bash-background-jobs-count
 echo -n "> "
+
 ### fatpacked app prompt-plain #################################################
 
 # Static prompt
 
 echo -n "BASH> "
+
 ### fatpacked app prompt-spare #################################################
 
 # Prompt without user name
@@ -5590,6 +5732,7 @@ echo -n "BASH> "
 dir-name-prettifier $PWD
 jobs=$jobs bash-background-jobs-count
 echo -n "> "
+
 ### fatpacked app proxy-setup-env ##############################################
 
 #!/bin/bash
@@ -5601,6 +5744,7 @@ port=${1:-8080}
 for proto in http https ftp ; do
     export ${proto}_proxy=$proto://localhost:$port/
 done
+
 ### fatpacked app proxyserver ##################################################
 
 #!/bin/bash
@@ -5627,11 +5771,13 @@ exec -a $name \
 disown -har
 
 INFO "Proxy server is now running on port $port."
+
 ### fatpacked app ps-watch #####################################################
 
 # Watch a process
 
 watch -n1 "ps -A | grep -i $@ | grep -v grep"
+
 ### fatpacked app pstree-search ################################################
 
 # Display or search pstree, exclude current process
@@ -5644,6 +5790,7 @@ command-knows-switch pstree -g && switches=$switches"g"
 pstree $switches \
     | perl -ne '$x = "xxSKIPme"; print if $_ !~ /[\|`]\-\{[\w-_]+},\d+$|less.+\+\/'$1'|$x/' \
     | less "+/$search"
+
 ### fatpacked app publicip #####################################################
 
 #!/bin/bash
@@ -5652,6 +5799,7 @@ pstree $switches \
 
 wcat http://checkip.dyndns.org \
     | perl -ne '/Address\: (.+?)</i || die; print $1'
+
 ### fatpacked app rel ##########################################################
 
 #!/bin/bash
@@ -5659,6 +5807,7 @@ wcat http://checkip.dyndns.org \
 # Create a relative path from an absolute path
 
 abs "$@" | perl -pe "s#^('|)($HOME/)#\$1#g"
+
 ### fatpacked app replace ######################################################
 
 #!/usr/bin/env perl
@@ -5725,6 +5874,7 @@ exit 1 if !$files_changed;
 print STDERR "$files_changed of $file_count files changed"
     . " (example: $example_file)"
     . ( $dry ? "$red - dry run.$no_color" : "" ) . "\n";
+
 ### fatpacked app rest-post-json ###############################################
 
 #!/bin/bash
@@ -5737,6 +5887,7 @@ file=${1?Specify file containing json post data}
 url=${2?Specify url to post to}
 
 curl -H "Content-Type: application/json" -X POST -d "@${file}" "$url"
+
 ### fatpacked app rest-server ##################################################
 
 #!/bin/bash
@@ -5767,6 +5918,7 @@ if [ ! -e $db ] ; then
 fi
 
 json-server --port $port --watch $db
+
 ### fatpacked app run-and-capture ##############################################
 
 #!/usr/bin/env perl
@@ -5822,6 +5974,7 @@ print STDOUT $output;
 
 exit $exit_code;
 
+
 ### fatpacked app run-or-test ##################################################
 
 #!/usr/bin/env perl
@@ -5855,6 +6008,7 @@ else {
 
 print STDERR "Running $cmd\n";
 exec $cmd;
+
 ### fatpacked app shell-color-test #############################################
 
 #!/usr/bin/perl
@@ -6143,16 +6297,19 @@ __DATA__
 253;dadada
 254;e4e4e4
 255;eeeeee
+
 ### fatpacked app shell-line-wrap-off ##########################################
 
 # Turn off shell line wrapping
 
 printf '\033[?7l'
+
 ### fatpacked app shell-line-wrap-on ###########################################
 
 # Turn off shell line wrapping
 
 printf '\033[?7h'
+
 ### fatpacked app shell-open-access-on-freeport ################################
 
 #!/bin/bash
@@ -6191,6 +6348,7 @@ if [ -e $fifo ] ; then
     echo "removing fifo: $fifo"
 #    rm -f $fifo
 fi
+
 ### fatpacked app sort-by-path-depth ###########################################
 
 #!/bin/bash
@@ -6200,6 +6358,7 @@ fi
 perl -n -e '$x = $_; $x =~ tr%/%%cd; print length($x), " $_";' \
     | sort -k 1n -k 2 \
     | perl -pe 's/^\S+ //' 
+
 ### fatpacked app ssh-agent-env-clear ##########################################
 
 #!/bin/bash
@@ -6209,6 +6368,7 @@ perl -n -e '$x = $_; $x =~ tr%/%%cd; print length($x), " $_";' \
 echo "# this has to be sourced from within the current shell"
 ssh-agent-env-grab \
     && unset SSH_AUTH_SOCK SSH_CLIENT SSH_CONNECTION SSH_TTY
+
 ### fatpacked app ssh-agent-env-grab ###########################################
 
 #!/bin/bash
@@ -6223,6 +6383,7 @@ for x in ${SSHVARS} ; do
                                 s/$/"/
                                 s/^/export /'
 done 1>$REMOTE_HOME/.ssh/agent_env
+
 ### fatpacked app ssh-agent-env-restore ########################################
 
 #!/bin/bash
@@ -6232,6 +6393,7 @@ done 1>$REMOTE_HOME/.ssh/agent_env
 # source this file to load the vars in your current shell
 
 cat $REMOTE_HOME/.ssh/agent_env
+
 ### fatpacked app ssh-no-check #################################################
 
 #!/bin/bash
@@ -6244,6 +6406,7 @@ ssh -A \
     -o UserKnownHostsFile=/dev/null \
     -o StrictHostKeyChecking=no \
     "$@"
+
 ### fatpacked app ssh-persistent-reverse-tunnel-setup ##########################
 
 #!/bin/bash
@@ -6294,6 +6457,7 @@ INFO "Starting tunnel now..."
 echo $CMD | bash
 
 INFO "done."
+
 ### fatpacked app ssh-server-turn-off-password-authentication ##################
 
 #!/bin/bash
@@ -6311,6 +6475,7 @@ UsePAM no
 EOF
 
 service ssh restart
+
 ### fatpacked app ssh-with-reverse-proxy #######################################
 
 #!/bin/bash
@@ -6336,6 +6501,7 @@ ssh -A -t $host -R $port:localhost:$port \
     FTP_PROXY=ftp://localhost:$port \
     ssh_remote_proxy=localhost:$port \
     bash -i
+
 
 ### fatpacked app ssl-create-self-signed-certificate ###########################
 
@@ -6364,6 +6530,7 @@ openssl req -x509 -newkey rsa:1024 \
     -subj "/C=DE/ST=SH/L=Germany/CN=$host"
 
 ls server-key.pem server-cert.pem
+
 ### fatpacked app ssl-strip ####################################################
 
 #!/bin/bash
@@ -6382,6 +6549,7 @@ fi
 cmd="sudo stunnel -c -d $in -r $out -f"
 INFO "running: $cmd"
 xtitle "ssl-strip $cmd" && $cmd
+
 ### fatpacked app text-context-grep ############################################
 
 #!/usr/bin/perl
@@ -6447,6 +6615,7 @@ sub match_all_positions {
     }
     return \@ret
 }
+
 ### fatpacked app text-from-any ################################################
 
 #!/bin/bash
@@ -6504,16 +6673,19 @@ fi
 
 DIE "Unknown file extension: $extension for $file"
 
+
 ### fatpacked app text-quote ###################################################
 
 # Quote text
 
 fmt -s | perl -pe 's/^/> /g' -
+
 ### fatpacked app text-remove-comments #########################################
 
 # Remove comment from text
 
 perl -ne 'print if ! /^#/ && ! /^$/' -
+
 ### fatpacked app time-dehumanize ##############################################
 
 #!/usr/bin/env perl
@@ -6537,6 +6709,7 @@ $amount || die "Cannot find amount in $human";
 $unit   || die "Cannot find unit in $human";
 
 print $amount * eval("\$" . $unit);
+
 ### fatpacked app time-humanize-seconds ########################################
 
 # Return a humanly comprehendable representation of an amount of seconds
@@ -6560,6 +6733,7 @@ if [ ${#human} = 2 ] ; then
 fi
 
 RETURN $GREY"$human"$NO_COLOR
+
 ### fatpacked app time-stamp-to-date ###########################################
 
 #!/usr/bin/env perl
@@ -6573,6 +6747,7 @@ use POSIX;
 my $timestamp = $ARGV[0] || die "Timestamp?";
 
 print strftime( "%F %T", localtime( substr( $timestamp, 0, 10 ) ) ) . "\n";
+
 ### fatpacked app tmux-reattach ################################################
 
 #!/bin/bash
@@ -6607,6 +6782,7 @@ ssh-agent-env-grab
     exit 1
 
 ) && clear
+
 ### fatpacked app tmux-session #################################################
 
 #!/bin/sh
@@ -6641,11 +6817,13 @@ tmux new-window -n ""
 tmux select-window -t $session:1
 
 # xtitle "$session" tmux -2 attach-session -d -t $session
+
 ### fatpacked app top-mem ######################################################
 
 # View top ordered by memory usage
 
 exec top -c -o '%MEM'
+
 ### fatpacked app trash ########################################################
 
 #!/bin/bash
@@ -6665,6 +6843,7 @@ trash="$dir/.trash"
 mkdir -p "$trash"
 
 mv "$file" "$trash/"
+
 ### fatpacked app tree #########################################################
 
 #!/usr/bin/env perl
@@ -7320,6 +7499,7 @@ sub size {
 }
 
 
+
 ### fatpacked app ubuntu-setup #################################################
 
 #!/bin/bash
@@ -7340,6 +7520,7 @@ INFO "Add user group editor - to be started via the ubuntu menu"
 sudo apt-get install gnome-system-tools
 
 ubuntu-setup-automatic-updates
+
 ### fatpacked app ubuntu-setup-automatic-updates ###############################
 
 #!/bin/bash
@@ -7363,6 +7544,7 @@ file-add-line-if-new /etc/apt/sources.list '^deb http://\S+\s+'$DISTRIB_CODENAME
 file-add-line-if-new /etc/apt/sources.list '^deb http://\S+\s+'$DISTRIB_CODENAME'-backports.*$' 'deb http://archive.ubuntu.com/ubuntu '$DISTRIB_CODENAME'-backports main restricted universe multiverse'
 
 apt-get update
+
 ### fatpacked app uniq-unsorted ################################################
 
 #!/usr/bin/env perl
@@ -7377,6 +7559,7 @@ while (<STDIN>) {
     print if !exists $seen{$_};
     $seen{$_} = 1;
 }
+
 ### fatpacked app unix2dos #####################################################
 
 #!/bin/bash
@@ -7384,6 +7567,7 @@ while (<STDIN>) {
 # Convert line endings from unix to dos
 
 perl -i -pe 's/\n/\r\n/' "$@"
+
 ### fatpacked app url ##########################################################
 
 #!/usr/bin/env perl
@@ -7400,6 +7584,7 @@ my $rel = qx{rel "@ARGV"};
 $rel =~ s/\n$//g;
 $rel = "\"$rel\"" if $rel =~ /\s|;/;
 print "$ENV{USER}\@" . $hostname . ":$rel\n"
+
 ### fatpacked app url-decode ###################################################
 
 #!/bin/bash
@@ -7408,6 +7593,7 @@ print "$ENV{USER}\@" . $hostname . ":$rel\n"
 # https://stackoverflow.com/questions/296536/how-to-urlencode-data-for-curl-command
 
 echo -n "$@" | perl -pe 's/\%(\w\w)/chr hex $1/ge'
+
 ### fatpacked app url-encode ###################################################
 
 #!/bin/bash
@@ -7416,6 +7602,7 @@ echo -n "$@" | perl -pe 's/\%(\w\w)/chr hex $1/ge'
 # https://stackoverflow.com/questions/296536/how-to-urlencode-data-for-curl-command
 
 echo -n "$@" | perl -pe 's/(\W)/sprintf("%%%02X", ord($1))/ge'
+
 ### fatpacked app user-add #####################################################
 
 #!/bin/bash
@@ -7438,6 +7625,7 @@ fi
 
 ssh $user@localhost
 
+
 ### fatpacked app vi ###########################################################
 
 #!/bin/bash
@@ -7445,6 +7633,7 @@ ssh $user@localhost
 # vi alias for vim
 
 exec vim "$@"
+
 
 ### fatpacked app vi-choose-file-from-list #####################################
 
@@ -7465,6 +7654,7 @@ file=$(cat | perl -ne 'print if $. == '$line)
 exec < $BASHRC_TTY
 
 command eval $EDITOR $file
+
 ### fatpacked app vi-from-find #################################################
 
 # Recursively search for a file and open it in vim - TODO
@@ -7478,6 +7668,7 @@ if [[ ! "$entry" ]] ; then
 fi
 
 command eval $EDITOR "$entry"
+
 ### fatpacked app vi-from-history ##############################################
 
 # Search eternal history for an existing file an open it in vi
@@ -7485,6 +7676,7 @@ command eval $EDITOR "$entry"
 set -e
 file=$(bash-eternal-history-search --file -c 1 "$@")
 command eval $EDITOR "$file"
+
 ### fatpacked app vi-from-path #################################################
 
 #!/bin/bash
@@ -7496,6 +7688,7 @@ set -e
 file=$(type -p $@)
 
 command eval $EDITOR "$file"
+
 ### fatpacked app vi-from-perl-inc #############################################
 
 #!/bin/bash
@@ -7507,6 +7700,7 @@ set -e
 file=$(perldoc -lm "$@")
 
 command eval $EDITOR "$file"
+
 ### fatpacked app video-dvd-install-decss ######################################
 
 # Install decss for encrypted dvd playback
@@ -7515,6 +7709,7 @@ command eval $EDITOR "$file"
 
 sudo apt-get install libdvdread4
 sudo /usr/share/doc/libdvdread4/install-css.sh
+
 ### fatpacked app video-dvd-rip ################################################
 
 # Rip and transcode a video dvd
@@ -7555,6 +7750,7 @@ for track in $@ ; do
 done
 
 INFO "All done"
+
 ### fatpacked app video-transcode ##############################################
 
 # Transcode a media file to x264 preserving all video, audio and subtitle tracks
@@ -7645,6 +7841,7 @@ fi
 
 exit
         -c:a ac3 -b:a 448k \
+
 ### fatpacked app vim ##########################################################
 
 #!/bin/bash
@@ -7671,6 +7868,7 @@ if [[ $1 =~ @ ]] && [[ $1 =~ : ]] ; then
 fi
 
 exec alternative-run $0 $args "$@"
+
 
 ### fatpacked app vim-setup ####################################################
 
@@ -7706,6 +7904,7 @@ git clone https://github.com/nilsboy/dotvim.git etc
 INFO "Starting vim to download plugins..."
 
 exec vi
+
 ### fatpacked app vim-url ######################################################
 
 #!/usr/bin/env perl
@@ -7722,6 +7921,7 @@ $url =~ s/\:/\//;
 $url =~ s/^/scp:\/\//g;
 
 print "$url\n";
+
 ### fatpacked app vnc-server-setup-upstart-script ##############################
 
 #!/bin/bash
@@ -7771,16 +7971,19 @@ sudo initctl reload-configuration
 sudo initctl emit login-session-start
 
 echo "check if vino is running!"
+
 ### fatpacked app vnc-start-vino ###############################################
 
 # Start vino vnc server
 
 /usr/lib/vino/vino-server --display :0 &
+
 ### fatpacked app vnc-vino-preferences #########################################
 
 # Set vino preferences
 
 vino-preferences
+
 ### fatpacked app vncviewer ####################################################
 
 #!/bin/bash
@@ -7794,6 +7997,7 @@ export VNC_VIA_CMD="/usr/bin/ssh -C -f -L %L:%H:%R %G sleep 20"
 
 $(type -pf vncviewer) -encoding tight \
     -compresslevel 9 -quality 5 -x11cursor -via $host localhost:$port
+
 ### fatpacked app wcat #########################################################
 
 #!/usr/bin/env perl
@@ -7874,6 +8078,7 @@ if ( $to_file || $file ) {
 else {
     print $content;
 }
+
 ### fatpacked app webserver-serve-current-directory ############################
 
 #!/bin/bash
@@ -7882,6 +8087,7 @@ else {
 
 perl-install-module App::HTTPThis
 http_this
+
 ### fatpacked app wikipedia-via-dns ############################################
 
 #!/bin/bash
@@ -7889,11 +8095,13 @@ http_this
 # Query wikipedia via DNS
 
 dig +short txt "$@".wp.dg.cx | perl -0777 -pe 'exit 1 if ! $_ ; s/\\//g'
+
 ### fatpacked app x2x-east #####################################################
 
 # Share input devices with another host
 
 ssh -X $1 x2x -east -to $DISPLAY
+
 ### fatpacked app xmv ##########################################################
 
 #!/usr/bin/env perl
@@ -8052,6 +8260,7 @@ sub normalize {
     return $_ . lc($ext);
 }
 
+
 ### fatpacked app xtitle #######################################################
 
 #!/bin/bash
@@ -8069,4 +8278,5 @@ case "$TERM" in
     *)
         ;;
 esac
+
 ### END fatpacked apps #########################################################

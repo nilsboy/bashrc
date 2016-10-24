@@ -606,7 +606,7 @@ function bashrc-unpack() {
         print STDERR "Exporting apps to $dst_dir...\n";
 
         my $export_count = 0;
-        while ($bashrc =~ /^### fatpacked app ([\w-]+) #*$(.+?)(?=\n^###)/igsm) {
+        while ($bashrc =~ /^### fatpacked app ([\w-]+) #*$(.+?)(?=\n^### fatpacked app)/igsm) {
 
             my $app_name = $1;
             my $app_data = $2;
@@ -2380,7 +2380,7 @@ foreach my $bin (sort (path(".")->children)) {
     $apps_count++;
 }
 
-$bashrc_phat->append("### END fatpacked apps ", "#" x 57, "\n");
+$bashrc_phat->append("### fatpacked apps END", "#" x 57, "\n");
 
 print "Done - apps packed: $apps_count\n";
 
@@ -2745,20 +2745,20 @@ source bash-helpers
 
 (
 cat <<EOF
-## Environment #################################################################
+### Environment ################################################################
 
 SHELL=/bin/bash
 BASH_ENV=~/.bashrc
 
 0 0 * * * crontab -l > ~/etc/crontab.local
 
-## ADD JOB NAME HERE ###########################################################
+### ADD JOB NAME HERE ##########################################################
 
 # MAILTO=email1,email2,...
 # m h  dom mon dow   command
 # @reboot my_script
 
-## #############################################################################
+################################################################################
 
 EOF
 crontab -l
@@ -8284,4 +8284,4 @@ case "$TERM" in
         ;;
 esac
 
-### END fatpacked apps #########################################################
+### fatpacked apps END#########################################################

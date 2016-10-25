@@ -784,7 +784,7 @@ file-template-filler:
 files-replace-from-env:
     Replace files with content from environment variables
 find-and:
-    Find files excluding dotfiles optional matching several strings
+    Find files excluding dotfiles optionally matching several strings
 find-and-limit:
     find-and with a limit
 find-from-date:
@@ -805,6 +805,10 @@ git-env-validate:
     Ensure git-scm is configured appropriately
 git-ignore:
     Download and save a default .gitignore for a specific environment
+git-log-compact:
+    Show compact git log
+git-log-file:
+    Show complete changes to a file in git
 git-modified:
     List all modified files since last git commit
 git-project:
@@ -1028,6 +1032,8 @@ tmux-reattach:
     Reattach to a screen or tmux session
 tmux-session:
     Start a named tmux session with 10 tabs
+tmux-synchronized-panes-toggle:
+    Toggle synchronized tmux panes
 top-mem:
     View top ordered by memory usage
 trash:
@@ -3828,19 +3834,6 @@ if [[ $1 == "status" ]] ; then
     exec alternative-run $0 status -uall "${@:2}" "$@"
 fi
 
-if [[ $1 == "log" ]] ; then
-
-    shift
-
-    files="$@"
-
-    if [[ ! "$files" ]] ; then
-        files="."
-    fi
-
-    exec alternative-run $0 log --oneline --follow --decorate --graph "$files"
-fi
-
 if [[ $1 == "branch"  && ! "$2" ]] ; then
     exec alternative-run $0 branch --list -vva
 fi
@@ -3889,6 +3882,22 @@ INFO "Fetching gitignore for $environment from $url..."
 wget -qO - $url >> .gitignore
 
 INFO "Appended to .gitignore"
+
+### fatpacked app git-log-compact ##############################################
+
+#!/bin/bash
+
+# Show compact git log
+
+exec git log --oneline --decorate --graph "$@"
+
+### fatpacked app git-log-file #################################################
+
+#!/bin/bash
+
+# Show complete changes to a file in git
+
+git log --follow -p -- "$@"
 
 ### fatpacked app git-modified #################################################
 
@@ -6809,8 +6818,6 @@ tmux new-window -n ""
 tmux new-window -n ""
 tmux new-window -n ""
 tmux new-window -n ""
-tmux new-window -n ""
-tmux new-window -n ""
 
 # tmux split-window -d -v -t $session:1 'ssh workflow@qualle3'
 # tmux split-window -d -v -t $session:1 'ssh workflow@qualle2'
@@ -6822,6 +6829,14 @@ tmux new-window -n ""
 tmux select-window -t $session:1
 
 # xtitle "$session" tmux -2 attach-session -d -t $session
+
+### fatpacked app tmux-synchronized-panes-toggle ###############################
+
+#!/bin/bash
+
+# Toggle synchronized tmux panes
+
+tmux set-window-option synchronize-panes
 
 ### fatpacked app top-mem ######################################################
 

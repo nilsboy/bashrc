@@ -1046,6 +1046,8 @@ ubuntu-setup:
     Stuff to do after a new ubuntu installation
 ubuntu-setup-automatic-updates:
     Make sure update and backports soures are activated
+ubuntu-unity-set-time-format:
+    Set time format of ubuntu unity desktop clock
 uniq-unsorted:
     uniq replacement without the need for sorted input
 unix2dos:
@@ -7588,6 +7590,15 @@ file-add-line-if-new /etc/apt/sources.list '^deb http://\S+\s+'$DISTRIB_CODENAME
 file-add-line-if-new /etc/apt/sources.list '^deb http://\S+\s+'$DISTRIB_CODENAME'-backports.*$' 'deb http://archive.ubuntu.com/ubuntu '$DISTRIB_CODENAME'-backports main restricted universe multiverse'
 
 apt-get update
+
+### fatpacked app ubuntu-unity-set-time-format #################################
+
+#!/bin/bash
+
+# Set time format of ubuntu unity desktop clock
+
+dconf write /com/canonical/indicator/datetime/time-format "'custom'"
+dconf write /com/canonical/indicator/datetime/custom-time-format "'KW%V | %a | %F | %R'"
 
 ### fatpacked app uniq-unsorted ################################################
 

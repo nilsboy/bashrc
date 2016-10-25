@@ -983,6 +983,8 @@ run-and-capture:
     Run a program and pretty print all its outputs
 run-or-test:
     Run a programs tests if any exist otherwise the program itself
+screen-reattach:
+    Reattach to a screen session
 shell-color-test:
     most color mappings taken from xterm-colortest
 shell-line-wrap-off:
@@ -1029,7 +1031,7 @@ time-humanize-seconds:
 time-stamp-to-date:
     Print date for a timestamp
 tmux-reattach:
-    Reattach to a screen or tmux session
+    Reattach or create a new tmux session
 tmux-session:
     Start a named tmux session with 10 tabs
 tmux-synchronized-panes-toggle:
@@ -6023,6 +6025,25 @@ else {
 print STDERR "Running $cmd\n";
 exec $cmd;
 
+### fatpacked app screen-reattach ##############################################
+
+#!/bin/bash
+
+# Reattach to a screen session
+
+ssh-agent-env-grab
+
+(
+    xtitle screen@$HOSTNAME
+    screen -rd $session && exit
+    screen -rd && exit
+
+    xtitle "Terminal"
+
+    exit 1
+
+) && clear
+
 ### fatpacked app shell-color-test #############################################
 
 #!/usr/bin/perl
@@ -6766,9 +6787,10 @@ print strftime( "%F %T", localtime( substr( $timestamp, 0, 10 ) ) ) . "\n";
 
 #!/bin/bash
 
-# Reattach to a screen or tmux session
+# Reattach or create a new tmux session
 
-session=$1
+wanted_session=$1
+session=$wanted_session
 
 if [[ ! $session ]] ; then
     session=main
@@ -6783,19 +6805,21 @@ ssh-agent-env-grab
     fi
 
 
-    if tmux has-session ; then
-        exec tmux -2 att -d
+    if [[ ! $wanted_session ]] ; then
+        if tmux has-session ; then
+            exec tmux -2 att -d
+        fi
     fi
 
-    xtitle screen@$HOSTNAME
-    screen -rd $session && exit
-    screen -rd && exit
+    tmux-session $session
+    exec tmux -2 att -d -t $session
 
     xtitle "Terminal"
 
     exit 1
 
 ) && clear
+
 
 ### fatpacked app tmux-session #################################################
 

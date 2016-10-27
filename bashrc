@@ -890,6 +890,8 @@ mem-swap-per-process:
     Show swap usage per process
 mysql:
     Fix mysql prompt to show real hostname - NEVER localhost
+neovim-setup:
+    Setup neovim
 net-find-free-port:
     Find an unused port
 net-ip2name:
@@ -4922,6 +4924,22 @@ xtitle "mysql@$host" && \
     MYSQL_HISTFILE=$history_file alternative-run $0 \
         --default-character-set=utf8 \
         --show-warnings --pager="less -FX" "$@"
+
+### fatpacked app neovim-setup #################################################
+
+#!/usr/bin/env bash
+
+# Setup neovim
+
+source bash-helpers
+
+sudo add-apt-repository ppa:neovim-ppa/unstable
+sudo apt-get update
+sudo apt-get install neovim
+
+sudo apt-get install python-dev python-pip python3-dev python3-pip
+
+sudo pip3 install neovim
 
 ### fatpacked app net-find-free-port ###########################################
 

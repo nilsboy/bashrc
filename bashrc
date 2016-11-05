@@ -785,7 +785,7 @@ file-template-filler:
 files-replace-from-env:
     Replace files with content from environment variables
 find-and:
-    Find files excluding dotfiles optional matching several strings
+    Find files excluding dotfiles optionally matching several strings
 find-and-limit:
     find-and with a limit
 find-from-date:
@@ -806,6 +806,10 @@ git-env-validate:
     Ensure git-scm is configured appropriately
 git-ignore:
     Download and save a default .gitignore for a specific environment
+git-log-compact:
+    Show compact git log
+git-log-file:
+    Show complete changes to a file in git
 git-modified:
     List all modified files since last git commit
 git-project:
@@ -846,6 +850,8 @@ groups-reload-memberships:
 hd-set-spin-timeout:
     Activate spindown and set spindown timeout on (buggy - i.e.
     Seagate) hard drives that don't do it themselfes
+head-warn:
+    Limit input lines and warn if more lines are left
 html-strip:
     Strip HTML of tags and entities
 iptables-port-redirect:
@@ -885,6 +891,8 @@ mem-swap-per-process:
     Show swap usage per process
 mysql:
     Fix mysql prompt to show real hostname - NEVER localhost
+neovim-setup:
+    Setup neovim
 net-find-free-port:
     Find an unused port
 net-ip2name:
@@ -978,6 +986,8 @@ run-and-capture:
     Run a program and pretty print all its outputs
 run-or-test:
     Run a programs tests if any exist otherwise the program itself
+screen-reattach:
+    Reattach to a screen session
 shell-color-test:
     most color mappings taken from xterm-colortest
 shell-line-wrap-off:
@@ -1024,9 +1034,11 @@ time-humanize-seconds:
 time-stamp-to-date:
     Print date for a timestamp
 tmux-reattach:
-    Reattach to a screen or tmux session
+    Reattach or create a new tmux session
 tmux-session:
     Start a named tmux session with 10 tabs
+tmux-synchronized-panes-toggle:
+    Toggle synchronized tmux panes
 top-mem:
     View top ordered by memory usage
 trash:
@@ -1037,6 +1049,8 @@ ubuntu-setup:
     Stuff to do after a new ubuntu installation
 ubuntu-setup-automatic-updates:
     Make sure update and backports soures are activated
+ubuntu-unity-set-time-format:
+    Set time format of ubuntu unity desktop clock
 uniq-unsorted:
     uniq replacement without the need for sorted input
 unix2dos:
@@ -2379,7 +2393,7 @@ foreach my $bin (sort (path(".")->children)) {
     $apps_count++;
 }
 
-$bashrc_phat->append("### END fatpacked apps ", "#" x 57, "\n");
+$bashrc_phat->append("### fatpacked apps END", "#" x 57, "\n");
 
 print "Done - apps packed: $apps_count\n";
 
@@ -3695,18 +3709,17 @@ done
 
 #!/bin/bash 
 
-# Find files excluding dotfiles optional matching several strings
+# Find files excluding dotfiles optionally matching several strings
 
 source bash-helpers
 
-if [[ $1 = '--fallback-to-cwd' ]] ; then
-    shift
-    fallback=1
-fi
+head_warn="head-warn"
+
+path=$(abs .)
 
 if [[ $1 = '--dir' ]] ; then
     shift
-    cd $1
+    path=$1
     shift
 fi
 
@@ -3714,38 +3727,39 @@ if [[ $1 = '--project' ]] ; then
     shift
 
     set +e
-    gitroot=$(git-root)
+    git_root=$(git-root)
     set -e
 
-    if [[ $gitroot ]] ; then
-        cd $gitroot
-    else
-      if [[ ! $fallback ]] ; then
-        DIE No project root found
-      fi
+    if [[ $git_root ]] ; then
+        path=$git_root
     fi
 fi
 
-if [[ $1 = '--abs' ]] ; then
+if [[ $1 = '--no-limit' ]] ; then
     shift
-    abs=1
+    head_warn=cat
 fi
 
-if [[ $abs ]] ; then
-    export abs=$(abs)
-fi
+cd /
 
+set +e
 
-find -H * -mount \
+find \
+    -H \
+    $path \
+    -mount \
     -type f \
-    | perl -ne 'print if ! m#/\.#' \
-    | perl -pe 's#^#$ENV{abs}# if $ENV{abs}' \
+    | perl -ne 'print if ! m#/\.git/#' \
+    | perl -ne 'print if ! m#'$path'/*\.#' \
     | perl -ne 'print if ! m#(^|/)node_modules/#' \
     | perl -ne 'print if ! m#(^|/)bower_components/#' \
     | perl -ne 'print if ! m#(^|/)classes/#' \
-    | grep-and -e $@
+    | grep-and -e $@ \
+    | head -101 \
+    | sort-by-path-depth \
+    | $head_warn
 
-
+exit 0
 
 ### fatpacked app find-and-limit ###############################################
 
@@ -3804,10 +3818,11 @@ find . -type f -ctime +$1 | less
 # Find a file or grep stdin
 
 if [[ -t 0 ]] ; then
-    find-and | while read i; do grep-and -epf "$i" "$@" ; done
+    find-and --no-limit | while read i; do grep-and -epf "$i" "$@" ; done
 else
     grep-and -e $@
 fi
+
 
 ### fatpacked app git ##########################################################
 
@@ -3824,19 +3839,6 @@ source bash-helpers
 if [[ $1 == "status" ]] ; then
     shift
     exec alternative-run $0 status -uall "${@:2}" "$@"
-fi
-
-if [[ $1 == "log" ]] ; then
-
-    shift
-
-    files="$@"
-
-    if [[ ! "$files" ]] ; then
-        files="."
-    fi
-
-    exec alternative-run $0 log --oneline --follow --decorate --graph "$files"
 fi
 
 if [[ $1 == "branch"  && ! "$2" ]] ; then
@@ -3887,6 +3889,22 @@ INFO "Fetching gitignore for $environment from $url..."
 wget -qO - $url >> .gitignore
 
 INFO "Appended to .gitignore"
+
+### fatpacked app git-log-compact ##############################################
+
+#!/bin/bash
+
+# Show compact git log
+
+exec git log --oneline --decorate --graph "$@"
+
+### fatpacked app git-log-file #################################################
+
+#!/bin/bash
+
+# Show complete changes to a file in git
+
+git log --follow -p -- "$@"
 
 ### fatpacked app git-modified #################################################
 
@@ -4331,6 +4349,46 @@ sudo hdparm -B255 $path
 
 # set timeout specified in multiples of 5s
 sudo hdparm -S180 $path
+
+### fatpacked app head-warn ####################################################
+
+#!/usr/bin/perl
+# Limit input lines and warn if more lines are left
+
+use strict;
+use warnings;
+no warnings 'uninitialized';
+
+my $count = 0;
+my $limit = 100;
+
+if($ARGV[0] =~ /-(\d+)/) {
+  $limit = $1;
+}
+
+my $red      = "\x1b[38;5;124m";
+my $no_color = "\x1b[33;0m";
+
+if (!-t STDERR) {
+    $red = $no_color = "";
+}
+
+my $last;
+while(<STDIN>) {
+  $count++;
+
+  if($count == $limit + 1) {
+    print $last;
+    print STDERR $red . "### Limit of $limit exceeded. ###" . $no_color . "\n";
+    exit 0;
+  }
+
+  print $last if $last;
+
+  $last = $_;
+}
+
+print $last;
 
 ### fatpacked app html-strip ###################################################
 
@@ -4867,6 +4925,22 @@ xtitle "mysql@$host" && \
     MYSQL_HISTFILE=$history_file alternative-run $0 \
         --default-character-set=utf8 \
         --show-warnings --pager="less -FX" "$@"
+
+### fatpacked app neovim-setup #################################################
+
+#!/usr/bin/env bash
+
+# Setup neovim
+
+source bash-helpers
+
+sudo add-apt-repository ppa:neovim-ppa/unstable
+sudo apt-get update
+sudo apt-get install neovim
+
+sudo apt-get install python-dev python-pip python3-dev python3-pip
+
+sudo pip3 install neovim
 
 ### fatpacked app net-find-free-port ###########################################
 
@@ -5972,6 +6046,25 @@ else {
 print STDERR "Running $cmd\n";
 exec $cmd;
 
+### fatpacked app screen-reattach ##############################################
+
+#!/bin/bash
+
+# Reattach to a screen session
+
+ssh-agent-env-grab
+
+(
+    xtitle screen@$HOSTNAME
+    screen -rd $session && exit
+    screen -rd && exit
+
+    xtitle "Terminal"
+
+    exit 1
+
+) && clear
+
 ### fatpacked app shell-color-test #############################################
 
 #!/usr/bin/perl
@@ -6715,9 +6808,10 @@ print strftime( "%F %T", localtime( substr( $timestamp, 0, 10 ) ) ) . "\n";
 
 #!/bin/bash
 
-# Reattach to a screen or tmux session
+# Reattach or create a new tmux session
 
-session=$1
+wanted_session=$1
+session=$wanted_session
 
 if [[ ! $session ]] ; then
     session=main
@@ -6732,19 +6826,21 @@ ssh-agent-env-grab
     fi
 
 
-    if tmux has-session ; then
-        exec tmux -2 att -d
+    if [[ ! $wanted_session ]] ; then
+        if tmux has-session ; then
+            exec tmux -2 att -d
+        fi
     fi
 
-    xtitle screen@$HOSTNAME
-    screen -rd $session && exit
-    screen -rd && exit
+    tmux-session $session
+    exec tmux -2 att -d -t $session
 
     xtitle "Terminal"
 
     exit 1
 
 ) && clear
+
 
 ### fatpacked app tmux-session #################################################
 
@@ -6767,8 +6863,6 @@ tmux new-window -n ""
 tmux new-window -n ""
 tmux new-window -n ""
 tmux new-window -n ""
-tmux new-window -n ""
-tmux new-window -n ""
 
 # tmux split-window -d -v -t $session:1 'ssh workflow@qualle3'
 # tmux split-window -d -v -t $session:1 'ssh workflow@qualle2'
@@ -6780,6 +6874,14 @@ tmux new-window -n ""
 tmux select-window -t $session:1
 
 # xtitle "$session" tmux -2 attach-session -d -t $session
+
+### fatpacked app tmux-synchronized-panes-toggle ###############################
+
+#!/bin/bash
+
+# Toggle synchronized tmux panes
+
+tmux set-window-option synchronize-panes
 
 ### fatpacked app top-mem ######################################################
 
@@ -7507,6 +7609,15 @@ file-add-line-if-new /etc/apt/sources.list '^deb http://\S+\s+'$DISTRIB_CODENAME
 file-add-line-if-new /etc/apt/sources.list '^deb http://\S+\s+'$DISTRIB_CODENAME'-backports.*$' 'deb http://archive.ubuntu.com/ubuntu '$DISTRIB_CODENAME'-backports main restricted universe multiverse'
 
 apt-get update
+
+### fatpacked app ubuntu-unity-set-time-format #################################
+
+#!/bin/bash
+
+# Set time format of ubuntu unity desktop clock
+
+dconf write /com/canonical/indicator/datetime/time-format "'custom'"
+dconf write /com/canonical/indicator/datetime/custom-time-format "'KW%V | %a | %F | %R'"
 
 ### fatpacked app uniq-unsorted ################################################
 
@@ -8250,4 +8361,4 @@ case "$TERM" in
         ;;
 esac
 
-### END fatpacked apps #########################################################
+### fatpacked apps END#########################################################

@@ -7677,14 +7677,6 @@ echo -n "$@" | perl -pe 's/\%(\w\w)/chr hex $1/ge'
 
 echo -n "$@" | perl -pe 's/(\W)/sprintf("%%%02X", ord($1))/ge'
 
-### fatpacked app usb-stick-boot ###############################################
-
-#!/usr/bin/env bash
-
-# Boot a bootable usb stick
-
-sudo qemu-system-x86_64 -hdb /dev/sdb1
-
 ### fatpacked app user-add #####################################################
 
 #!/bin/bash
@@ -7712,9 +7704,34 @@ ssh $user@localhost
 
 #!/bin/bash
 
-# vi alias for vim
+# Setup and run vim
 
-exec vim "$@"
+set -e
+
+export VIM_HOME=$REMOTE_HOME/.vim
+
+if [[ -e $VIM_HOME/etc/vimrc ]] ; then
+    args=" -u $VIM_HOME/etc/vimrc"
+else
+    args=" -i $REMOTE_HOME/._viminfo"
+fi
+
+# Theres no buildin way to check if arguments exists other than files
+if [[ $@ ]] ; then
+    export VIM_HAS_ARGS=1
+fi
+
+if [[ $1 =~ @ ]] && [[ $1 =~ : ]] ; then
+    args="$args "$(vim-url $1)
+fi
+
+vi=vim
+
+if [[ $(type -p nvim) ]] ; then
+  vi=nvim
+fi
+
+exec $vi $args "$@"
 
 
 ### fatpacked app vi-choose-file-from-list #####################################
@@ -7923,34 +7940,6 @@ fi
 
 exit
         -c:a ac3 -b:a 448k \
-
-### fatpacked app vim ##########################################################
-
-#!/bin/bash
-
-# Setup and run vim
-
-set -e
-
-export VIM_HOME=$REMOTE_HOME/.vim
-
-if [[ -e $VIM_HOME/etc/vimrc ]] ; then
-    args=" -u $VIM_HOME/etc/vimrc"
-else
-    args=" -i $REMOTE_HOME/._viminfo"
-fi
-
-# Theres no buildin way to check if arguments exists other than files
-if [[ $@ ]] ; then
-    export VIM_HAS_ARGS=1
-fi
-
-if [[ $1 =~ @ ]] && [[ $1 =~ : ]] ; then
-    args="$args "$(vim-url $1)
-fi
-
-exec alternative-run $0 $args "$@"
-
 
 ### fatpacked app vim-setup ####################################################
 

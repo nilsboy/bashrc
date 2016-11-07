@@ -1064,7 +1064,7 @@ url-encode:
 user-add:
     Add a new user to the system without hassle
 vi:
-    alias for vim
+    Setup and run vim
 vi-choose-file-from-list:
     Edit a file from a list on STDIN
 vi-from-find:
@@ -1082,8 +1082,8 @@ video-dvd-rip:
 video-transcode:
     Transcode a media file to x264 preserving all video, audio and
     subtitle tracks
-vim:
-    Setup and run vim
+vim-firefox:
+    Vim to use from firefox addon its-all-text
 vim-setup:
     Setup vim environment
 vim-url:
@@ -7940,6 +7940,15 @@ fi
 
 exit
         -c:a ac3 -b:a 448k \
+
+### fatpacked app vim-firefox ##################################################
+
+#!/bin/bash
+# Vim to use from firefox addon its-all-text
+
+export REMOTE_HOME=$HOME
+
+exec gnome-terminal -x ~/.bin/vi "$@"
 
 ### fatpacked app vim-setup ####################################################
 

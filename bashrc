@@ -313,6 +313,7 @@ function cdh() {
     fi
 
     cd "$dir"
+    pwd
 }
 
 # Search for file or dir in cur dir and go there
@@ -3713,7 +3714,7 @@ done
 
 source bash-helpers
 
-head_warn="head-warn"
+head_warn="head-warn -1000"
 
 path=$(abs .)
 
@@ -3755,7 +3756,7 @@ find \
     | perl -ne 'print if ! m#(^|/)bower_components/#' \
     | perl -ne 'print if ! m#(^|/)classes/#' \
     | grep-and -e $@ \
-    | head -101 \
+    | head -1001 \
     | sort-by-path-depth \
     | $head_warn
 
@@ -3766,7 +3767,7 @@ exit 0
 #!/bin/bash
 # find-and with a limit
 
-find-and "$@" | sort-by-path-depth | head -100
+find-and "$@" | sort-by-path-depth | head -1001
 
 ### fatpacked app find-from-date ###############################################
 

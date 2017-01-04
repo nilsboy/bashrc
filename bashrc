@@ -829,8 +829,6 @@ gnome-send-to-mail-images:
     Resize one or more images and add them as attachements
 gnome-send-to-mail-images-setup:
     Download and setup gnome-send-to-mail-images
-gnome-terminal-prevent-cursor-blinking:
-    Prevent the gnome-terminal cursor from blinking
 gotroot:
     Make sure we're running as root
 grep-and:
@@ -1121,26 +1119,12 @@ xtitle:
 
 use Cwd;
 
-abss(@ARGV) if @ARGV;
-
-if(!-t STDIN) {
-  while(<STDIN>) {
-    s/\n$//g;
-    abss($_);
-  }
-}
-else {
-  abss('.') if !@ARGV;
-}
-
-sub abss {
-  my $file = join(" ", @_);
-  my $abs = Cwd::abs_path($file);
-  $abs .= "/" if -d $file;
-  $abs = "'$abs'" if $abs =~ /\s/;
-  $abs =~ s/;/\\;/g;
-  print "$abs\n";
-}
+my $file = join(" ", @_);
+my $abs = Cwd::abs_path($file);
+$abs .= "/" if -d $file;
+$abs = "'$abs'" if $abs =~ /\s/;
+$abs =~ s/;/\\;/g;
+print "$abs\n";
 
 ### fatpacked app alternative ##################################################
 
@@ -3716,7 +3700,7 @@ done
 
 source bash-helpers
 
-head_warn="head-warn -1000"
+head_warn="head-warn"
 
 path=$(abs .)
 
@@ -3758,7 +3742,7 @@ find \
     | perl -ne 'print if ! m#(^|/)bower_components/#' \
     | perl -ne 'print if ! m#(^|/)classes/#' \
     | grep-and -e $@ \
-    | head -1001 \
+    | head -101 \
     | sort-by-path-depth \
     | $head_warn
 
@@ -3769,7 +3753,7 @@ exit 0
 #!/bin/bash
 # find-and with a limit
 
-find-and "$@" | sort-by-path-depth | head -1001
+find-and "$@" | sort-by-path-depth | head -100
 
 ### fatpacked app find-from-date ###############################################
 

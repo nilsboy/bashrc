@@ -829,6 +829,8 @@ gnome-send-to-mail-images:
     Resize one or more images and add them as attachements
 gnome-send-to-mail-images-setup:
     Download and setup gnome-send-to-mail-images
+gnome-terminal-prevent-cursor-blinking:
+    Prevent the gnome-terminal cursor from blinking
 gotroot:
     Make sure we're running as root
 grep-and:
@@ -4111,6 +4113,17 @@ if [[ $LANG =~ de ]] ; then
 fi
 
 echo "OK - script installed"
+
+### fatpacked app gnome-terminal-prevent-cursor-blinking #######################
+
+#!/usr/bin/env bash
+
+# Prevent the gnome-terminal cursor from blinking
+
+source bash-helpers
+
+gconftool-2 --set /apps/gnome-terminal/profiles/Default/cursor_blink_mode --type string off
+
 
 ### fatpacked app gotroot ######################################################
 

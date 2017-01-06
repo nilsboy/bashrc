@@ -829,6 +829,8 @@ gnome-send-to-mail-images:
     Resize one or more images and add them as attachements
 gnome-send-to-mail-images-setup:
     Download and setup gnome-send-to-mail-images
+gnome-terminal-prevent-cursor-blinking:
+    Prevent the gnome-terminal cursor from blinking
 gotroot:
     Make sure we're running as root
 grep-and:
@@ -3738,9 +3740,9 @@ find \
     -type f \
     | perl -ne 'print if ! m#/\.git/#' \
     | perl -ne 'print if ! m#'$path'/*\.#' \
-    | perl -ne 'print if ! m#(^|/)node_modules/#' \
-    | perl -ne 'print if ! m#(^|/)bower_components/#' \
-    | perl -ne 'print if ! m#(^|/)classes/#' \
+    | perl -ne 'print if ! m#'$path'node_modules/.*#' \
+    | perl -ne 'print if ! m#'$path'bower_components/.*#' \
+    | perl -ne 'print if ! m#'$path'classes/.*#' \
     | grep-and -e $@ \
     | head -101 \
     | sort-by-path-depth \

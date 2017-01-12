@@ -650,6 +650,20 @@ true
 ### END ########################################################################
 return 0
 ### fatpacked apps start here ##################################################
+### fatpacked app H ############################################################
+
+#!/usr/bin/env bash
+
+# Open --help output in vi
+
+source bash-helpers
+
+dir=$(mktemp -d)
+file="$dir/$1.docopt"
+
+"$@" --help > "$file"
+vi "$file"
+
 ### fatpacked app README #######################################################
 
 Tools that make my shell life easier.
@@ -664,6 +678,8 @@ in your path.
 
 Descriptions:
 
+H:
+    Open --help output in vi
 abs:
     Print the absolute path of a file or dir
 alternative:

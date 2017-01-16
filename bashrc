@@ -1120,6 +1120,8 @@ wcat:
     Easily dump a web site
 webserver-serve-current-directory:
     Serve current directory files via http
+webserver-serve-current-directory.pl:
+    Serve current directory files via http - perl version
 wikipedia-via-dns:
     Query wikipedia via DNS
 x2x-east:
@@ -8177,9 +8179,20 @@ else {
 
 ### fatpacked app webserver-serve-current-directory ############################
 
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Serve current directory files via http
+
+source bash-helpers
+
+npm install -g serve
+serve .
+
+### fatpacked app webserver-serve-current-directory.pl #########################
+
+#!/bin/bash
+
+# Serve current directory files via http - perl version
 
 perl-install-module App::HTTPThis
 http_this

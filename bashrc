@@ -932,6 +932,8 @@ npm-set-proxy-from-environment:
     Set proxy from environment
 once:
     Print stdin once if it has changed since last time
+passwort-generate:
+    Generate a list of random and secure passwords
 path-grep:
     Find an executable in path
 perl-force-stacktrace:
@@ -5377,6 +5379,16 @@ open(my $fileh, ">", $file)
     or die "cannot open > $file: $!";
 print $fileh $data;
 
+### fatpacked app passwort-generate ############################################
+
+#!/usr/bin/env bash
+
+# Generate a list of random and secure passwords
+
+source bash-helpers
+
+apg -M SN -n 20
+
 ### fatpacked app path-grep ####################################################
 
 #!/bin/bash
@@ -8353,13 +8365,12 @@ sub normalize {
 
     $_ = $file;
 
-    s/www\.[^\.]+\.[[:alnum:]]+//g;
     s/&/and/g;
     s/['`´]+//g;
-    s/[^\w\.]+/_/g;
     s/[\._]+/_/g;
-    s/^[\._]+//g;
-    s/[\._]+$//g;
+    s/^_*//g;
+    s/_*$//g;
+    s/.*?www_[^_]+_[^_]+_//gi;
 
     if ( !$_ ) {
         $empty_file_name_count++;

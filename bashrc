@@ -1128,6 +1128,8 @@ wikipedia-via-dns:
     Query wikipedia via DNS
 x2x-east:
     Share input devices with another host
+xdg-cache-home:
+    Return xdg cache home
 xmv:
     Rename files by perl expression
 xtitle:
@@ -8219,6 +8221,29 @@ dig +short txt "$@".wp.dg.cx | perl -0777 -pe 'exit 1 if ! $_ ; s/\\//g'
 # Share input devices with another host
 
 ssh -X $1 x2x -east -to $DISPLAY
+
+### fatpacked app xdg-cache-home ###############################################
+
+#!/usr/bin/env bash
+
+# Return xdg cache home
+
+source bash-helpers
+
+subdir="$1"
+subdir=$(echo $subdir | perl -pe 's/^.*\/(.+)/$1/')
+
+if [[ ! $XDG_CACHE_HOME ]] ; then
+  XDG_CACHE_HOME=$REMOTE_HOME/.cache
+fi
+
+if [[ $subdir ]] ; then
+  XDG_CACHE_HOME=$XDG_CACHE_HOME/$subdir/
+fi
+
+mkdir -p $XDG_CACHE_HOME
+
+RETURN $XDG_CACHE_HOME
 
 ### fatpacked app xmv ##########################################################
 

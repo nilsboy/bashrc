@@ -343,11 +343,9 @@ function cdm() {
 
 if [[ $DISPLAY ]] ; then
 
-    # keyboard-disable-caps-lock-xwindows
-
-    # make windows blink if prompt appears
+    # make windows blink when prompt reappears
     if [[ $(type -p wmctrl) ]] ; then
-        export BASHRC_PROMPT_WMCTRL="wmctrl -i -r $WINDOWID -b add,DEMANDS_ATTENTION"
+      export BASHRC_PROMPT_WMCTRL=window-blink
     fi
 
     export BROWSER=firefox
@@ -1126,6 +1124,8 @@ webserver-serve-current-directory.pl:
     Serve current directory files via http - perl version
 wikipedia-via-dns:
     Query wikipedia via DNS
+window-blink:
+    Blink current window
 x2x-east:
     Share input devices with another host
 xdg-cache-home:
@@ -8215,6 +8215,19 @@ http_this
 # Query wikipedia via DNS
 
 dig +short txt "$@".wp.dg.cx | perl -0777 -pe 'exit 1 if ! $_ ; s/\\//g'
+
+### fatpacked app window-blink #################################################
+
+#!/usr/bin/env bash
+
+# Blink current window
+
+source bash-helpers
+
+[[ ! "$DISPLAY" ]] || exit 0
+[[ ! "$WINDOWID" ]] || exit 0
+
+wmctrl -i -r $WINDOWID -b "add,DEMANDS_ATTENTION"
 
 ### fatpacked app x2x-east #####################################################
 

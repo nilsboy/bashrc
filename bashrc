@@ -933,6 +933,8 @@ passwort-generate:
     Generate a list of random and secure passwords
 path-grep:
     Find an executable in path
+path-list:
+    List PATH enties one per line
 perl-force-stacktrace:
     Force stracktrace output from a perl script
 perl-install-deps-for-module:
@@ -5394,6 +5396,16 @@ apg -M SN -n 20
 # Find an executable in path
 
 compgen -c | sort -u | find-or-grep "$@"
+
+### fatpacked app path-list ####################################################
+
+#!/usr/bin/env bash
+
+# List PATH enties one per line
+
+source bash-helpers
+
+echo $PATH | perl -pe 's/:/\n/g' | uniq-unsorted
 
 ### fatpacked app perl-force-stacktrace ########################################
 

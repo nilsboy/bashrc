@@ -2152,43 +2152,6 @@ if [[ -e $REMOTE_BASHRC ]] ; then
     fi
 fi
 
-### fatpacked app bashrc-eternal-history-add ###################################
-
-# Add entry to the eternal bash history
-
-source bash-helpers
-
-$HISTFILE_ETERNAL || DIE "Set HISTFILE_ETERNAL"
-$history1 || DIE "Specify history 1"
-$history2 || DIE "Specify history 2"
-
-$PRIVATE_SHELL && exit 0
-
-# TODO remove history position (by splitting)
-# history1=$(history 1)
-# history2=$(history 2)
-
-[[ $history1 = $history2 ]] && EXIT;
-
-read -r pos cmd <<< $history1
-
-if [[ $cmd == "rm "* ]] ; then
-    cmd="# $cmd"
-    history -s "$cmd"
-fi
-
-quoted_pwd=${PWD//\"/\\\"}
-
-# update cleanup_eternal_history if changed:
-line="$USER"
-line="$line $(date +'%F %T')"
-line="$line $BASHPID"
-line="$line \"$quoted_pwd\""
-line="$line \"$bashrc_last_return_values\""
-line="$line $cmd"
-echo "$line" >> $HISTFILE_ETERNAL
-
-
 ### fatpacked app bashrc-eternal-history-add-simple ############################
 
 #!/bin/bash
@@ -2305,7 +2268,7 @@ source bash-helpers
 
 [[ $DISTRIB_ID = "" ]] && exit
 
-local fix_file=bashrc-linux-distribution-fix-$DISTRIB_ID
+fix_file=bashrc-linux-distribution-fix-$DISTRIB_ID
 if [[ $(type -t $fix_file) ]] ; then
     . $fix_file
 fi

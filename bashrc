@@ -1056,7 +1056,7 @@ xtitle:
 
 use Cwd;
 
-my $file = join(" ", @_);
+my $file = join(" ", @ARGV);
 my $abs = Cwd::abs_path($file);
 $abs .= "/" if -d $file;
 $abs = "'$abs'" if $abs =~ /\s/;

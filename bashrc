@@ -1321,7 +1321,7 @@ file=$(abs $file)
 file_prefix=$(filename $file)
 file_type=$(extension $file)
 
-perl -e 'exit 1 if "'$file_type'" !~ /(ogg|mp3|flac|wav|mp4)$/i' \
+perl -e 'exit 1 if "'$file_type'" !~ /(ogg|mp3|flac|wav|mp4|m4a)$/i' \
     || RETURN "Unknown music file format for $file - skipping\n"
 
 INFO "Converting to $dst_type"
@@ -1346,13 +1346,19 @@ out_file="$file".$dst_type
 # save to flac first to keep the tags
 # cannot convert to ogg directly because I don't know 
 # how to specify the ogg quality level with avconv
-# if [[ $file_type != flac ]] ; then
-#     DEBUG "Transcoding $file to flac"
-#     # sox $file -t flac $tmp
-#     avconv -i "$file" $tmp
-# else
-#     ln -s "$file" $tmp
-# fi
+
+
+
+if [[ $dst_type = ogg ]] ; then
+    if [[ $file_type != flac ]] ; then
+        DEBUG "Transcoding $file to flac"
+        # sox $file -t flac $tmp
+        avconv -i "$file" $tmp
+        _file="$file"
+        file="$tmp"
+        tmp="$_file"
+    fi
+fi
 
 # remove old extension if old format was lossless
 # if [[ $file_type = flac || $file_type = ape ]] ; then
@@ -1360,6 +1366,8 @@ out_file="$file".$dst_type
 # fi
 
 DEBUG "Transcoding $file to $dst_type"
+
+INFO "dst_type: $dst_type"
 
 if [[ $dst_type = ogg ]] ; then
     oggenc -q6 -o "$out_file" "$file"
@@ -1376,10 +1384,14 @@ else
     avconv -loglevel quiet -i "$file" -vn -c:a libmp3lame -b:a 192k -map_metadata 0:s:0 "$out_file"
 fi
 
+if [[ -e $tmp ]] ; then
+    rm $tmp
+fi
+
 rm "$file"
-# rm $tmp
 
 DEBUG "Done"
+
 
 
 ### fatpacked app audio-split-by-cue ###########################################
@@ -2545,7 +2557,7 @@ exit 1;
 source bash-helpers
 
 src=${1?specify source directory}
-dst=${2?specify destination directory}
+dst=${2?specify destination base directory}
 
 if [[ $dst = . ]] ; then
     dst=$(basename $(abs $src))
@@ -2556,14 +2568,19 @@ mkdir -p "$dst"
 test -d "$src" || DIE "Not a directory: $src"
 test -d "$dst" || DIE "Not a directory: $dst"
 
-INFO "copying $src -> $dst"
-
 src_device=$(stat --format "%d" "$src")
 dst_device=$(stat --format "%d" "$dst")
 
 if [[ $src_device != $dst_device ]] ; then
     DIE "$src and $dst have to reside on the same device for hard links to work"
 fi
+
+src_base=$(basename "$src")
+dst="$dst/$src_base"
+
+INFO "copying $src -> $dst"
+
+mkdir -p "$dst"
 
 cp -rnl "$src"/* "$dst"/
 
@@ -8383,10 +8400,10 @@ sub normalize {
 
     s/&/and/g;
     s/['`´]+//g;
-    s/[\._]+/_/g;
+    s/[\._\W]+/_/g;
+    s/.*?www_[^_]+_[^_]+_//gi;
     s/^_*//g;
     s/_*$//g;
-    s/.*?www_[^_]+_[^_]+_//gi;
 
     if ( !$_ ) {
         $empty_file_name_count++;

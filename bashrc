@@ -1655,16 +1655,14 @@ if [[ $BASHRC_PROMPT_COLORS ]] ; then
         GREY='\[\e[38;5;243m\]'
        GREEN='\[\e[38;5;2m\]'
       ORANGE='\[\e[38;5;3m\]'
-         RED='\[\e[38;5;9m\]'
-     DARKRED='\[\e[38;5;1m\]'
+         RED='\[\e[38;5;1m\]'
 else
     NO_COLOR=$(echo -e '\x1b[33;0;m')
         GRAY=$(echo -e '\x1b[38;5;243m')
         GREY=$(echo -e '\x1b[38;5;243m')
        GREEN=$(echo -e '\x1b[38;5;2m')
       ORANGE=$(echo -e '\x1b[38;5;3m')
-         RED=$(echo -e '\x1b[38;5;9m')
-     DARKRED=$(echo -e '\x1b[38;5;1m')
+         RED=$(echo -e '\x1b[38;5;1m')
 fi
 
 function _LOG() {
@@ -2227,10 +2225,12 @@ source bash-helpers
 
 COLOR=$GREEN
 if [[ $BASHRC_INSIDE_DOCKER ]] ; then
-    COLOR=$DARKRED
+  DOCKER="${RED}docker${NO_COLOR}(${HOSTNAME})"
+else
+  DOCKER=$HOSTNAME
 fi
 
-echo -n $COLOR${HOSTNAME}$NO_COLOR
+echo -n $COLOR$DOCKER$NO_COLOR
 
 ### fatpacked app bashrc-helper-login-name #####################################
 

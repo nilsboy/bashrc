@@ -5382,6 +5382,8 @@ source bash-helpers
 
 wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
 
+mkdir -p ~/.bashrc.d
+
 cat << ''EOF > ~/.bashrc.d/nvm
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
@@ -6626,7 +6628,10 @@ host=${1?specify host}
 port=${2:-59347}
 
 # proxyserver $port
-nproxy start -p $port &
+# nproxy start -p $port &
+
+# npm install -g proxy
+pidof proxy > /dev/null || proxy -p $port &
 
 ssh -A -t $host -R $port:localhost:$port \
     http_proxy=http://localhost:$port \
@@ -6637,7 +6642,6 @@ ssh -A -t $host -R $port:localhost:$port \
     FTP_PROXY=ftp://localhost:$port \
     ssh_remote_proxy=localhost:$port \
     bash -i
-
 
 ### fatpacked app ssl-create-self-signed-certificate ###########################
 

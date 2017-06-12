@@ -27,7 +27,7 @@ if [[ $REMOTE_HOME != $HOME ]] ; then
 fi
 PATH+=~/.bin:~/bin:~/opt/bin
 PATH+=:./node_modules/.bin
-PATH+=:~/node_modules/bin
+# PATH+=:~/node_modules/bin
 PATH+=:$BASHRC_PATH_ORG
 export PATH
 
@@ -5063,6 +5063,8 @@ nmap -sn 192.168.0.0/16
 # Install latest node version
 
 source bash-helpers
+
+DIE 'Use nvm-setup instead'
 
 node_dst=~/opt/node
 node_bin=~/opt/bin/node

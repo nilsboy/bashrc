@@ -2345,7 +2345,7 @@ foreach my $bin (sort (path(".")->children)) {
     $apps_count++;
 }
 
-$bashrc_phat->append("### fatpacked apps END", "#" x 57, "\n");
+$bashrc_phat->append("### fatpacked apps END ", "#" x 57, "\n\n");
 
 print "Done - apps packed: $apps_count\n";
 
@@ -5369,6 +5369,22 @@ if [[ $https_proxy ]] ; then
     npm config set https-proxy $https_proxy
 fi
 
+
+### fatpacked app nvm-setup ####################################################
+
+#!/usr/bin/env bash
+
+# Setup nvm (node version manager)
+
+source bash-helpers
+
+wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
+
+cat << ''EOF > ~/.bashrc.d/nvm
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+EOF
 
 ### fatpacked app once #########################################################
 
@@ -8467,4 +8483,5 @@ case "$TERM" in
         ;;
 esac
 
-### fatpacked apps END#########################################################
+### fatpacked apps END #########################################################
+

@@ -5704,7 +5704,7 @@ cat $file
 source bash-helpers
 
 pm2 install pm2-logrotate
-pm2 set pm2-logrotate:max_size '1K'
+pm2 set pm2-logrotate:max_size '3M'
 pm2 set pm2-logrotate:compress true
 pm2 set pm2-logrotate:retain 31
 pm2 set pm2-logrotate:rotateInterval: '* * */1 * *'

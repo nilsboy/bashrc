@@ -854,6 +854,8 @@ npm-set-global-modules-dir:
     Make npm use local dir for modules
 npm-set-proxy-from-environment:
     Set proxy from environment
+nvm-setup:
+    Setup nvm (node version manager)
 once:
     Print stdin once if it has changed since last time
 passwort-generate:
@@ -897,6 +899,8 @@ perl-upgrade-outdated-modules:
 pipe-wrapper:
     Emulate a pipe for a program that does not support one itself like
     eslint
+pm2-activate-log-rotation:
+    Setup log rotation for pm2
 prompt-dir:
     Prompt containing only the prettified current directory
 prompt-dir-full:
@@ -5690,6 +5694,25 @@ if [[ $error ]]; then
 fi
 
 cat $file
+
+### fatpacked app pm2-activate-log-rotation ####################################
+
+#!/usr/bin/env bash
+
+# Setup log rotation for pm2
+
+source bash-helpers
+
+pm2 install pm2-logrotate
+pm2 set pm2-logrotate:max_size '1K'
+pm2 set pm2-logrotate:compress true
+pm2 set pm2-logrotate:retain 31
+pm2 set pm2-logrotate:rotateInterval: '* * */1 * *'
+pm2 set pm2-logrotate:dateFormat 'DD'
+
+# Check every 10 minutes for file size
+pm2 set pm2-logrotate:workerInterval '600'
+
 
 ### fatpacked app prompt-dir ###################################################
 

@@ -899,8 +899,10 @@ perl-upgrade-outdated-modules:
 pipe-wrapper:
     Emulate a pipe for a program that does not support one itself like
     eslint
-pm2-activate-log-rotation:
-    Setup log rotation for pm2
+pm2-logrotate-config:
+    Display the config of the logrotate module of pm2
+pm2-setup:
+    Setup pm2 including log rotation
 prompt-dir:
     Prompt containing only the prettified current directory
 prompt-dir-full:
@@ -5694,6 +5696,16 @@ if [[ $error ]]; then
 fi
 
 cat $file
+
+### fatpacked app pm2-logrotate-config #########################################
+
+#!/usr/bin/env bash
+
+# Display the config of the logrotate module of pm2
+
+source bash-helpers
+
+pm2 get pm2-logrotate
 
 ### fatpacked app pm2-setup ####################################################
 

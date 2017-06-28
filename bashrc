@@ -5695,22 +5695,30 @@ fi
 
 cat $file
 
-### fatpacked app pm2-activate-log-rotation ####################################
+### fatpacked app pm2-setup ####################################################
 
 #!/usr/bin/env bash
 
-# Setup log rotation for pm2
+# Setup pm2 including log rotation
 
 source bash-helpers
 
+npm install -g pm2
+
 pm2 install pm2-logrotate
+
+# Keep max 3 MB of log data (uncompressed) for each day of the
+# month then compress it.
+#
+# Every new chunk will overwrite any already rotated data for the day.
+# The last chunk of the day may contain much less that max_size.
+pm2 set pm2-logrotate:rotateInterval '* * */1 * *'
+pm2 set pm2-logrotate:retain 31
+pm2 set pm2-logrotate:dateFormat 'DD'
 pm2 set pm2-logrotate:max_size '3M'
 pm2 set pm2-logrotate:compress true
-pm2 set pm2-logrotate:retain 31
-pm2 set pm2-logrotate:rotateInterval: '* * */1 * *'
-pm2 set pm2-logrotate:dateFormat 'DD'
 
-# Check every 10 minutes for file size
+# Check every 10 minutes for max file size.
 pm2 set pm2-logrotate:workerInterval '600'
 
 

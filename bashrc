@@ -3504,7 +3504,13 @@ perl -i -pe 's/\r//g' "$@"
 
 # Grep environment
 
-env | grep -i "$@"
+var="$@"
+
+if [[ -z var ]] ; then
+  var=.
+fi
+
+env --null | perl -pe 's/\n/\\n/g ; s/\0/\n/g' | grep -i "$var" | grep -v LS_COLORS
 
 ### fatpacked app env-show #####################################################
 

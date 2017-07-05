@@ -550,8 +550,13 @@ EOF
 
 [ -e "$REMOTE_HOME/.bin" ] || bashrc-unpack
 
-eval $(linux-distribution-info | perl -pe 's/^/export /g')
-source bashrc-linux-distribution-run-fixes
+eval $(linux-distribution-info)
+if [[ $DISTRIB_ID ]] ; then
+  fix_file=bashrc-linux-distribution-fix-$DISTRIB_ID
+  if [[ $(type -t $fix_file) ]] ; then
+      source $fix_file
+  fi
+fi
 
 prompt-set
 bashrc-set-last-session-pwd
@@ -646,8 +651,6 @@ bashrc-install:
     Install and run specified installer_command
 bashrc-linux-distribution-fix-suse:
     Script to run when logging into a suse machine
-bashrc-linux-distribution-run-fixes:
-    Environment fixes to run on specific linux distributions
 bashrc-pack:
     Attach scripts to the bashrc skeleton
 bashrc-unpack-and-run:
@@ -2300,21 +2303,6 @@ exec alternative-run $abs_app
 # Script to run when logging into a suse machine
 
 unalias crontab
-
-### fatpacked app bashrc-linux-distribution-run-fixes ##########################
-
-#!/usr/bin/env bash
-
-# Environment fixes to run on specific linux distributions
-
-source bash-helpers
-
-[[ $DISTRIB_ID = "" ]] && exit
-
-fix_file=bashrc-linux-distribution-fix-$DISTRIB_ID
-if [[ $(type -t $fix_file) ]] ; then
-    . $fix_file
-fi
 
 ### fatpacked app bashrc-pack ##################################################
 

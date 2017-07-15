@@ -1055,6 +1055,8 @@ vncviewer:
     preconfigured to use ssh
 wcat:
     Easily dump a web site
+webserver-file-manager:
+    Serve a file manager for the current directory via http
 webserver-serve-current-directory:
     Serve current directory files via http
 webserver-serve-current-directory.pl:
@@ -5392,6 +5394,7 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 EOF
 
+WARN "Make sure 'prefix' is not set in ~/.npmrc"
 INFO "Now logout and in again to update your environment."
 INFO "Then to install node run:"
 INFO "nvm install node"
@@ -8286,6 +8289,19 @@ else {
     print $content;
 }
 
+### fatpacked app webserver-file-manager #######################################
+
+#!/usr/bin/env bash
+
+# Serve a file manager for the current directory via http
+
+source bash-helpers
+
+dir=$(pwd)
+INFO "Serving current directory: $dir"
+npm install -g node-file-manager
+npx node-file-manager -p 5002 -d $dir
+
 ### fatpacked app webserver-serve-current-directory ############################
 
 #!/usr/bin/env bash
@@ -8295,7 +8311,7 @@ else {
 source bash-helpers
 
 npm install -g serve
-serve .
+serve --port 5001 .
 
 ### fatpacked app webserver-serve-current-directory.pl #########################
 

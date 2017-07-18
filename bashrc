@@ -2539,7 +2539,8 @@ fi
 
 ### fatpacked app chroot-fully-working #########################################
 
-#/usr/bin/env bash
+#!/usr/bin/env bash
+
 # Setup fully working change root
 
 source bash-helpers

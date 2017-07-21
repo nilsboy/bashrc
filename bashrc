@@ -5431,7 +5431,7 @@ open(my $fileh, ">", $file)
     or die "cannot open > $file: $!";
 print $fileh $data;
 
-### fatpacked app passwort-generate ############################################
+### fatpacked app password-generate ############################################
 
 #!/usr/bin/env bash
 

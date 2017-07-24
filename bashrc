@@ -700,6 +700,9 @@ diff-so-fancy:
     Install diff-so-fancy
 dir-diff:
     Diff two directory structures
+dir-diff-by-contents:
+    Diff 2 directories recursively comparing file contents and not file
+    attributes
 dir-name-prettifier:
     shorten prompt dir to max 15 chars
 docker-ls:
@@ -861,7 +864,7 @@ nvm-setup:
     Setup nvm (node version manager)
 once:
     Print stdin once if it has changed since last time
-passwort-generate:
+password-generate:
     Generate a list of random and secure passwords
 path-grep:
     Find an executable in path
@@ -3233,6 +3236,20 @@ $diff -y \
     <(tree --no-colors --ascii $@ "$left") \
     <(tree --no-colors --ascii $@ "$right") \
     | less
+
+### fatpacked app dir-diff-by-contents #########################################
+
+#!/usr/bin/env bash
+
+# Diff 2 directories recursively comparing file contents and not file attributes
+# (timestamp etc)
+
+source bash-helpers
+
+src=$1
+dst=$2
+
+rsync -nvrclD --delete $src/ $dst/
 
 ### fatpacked app dir-name-prettifier ##########################################
 

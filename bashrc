@@ -1300,7 +1300,7 @@ file=$(perl -pe 's/\/$//g' <<<"$file")
 bak=$(basename "$file")
 bak=$REMOTE_HOME/backup/"$bak""_"$(date +%Y%m%d_%H%M%S)
 
-INFO "Archiving to: $file -> $bak"
+INFO "Copying: $file -> $bak"
 
 cp "$file" "$bak"
 
@@ -1319,7 +1319,7 @@ file=$(perl -pe 's/\/$//g' <<<"$file")
 bak=$(basename "$file")
 bak=$REMOTE_HOME/backup/"$bak""_"$(date +%Y%m%d_%H%M%S)
 
-INFO "Archiving to: $file -> $bak"
+INFO "Moving: $file -> $bak"
 
 mv "$file" "$bak"
 

@@ -617,7 +617,9 @@ apt-popularity:
 apt-unhold-package:
     Return a deb package to its default upgrade state
 archive:
-    Archive a file appending a timestamp
+    Copy a file to ~/backups/ appending a timestamp
+archive-mv-to:
+    Move a file to ~/backups/ appending a timestamp
 audio-file-prefix-track-number:
     Add a leading two digit track number to the file name
 audio-ogg-from-any:
@@ -1287,7 +1289,26 @@ dpkg --get-selections $package_name
 
 #!/bin/bash
 
-# Archive a file appending a timestamp
+# Copy a file to ~/backups/ appending a timestamp
+
+set -e
+
+source bash-helpers
+
+file=${1?filename not specified}
+file=$(perl -pe 's/\/$//g' <<<"$file")
+bak=$(basename "$file")
+bak=$REMOTE_HOME/backup/"$bak""_"$(date +%Y%m%d_%H%M%S)
+
+INFO "Archiving to: $file -> $bak"
+
+cp "$file" "$bak"
+
+### fatpacked app archive-mv-to ################################################
+
+#!/bin/bash
+
+# Move a file to ~/backups/ appending a timestamp
 
 set -e
 

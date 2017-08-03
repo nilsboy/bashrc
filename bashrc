@@ -911,6 +911,8 @@ pm2-logrotate-config:
     Display the config of the logrotate module of pm2
 pm2-setup:
     Setup pm2 including log rotation
+projects-start:
+    Start all local projects that have a start script
 prompt-dir:
     Prompt containing only the prettified current directory
 prompt-dir-full:
@@ -2804,6 +2806,7 @@ BASH_ENV=~/.bashrc
 # MAILTO=email1,email2,...
 # m h  dom mon dow   command
 # @reboot my_script
+# @reboot projects-start
 
 ################################################################################
 
@@ -5775,6 +5778,28 @@ pm2 set pm2-logrotate:compress true
 # Check every 10 minutes for max file size.
 pm2 set pm2-logrotate:workerInterval 600
 
+
+### fatpacked app projects-start ###############################################
+
+#!/usr/bin/env bash
+
+# Start all local projects that have a start script
+
+source bash-helpers
+
+for dir in ~/projects/* ; do
+  project=$(basename $dir)
+  INFO "Found project: $project"
+  cd $dir
+  exe=$dir/bin/project-start
+  
+  if [ -x $exe ] ; then
+    INFO "Starting $project via $exe"
+    ./bin/project-start || ERROR "Could not start: $exe"
+  else
+    WARN "Cannot start project: $project - no start file: $exe"
+  fi
+done
 
 ### fatpacked app prompt-dir ###################################################
 

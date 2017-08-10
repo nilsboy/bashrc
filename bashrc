@@ -1304,7 +1304,7 @@ bak=$REMOTE_HOME/backup/"$bak""_"$(date +%Y%m%d_%H%M%S)
 
 INFO "Copying: $file -> $bak"
 
-cp "$file" "$bak"
+cp -a "$file" "$bak"
 
 ### fatpacked app archive-mv-to ################################################
 

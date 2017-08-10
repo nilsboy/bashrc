@@ -842,6 +842,8 @@ mem-swap-per-process:
     Show swap usage per process
 mysql:
     Fix mysql prompt to show real hostname - NEVER localhost
+mysqldump-structure:
+    Dump the structure without the data of a mysql database
 neovim-setup:
     Setup neovim
 net-find-free-port:
@@ -5011,6 +5013,31 @@ xtitle "mysql@$host" && \
     MYSQL_HISTFILE=$history_file alternative-run $0 \
         --default-character-set=utf8 \
         --show-warnings --pager="less -FX" "$@"
+
+### fatpacked app mysqldump-structure ##########################################
+
+#!/usr/bin/env bash
+
+# Dump the structure without the data of a mysql database
+
+source bash-helpers
+
+host=${1:?Specify host}
+database=${2:?Specify database}
+user=${3:?Specify user}
+password=${4:?Specify password}
+
+mysqldump \
+  --protocol=TCP \
+  --single-transaction \
+  --skip-comments \
+  --skip-set-charset \
+  -d \
+  -u $user \
+  --password="$password" \
+  --host $host \
+  $database
+
 
 ### fatpacked app neovim-setup #################################################
 

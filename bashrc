@@ -1843,7 +1843,7 @@ let bashrcFileName = path.resolve("../bashrc/bashrc")
 
 let appsCount = 0
 
-let skipToSkip = [
+let filesToSkip = [
   `README`,
   `package-lock.json`,
 ]
@@ -1853,14 +1853,12 @@ for (const binFileName of glob(path.join(wd, '*'))) {
   if(fs.lstatSync(binFileName).isDirectory()) {
     continue
   }
-  if(skipToSkip.includes(path.basename(binFileName))) {
+  if(filesToSkip.includes(path.basename(binFileName))) {
     continue
   }
 
   DEBUG(`binFileName:`, binFileName)
-
   const bin = fs.readFileSync(binFileName).toString()
-
   let description = `fatpacked app ${path.basename(binFileName)}`
   bashrc += _.padEnd("### " + description + " ", 80, `#`) + "\n\n"
   bashrc += bin + "\n"
@@ -1868,7 +1866,6 @@ for (const binFileName of glob(path.join(wd, '*'))) {
 }
 
 bashrc += _.padEnd("### fatpacked apps END ", 80, "#") + "\n\n"
-
 fs.writeFileSync(bashrcFileName, bashrc)
 
 INFO(`Done - apps packed: ${appsCount}`)
@@ -2742,26 +2739,6 @@ alternative-run $0 -h \
 
 exec bashrc-install "$0" npm install -g diff-so-fancy
 
-
-### fatpacked app dir-diff #####################################################
-
-#!/bin/bash
-
-# Diff two directory structures
-
-left=$1 ; shift
-right=$1 ; shift
-
-diff=diff
-
-if [[ $(type -p colordiff) ]] ; then
-    diff=colordiff
-fi
-
-$diff -y \
-    <(tree --no-colors --ascii $@ "$left") \
-    <(tree --no-colors --ascii $@ "$right") \
-    | less
 
 ### fatpacked app dir-diff-by-contents #########################################
 
@@ -7326,6 +7303,26 @@ sub size {
 }
 
 
+
+### fatpacked app tree-diff ####################################################
+
+#!/bin/bash
+
+# Diff two directory structures
+
+left=$1 ; shift
+right=$1 ; shift
+
+diff=diff
+
+if [[ $(type -p colordiff) ]] ; then
+    diff=colordiff
+fi
+
+$diff -y \
+    <(tree --no-colors --ascii $@ "$left") \
+    <(tree --no-colors --ascii $@ "$right") \
+    | less
 
 ### fatpacked app ubuntu-setup #################################################
 

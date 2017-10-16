@@ -2107,7 +2107,7 @@ exit 0 if $output =~ /^\s*$switch/ms;
 
 exit 1;
 
-### fatpacked app cp-merge-directories #########################################
+### fatpacked app cp-merge-directories-by-hardlinks ############################
 
 #!/bin/bash
 
@@ -2693,7 +2693,7 @@ $readme->spew("$preamble\n\n");
 foreach my $app (sort(path(".")->children)) {
 
     next if $app->is_dir;
-    next if $app->basename eq "README";
+    next if $app->basename =~ /^readme$|^package.*json$/i;
 
     my ($description) = $app->slurp =~ /^=head1 NAME\s+(.+)/m;
     ($description) = $app->slurp =~ /^# (.+?)\n/m if !$description;
@@ -2731,16 +2731,7 @@ alternative-run $0 -h \
     | csvview \
     | less -S
 
-### fatpacked app diff-so-fancy ################################################
-
-#!/usr/bin/env bash
-
-# Install diff-so-fancy
-
-exec bashrc-install "$0" npm install -g diff-so-fancy
-
-
-### fatpacked app dir-diff-by-contents #########################################
+### fatpacked app diff-dir #####################################################
 
 #!/usr/bin/env bash
 
@@ -2749,10 +2740,19 @@ exec bashrc-install "$0" npm install -g diff-so-fancy
 
 source bash-helpers
 
-src=$1
-dst=$2
+src=${1:?Specify src}
+dst=${2:-.}
 
-rsync -nvrclD --delete $src/ $dst/
+rsync -nrclD --delete --exclude /.git --info COPY,DEL,NAME,SYMSAFE $src/ $dst/
+
+### fatpacked app diff-so-fancy ################################################
+
+#!/usr/bin/env bash
+
+# Install diff-so-fancy
+
+exec bashrc-install "$0" npm install -g diff-so-fancy
+
 
 ### fatpacked app dir-name-prettifier ##########################################
 

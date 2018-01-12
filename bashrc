@@ -6142,6 +6142,14 @@ if [ -e $fifo ] ; then
 #    rm -f $fifo
 fi
 
+### fatpacked app sort-by-file-modification ####################################
+
+#!/usr/bin/env bash
+
+# Sort a list of file names by their modification time
+
+perl -e 'map { print "$_"; } sort { -M $a <=> -M $b } <>'
+
 ### fatpacked app sort-by-path-depth ###########################################
 
 #!/bin/bash

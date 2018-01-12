@@ -6148,7 +6148,7 @@ fi
 
 # Sort a list of file names by their modification time
 
-perl -e 'map { print "$_"; } sort { -M $a <=> -M $b } <>'
+perl -MFile::stat -e 'map { print "$_\n" } sort { stat($a)->mtime <=> stat($b)->mtime } map {$_ =~ s/\n//g ; $_} <>'
 
 ### fatpacked app sort-by-path-depth ###########################################
 

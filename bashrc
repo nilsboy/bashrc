@@ -3063,6 +3063,12 @@ else
     SHOW Linux $(cat /etc/issue.net)
 fi
 
+if [[ -e /var/run/reboot-required ]] ; then
+  echo
+  echo 'REBOOT REQUIRED'
+  echo
+fi
+
 ### fatpacked app file-add-line-if-new #########################################
 
 #!/usr/bin/env perl

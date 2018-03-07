@@ -6438,7 +6438,7 @@ INFO "Converting file $file"
 
 extension=$(extension $file)
 type=$(file -b --mime-type "$file")
-out="$file.text-from-any"
+out=`basename "$file"`
 
 DEBUG "type: $type"
 

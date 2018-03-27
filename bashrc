@@ -4624,6 +4624,18 @@ netstat -tapnu | less -S
 
 nmap -sn 192.168.0.0/16
 
+### fatpacked app net-wlan-rtl8723be-wrong-antenna-fix #########################
+
+#!/usr/bin/env bash
+
+# Fix wrong antenna problem of rtl8723be wlan adaptor
+
+source bash-helpers
+
+gotroot
+
+echo "options rtl8723be ant_sel=1" > /etc/modprobe.d/rtl8723be.conf
+
 ### fatpacked app node-install #################################################
 
 #!/bin/bash

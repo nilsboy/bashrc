@@ -4629,6 +4629,7 @@ nmap -sn 192.168.0.0/16
 #!/usr/bin/env bash
 
 # Fix wrong antenna problem of rtl8723be wlan adaptor
+# Used in HP 250 laptops
 
 source bash-helpers
 

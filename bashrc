@@ -1042,6 +1042,16 @@ fi
 RETURN " ${color}$total${NO_COLOR}"
 
 
+### fatpacked app bash-eternal-history-grep ####################################
+
+#!/usr/bin/env bash
+
+# Grep bash history
+
+source bash-helpers
+
+tac $HISTFILE_ETERNAL | grep -ai "$@" | less
+
 ### fatpacked app bash-eternal-history-search ##################################
 
 #!/usr/bin/env perl
@@ -1093,6 +1103,9 @@ $count ||= 100;
 my @to_show = ();
 
 ENTRY: while (<F>) {
+    if(length($_) > 10000) {
+      $_ = substr($_, 0, 10000);
+    }
     my (@all) = $_ =~ /$hist_regex/g;
     my ( $user, $date, $time, $pid, $dir, $result, $cmd ) = @all;
     my $was_successful = $result =~ /[0 ]+/g;

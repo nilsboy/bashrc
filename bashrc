@@ -174,7 +174,7 @@ alias    la='ls -1d \.*'
 alias   lla='ls -lhd \.*'
 
 function lls() {
-  ls -1d *$**
+  ls -1ld *$**
 }
 
 # https://github.com/seebi/dircolors-solarized
@@ -1042,16 +1042,6 @@ fi
 RETURN " ${color}$total${NO_COLOR}"
 
 
-### fatpacked app bash-eternal-history-grep ####################################
-
-#!/usr/bin/env bash
-
-# Grep bash history
-
-source bash-helpers
-
-tac $HISTFILE_ETERNAL | grep -ai "$@" | less
-
 ### fatpacked app bash-eternal-history-search ##################################
 
 #!/usr/bin/env perl
@@ -1093,7 +1083,7 @@ my $wd     = cwd;
 
 # user 2011-08-20 21:02:47 19202 "dir" "0 1" cmd with options ...
 #                  usr  date time  pid   dir   exit codes  cmd
-my $hist_regex = '^(.+?) (.+?) (.+?) (\d*?) "(.+?)" "([\d ]+?)" (.+)$';
+my $hist_regex = '^(.+) (.+) (.+) (\d*) "(.+)" "([\d ]+)" (.+)$';
 
 my $h = $ENV{HISTFILE_ETERNAL};
 open( F, "tac $h |" ) || die $!;
@@ -4633,19 +4623,6 @@ netstat -tapnu | less -S
 # Scan for hosts in private network
 
 nmap -sn 192.168.0.0/16
-
-### fatpacked app net-wlan-rtl8723be-wrong-antenna-fix #########################
-
-#!/usr/bin/env bash
-
-# Fix wrong antenna problem of rtl8723be wlan adaptor
-# Used in HP 250 laptops
-
-source bash-helpers
-
-gotroot
-
-echo "options rtl8723be ant_sel=1" > /etc/modprobe.d/rtl8723be.conf
 
 ### fatpacked app node-install #################################################
 

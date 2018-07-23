@@ -5065,6 +5065,15 @@ source bash-helpers
 
 apg -M SN -n 20
 
+### fatpacked app path-edit ####################################################
+
+#!/usr/bin/env bash
+
+# Edit $PATH
+# Usage: eval `path-edit`
+
+echo export PATH=${PATH} | vipe
+
 ### fatpacked app path-grep ####################################################
 
 #!/bin/bash
@@ -7806,6 +7815,24 @@ $url =~ s/\:/\//;
 $url =~ s/^/scp:\/\//g;
 
 print "$url\n";
+
+### fatpacked app vipe #########################################################
+
+#!/bin/bash
+
+# Edit stdin in a pipe using vim
+# Based on https://old.reddit.com/r/vim/comments/3oo156/whats_your_best_vim_related_shell_script/
+
+function cleanup() { test -e "$TOVIMTMP" && rm "$TOVIMTMP" ; }
+trap cleanup ERR EXIT
+
+set -e
+
+TOVIMTMP=/tmp/tovim_tmp_`date +%Y-%m-%d_%H-%M-%S`.`uuid`.txt
+cat > $TOVIMTMP 
+vi $TOVIMTMP < /dev/tty > /dev/tty
+cat $TOVIMTMP 
+
 
 ### fatpacked app vnc-server-setup-upstart-script ##############################
 

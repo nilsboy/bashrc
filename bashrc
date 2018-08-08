@@ -7539,13 +7539,13 @@ if [[ $1 =~ @ ]] && [[ $1 =~ : ]] ; then
     args="$args "$(vim-url $1)
 fi
 
-vi=vim
-
 if [[ $(type -p nvim) ]] ; then
-  vi=nvim
+  # :set guicursor prevents 001b from appearing when setting cursorshape for
+  # incompatible terminals
+  exec nvim --cmd ':set guicursor=' $args "$@"
 fi
 
-exec $vi $args "$@"
+exec vim $args "$@"
 
 
 ### fatpacked app vi-choose-file-from-list #####################################

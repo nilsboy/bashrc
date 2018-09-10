@@ -237,7 +237,8 @@ function csvview() { command csvview "$@" | LESS= less -S ; }
 
 ### Vim and less
 
-EDITOR=vi
+# git commit needs absolute path
+EDITOR=$REMOTE_HOME/.bin/vi
 if [[ $REMOTE_HOST ]] ; then
     EDITOR="DISPLAY= $EDITOR"
 fi
@@ -7528,8 +7529,8 @@ set -e
 
 export VIM_HOME=$REMOTE_HOME/.vim
 
-if [[ -e $VIM_HOME/etc/vimrc ]] ; then
-    args=" -u $VIM_HOME/etc/vimrc"
+if [[ -e $VIM_HOME/vimrc ]] ; then
+    args=" -u $VIM_HOME/vimrc"
 else
     args=" -i $REMOTE_HOME/._viminfo"
 fi

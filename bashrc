@@ -3985,6 +3985,53 @@ undef $/;
 
 print HTML::Strip->new()->parse( <> );
 
+### fatpacked app http-echo-server #############################################
+
+#!/usr/bin/env node
+
+// Test HTTP server that response with the request
+
+const express = require(`express`)
+const app = express()
+const basicAuth = require(`express-basic-auth`)
+
+app.use(
+  basicAuth({
+    authorizer: myAuthorizer
+  })
+)
+
+let gusername
+let gpassword
+function myAuthorizer(username, password) {
+  gusername = username
+  gpassword = password
+  return true
+}
+
+app.get(`/*`, (req, res) => {
+  return res.send({
+    headers: req.headers
+    , params: req.params
+    , query: req.query
+    , originalUrl: req.originalUrl
+    , body: req.body
+    , hostname: req.hostname
+    , ip: req.ip
+    , method: req.method
+    , path: req.path
+    , protocol: req.protocol
+    , isCachefresh: req.fresh
+    , ips: req.ips
+    , username: gusername
+    , password: gpassword
+  })
+})
+
+app.listen(6666, () => {
+  return console.log(`Example app listening on port 3000!`)
+})
+
 ### fatpacked app iptables-port-redirect #######################################
 
 #!/bin/bash

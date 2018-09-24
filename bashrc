@@ -198,7 +198,6 @@ alias shell-turn-on-line-wrapping="tput smam"
 
 alias cp="cp -i"
 alias mv="mv -i"
-alias df="df -h"
 alias du="du -sch"
 alias crontab="crontab -i"
 alias xargs='xargs -I {} -d \\n'

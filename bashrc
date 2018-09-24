@@ -198,6 +198,7 @@ alias shell-turn-on-line-wrapping="tput smam"
 
 alias cp="cp -i"
 alias mv="mv -i"
+alias df="df -h"
 alias du="du -sch"
 alias crontab="crontab -i"
 alias xargs='xargs -I {} -d \\n'
@@ -2741,6 +2742,7 @@ if [[ $@ ]] ; then
 fi
 
 alternative-run $0 -h \
+    | perl -ne 'print if $_ !~ /\/snap\//' \
     | perl -0777 -pe 's/Mounted on/Mounted_on/gm' \
     | perl -0777 -pe 's/^(\S+)\n/$1/gm' \
     | csvview \
@@ -4030,6 +4032,30 @@ app.get(`/*`, (req, res) => {
 app.listen(6666, () => {
   return console.log(`Example app listening on port 3000!`)
 })
+
+### fatpacked app internalip ###################################################
+
+#!/bin/sh
+
+# get internal IP address
+# used for outgoing Internet connections
+# see: https://github.com/rsp/scripts/blob/master/internalip.md
+
+resolve() {
+	(gethostip -d $1 || getent ahostsv4 $t | grep RAW | awk '{print $1; exit}') 2>/dev/null
+}
+noip() {
+	[ -n "$(echo $1 | tr -d '0-9.\n')" ]
+}
+
+[ -n "$1" ] && t=$1 || t='8.8.8.8'
+
+noip $t && t=$(resolve $t)
+
+[ -n "$t" ] || { echo Cannot resolve domain $1 >&2; exit 1; }
+
+ip route get $t | awk '{print $NF; exit}'
+
 
 ### fatpacked app iptables-port-redirect #######################################
 

@@ -7852,7 +7852,7 @@ source bash-helpers
 INFO "Setting up vim config..."
 
 VIM_DIR=$REMOTE_HOME/.vim/
-VIM_ETC=$VIM_DIR/etc
+VIM_ETC=$VIM_DIR/
 
 mkdir -p $VIM_DIR
 cd $VIM_DIR
@@ -7870,7 +7870,7 @@ fi
 
 INFO "Cloning git dotvim repo..."
 
-git clone https://github.com/nilsboy/dotvim.git etc
+git clone --depth 1 https://github.com/nilsboy/dotvim.git etc
 
 INFO "Starting vim to download plugins..."
 

@@ -6761,6 +6761,16 @@ tmux select-window -t $session:1
 
 # xtitle "$session" tmux -2 attach-session -d -t $session
 
+### fatpacked app tmux-setup ###################################################
+
+#!/usr/bin/env bash
+
+# Setup tmux config
+
+source bash-helpers
+
+wcat https://raw.githubusercontent.com/nilsboy/dotfiles/master/tmux.conf > ~/.tmux.conf
+
 ### fatpacked app tmux-synchronized-panes-toggle ###############################
 
 #!/bin/bash

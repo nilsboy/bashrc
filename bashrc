@@ -984,6 +984,10 @@ rm $audio_file
 INFO "Done"
 
 
+### fatpacked app authorized_keys ##############################################
+
+ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAgEAtdUl549e+o3OTc/PJJs2YeYK4iWKm98IshZCzOzmTUazIG8xUNgcFclbC9YgAdIqQMkabGd9kJYO32jQv08ylP0cDam11KKGLppYz64VOtNYEiQAQN2EPRbGvYfheXvQtfdHt4r7JG6c+5e1XBXkLILiqiXgdg0V3VHPuc//SGpRLCU3V18629jihXz4AgcyEqInm3mAgEDyEVViZAc7zu4HyaBrBWxDAh0ue5KQWkDdxh6vEyPFOTVxslMhEtimtoU3wuzjojSQgJnGa2NGuMGTMyc5KeBb4xfAeXnir+TDqj0lkU2TlDOf1rlDWFRRZiYVWvCvuixx4RfSSmr41h0txrJjiXRApRz/cEOym62GEvVGyu4P9jCvnNufJkV1Du8p1ghELn2+U5YwOLUCnZ+xEetYQyvfmspJXtb5w6ZBm5trlSie7ippWd08BdwTFJLtXVboquIJ1FVuOxg+xesWcmONgVlcmyODwJjDKOeUc8rY0ZPkwEsbb3QZnCFXbsNnTetos7cSriOeFuNGkTrynERt1F23jFu6z+Bv/Im6kjU1tRfFc+kvWLu/jrWQ3i7/hvDfzSD7n0O1LrG5dDgtJGexf54Ogcn7rmPsYMBEjrtWAhrsyuB06Kn4hBvPn/O5xRLp0R49VnLdeJY/53M8xO24Cysa/DQ4XgLIWlE= Nils Boysen haha
+
 ### fatpacked app bak ##########################################################
 
 #!/bin/bash
@@ -2709,7 +2713,7 @@ $readme->spew("$preamble\n\n");
 foreach my $app (sort(path(".")->children)) {
 
     next if $app->is_dir;
-    next if $app->basename =~ /^readme$|^package.*json$/i;
+    next if $app->basename =~ /^readme$|^package.*json$|^authorized_keys$/i;
 
     my ($description) = $app->slurp =~ /^=head1 NAME\s+(.+)/m;
     ($description) = $app->slurp =~ /^# (.+?)\n/m if !$description;
@@ -6382,6 +6386,17 @@ INFO "Starting tunnel now..."
 echo $CMD | bash
 
 INFO "done."
+
+### fatpacked app ssh-register-my-key ##########################################
+
+#!/usr/bin/env bash
+
+# Register my ssh key
+
+source bash-helpers
+
+mkdir -p $REMOTE_HOME/.ssh
+cat $REMOTE_HOME/.bin/authorized_keys >> ~/.ssh/authorized_keys
 
 ### fatpacked app ssh-server-turn-off-password-authentication ##################
 

@@ -3998,13 +3998,13 @@ print HTML::Strip->new()->parse( <> );
 
 const express = require(`express`)
 const app = express()
-const basicAuth = require(`express-basic-auth`)
+// const basicAuth = require(`express-basic-auth`)
 
-app.use(
-  basicAuth({
-    authorizer: myAuthorizer
-  })
-)
+// app.use(
+//   basicAuth({
+//     authorizer: myAuthorizer
+//   })
+// )
 
 let gusername
 let gpassword
@@ -4033,8 +4033,9 @@ app.get(`/*`, (req, res) => {
   })
 })
 
-app.listen(6666, () => {
-  return console.log(`Example app listening on port 3000!`)
+const port = 6666
+app.listen(port, () => {
+  return console.log(`Example app listening on port ${port}!`)
 })
 
 ### fatpacked app internalip ###################################################
@@ -6569,9 +6570,15 @@ file="$@"
 
 INFO "Converting file $file"
 
+if [[ -e txt ]] ; then
+  DIE 'txt directory exists'
+fi
+
 extension=$(extension $file)
 type=$(file -b --mime-type "$file")
-out=`basename "$file"`
+out="txt/$file"
+dir="txt/"`dirname "$file"`
+mkdir -p "$dir"
 
 DEBUG "type: $type"
 
@@ -6584,12 +6591,10 @@ if [[ "$type" =~ "xml" ]] ; then
 fi
 
 if [[ "$type" =~ "x-msaccess" ]] ; then
-
     for table in $(mdb-tables "$file") ; do
         INFO "Exporting database table $table..."
         mdb-export -D '%F %T' "$file" "$table" > "$out.table-$table.csv"
     done
-
     RETURN
 fi
 

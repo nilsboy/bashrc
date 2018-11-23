@@ -6331,6 +6331,16 @@ done 1>$REMOTE_HOME/.ssh/agent_env
 
 cat $REMOTE_HOME/.ssh/agent_env
 
+### fatpacked app ssh-copy-id-my ###############################################
+
+#!/usr/bin/env bash
+
+# Copy one public key instead of all.
+
+source bash-helpers
+
+ssh-copy-id -i ~/.ssh/id_rsa.pub "$@"
+
 ### fatpacked app ssh-no-check #################################################
 
 #!/bin/bash

@@ -285,10 +285,7 @@ fi
 
 ### SSH
 
-# ServerAliveInterval=5 make sure there is ssh traffic so no firewall closes
-#     the connection
-# GSSAPIAuthentication=no - usually not used - speeds up connection time
-alias ssh="ssh -AC -o GSSAPIAuthentication=no -o ServerAliveInterval=5"
+alias ssh=ssh-alias
 
 function _ssh_completion() {
     perl -ne 'print "$1 " if /^Host (.+)$/' $REMOTE_HOME/.ssh/config
@@ -3015,6 +3012,21 @@ if [[ -z var ]] ; then
 fi
 
 env --null | perl -pe 's/\n/\\n/g ; s/\0/\n/g' | grep -i "$var" | grep -v LS_COLORS
+
+### fatpacked app env-set-vars-from-lc #########################################
+
+#!/bin/bash
+
+# Set env vars prefixed with LC_BASHRC_ without the prefix
+# This file has to be sourced to affect the running shell.
+
+source bash-helpers
+
+for prefixed_var in $(compgen -e LC_BASHRC_) ; do
+  [[ $prefixed_var =~ ^LC_BASHRC_(.+)$ ]]
+  var=${BASH_REMATCH[1]}
+  export $var=${!prefixed_var}
+done
 
 ### fatpacked app env-show #####################################################
 
@@ -6395,6 +6407,25 @@ done 1>$REMOTE_HOME/.ssh/agent_env
 # source this file to load the vars in your current shell
 
 cat $REMOTE_HOME/.ssh/agent_env
+
+### fatpacked app ssh-alias ####################################################
+
+#!/bin/bash
+
+# Send remote host alias to remote host to display in prompt etc
+
+source bash-helpers
+opts="$@"
+
+remote_host=$(echo $opts | perl -ne 'print $3 if /(-\S+\s+|\S+=\S+\s+)*(\w+@)*(\S+)/i')
+
+# ServerAliveInterval=5 make sure there is ssh traffic so no firewall closes
+#     the connection
+# GSSAPIAuthentication=no - usually not used - speeds up connection time
+
+LC_BASHRC_REMOTE_HOST_ALIAS=$remote_host \
+  ssh -AC -o GSSAPIAuthentication=no -o ServerAliveInterval=5" \
+  "$opts"
 
 ### fatpacked app ssh-copy-id-my ###############################################
 

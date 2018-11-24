@@ -559,6 +559,8 @@ if [[ $DISTRIB_ID ]] ; then
   fi
 fi
 
+eval $(env-set-vars-from-lc)
+
 prompt-set
 bashrc-set-last-session-pwd
 
@@ -1741,12 +1743,14 @@ source bash-helpers
 
 COLOR=$GREEN
 if [[ $BASHRC_INSIDE_DOCKER ]] ; then
-  DOCKER="${RED}docker${NO_COLOR}(${HOSTNAME})"
+  host="${RED}docker${NO_COLOR}(${HOSTNAME})"
+elif [[ "$REMOTE_HOST_ALIAS" ]] ; then
+  host=$REMOTE_HOST_ALIAS
 else
-  DOCKER=$HOSTNAME
+  host=$HOSTNAME
 fi
 
-echo -n $COLOR$DOCKER$NO_COLOR
+echo -n $COLOR$host$NO_COLOR
 
 ### fatpacked app bashrc-helper-login-name #####################################
 
@@ -3025,7 +3029,7 @@ source bash-helpers
 for prefixed_var in $(compgen -e LC_BASHRC_) ; do
   [[ $prefixed_var =~ ^LC_BASHRC_(.+)$ ]]
   var=${BASH_REMATCH[1]}
-  export $var=${!prefixed_var}
+  echo export $var=${!prefixed_var}
 done
 
 ### fatpacked app env-show #####################################################

@@ -790,14 +790,11 @@ set -e
 
 source bash-helpers
 
-file=${1?filename not specified}
-file=$(perl -pe 's/\/$//g' <<<"$file")
-bak=$(basename "$file")
-bak=$REMOTE_HOME/backup/"$bak""_"$(date +%Y%m%d_%H%M%S)
+file="$@"
+bak=$(filestamp $file)
+bak=$REMOTE_HOME/backup/"$bak"
 
-INFO "Copying: $file -> $bak"
-
-cp -a "$file" "$bak"
+cp -va "$file" "$bak"
 
 ### fatpacked app archive-mv-to ################################################
 
@@ -809,14 +806,11 @@ set -e
 
 source bash-helpers
 
-file=${1?filename not specified}
-file=$(perl -pe 's/\/$//g' <<<"$file")
-bak=$(basename "$file")
-bak=$REMOTE_HOME/backup/"$bak""_"$(date +%Y%m%d_%H%M%S)
+file="$@"
+bak=$(filestamp $file)
+bak=$REMOTE_HOME/backup/"$bak"
 
-INFO "Moving: $file -> $bak"
-
-mv "$file" "$bak"
+mv -v "$file" "$bak"
 
 ### fatpacked app audio-file-prefix-track-number ###############################
 
@@ -996,23 +990,13 @@ ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAgEAtdUl549e+o3OTc/PJJs2YeYK4iWKm98IshZCzOzmTUaz
 
 source bash-helpers
 
-file=${1?filename not specified}
-info=$2
-
-if [[ $info ]] ; then
-    info=".$info"
-fi
-
-# remove optional trailing slash
-file=${file%/}
-bak=$file"_"$(date +%Y%m%d_%H%M%S)$info
-
-INFO "Backing up: $file -> $bak"
+file="$@"
+bak=$(filestamp $file)
 
 if [ -d $file ] ; then
-    cp -a $file $bak
+    cp -va $file $bak
 else
-    cp $file $bak
+    cp -v $file $bak
 fi
 
 ### fatpacked app bash-background-jobs-count ###################################
@@ -1343,18 +1327,6 @@ function docopt() {
     # save json to $docopt
     docopt=$(docopt-convert $(readlink -f $0)$docopt_files --json -- "$@")
     eval $(docopt-convert $(readlink -f $0)$docopt_files --env -- "$@")
-}
-
-# Find file name without extension
-function filename() {
-    local file="$@"
-    echo ${file%.*}
-}
-
-# Find extension of a file name
-function extension() {
-    local file="$@"
-    echo ${file##*.}
 }
 
 ### fatpacked app bash-jobs ####################################################
@@ -3090,6 +3062,38 @@ if [[ -e /var/run/reboot-required ]] ; then
   echo
 fi
 
+### fatpacked app extension ####################################################
+
+#!/bin/bash
+
+# Find the extension of a filename
+
+source bash-helpers
+
+file="$@"
+
+if [[ ! "$file" ]] ; then
+  DIE "Specify filename"
+fi
+
+# remove optional trailing slash
+file=${file%/}
+
+filename=$(basename -- "$file")
+extension="${filename##*.}"
+
+if [[ $extension = $filename ]] ; then
+  exit 0
+fi
+
+extension=.$extension
+
+if [[ $file = $extension ]] ; then
+  exit 0
+fi
+
+echo $extension
+
 ### fatpacked app file-add-line-if-new #########################################
 
 #!/usr/bin/env perl
@@ -3233,6 +3237,33 @@ close($tempf);
 
 move($temp, $file) || die $!;
 
+### fatpacked app filename #####################################################
+
+#!/bin/bash
+
+# Find the filename without the extension of a filename
+
+source bash-helpers
+
+file="$@"
+
+if [[ ! "$file" ]] ; then
+  DIE "Specify filename"
+fi
+
+# remove optional trailing slash
+file=${file%/}
+
+basename=$(basename -- "$file")
+filename=${basename%.*}
+
+if [[ $filename = '' ]] ; then
+  echo $basename
+  exit 0
+fi
+
+echo $filename
+
 ### fatpacked app files-replace-from-env #######################################
 
 #!/bin/bash
@@ -3267,6 +3298,40 @@ for file_env in ${!OVERLAY_FILE_*} ; do
     echo "$data" > "$file"
 done
 
+
+### fatpacked app filestamp ####################################################
+
+#!/bin/bash
+
+# Create a new backup filename with a timestamp; replace an existing timestamp
+
+source bash-helpers
+
+file="$@"
+
+if [[ ! "$file" ]] ; then
+  DIE "Specify filename"
+fi
+
+filename=$(filename $file)
+basename=$(basename $filename)
+extension=$(extension $file)
+
+echo $extension
+
+if [[ $filename =~ (.+)(@[[:digit:]]{8}_[[:digit:]]{6}$) ]] ; then
+  filename=${BASH_REMATCH[1]}
+  filename=$(filename $filename)
+fi
+
+# echo ${BASH_REMATCH[*]}
+
+postfix=@$(date +%Y%m%d_%H%M%S)
+
+bak=$filename$extension$postfix$extension
+
+echo $bak
+exit 1
 
 ### fatpacked app find-and #####################################################
 
@@ -6335,7 +6400,7 @@ cat $REMOTE_HOME/.ssh/agent_env
 
 #!/usr/bin/env bash
 
-# Copy one public key instead of all.
+# Copy one public key instead of all
 
 source bash-helpers
 

@@ -1185,6 +1185,10 @@ if [[ $BASHRC_PROMPT_COLORS ]] ; then
        GREEN='\[\e[38;5;2m\]'
       ORANGE='\[\e[38;5;3m\]'
          RED='\[\e[38;5;1m\]'
+      PURPLE='\[\e[38;5;5m\]'
+        BLUE='\[\e[38;5;21m\]'
+      YELLOW='\[\e[38;5;226m\]'
+        PINK='\[\e[38;5;13m\]'
 else
     NO_COLOR=$(echo -e '\x1b[33;0;m')
         GRAY=$(echo -e '\x1b[38;5;243m')
@@ -1741,16 +1745,29 @@ echo "$line" >> $HISTFILE_ETERNAL
 
 source bash-helpers
 
-COLOR=$GREEN
 if [[ $BASHRC_INSIDE_DOCKER ]] ; then
-  host="${RED}docker${NO_COLOR}(${HOSTNAME})"
+  host="docker($HOSTNAME)"
 elif [[ "$REMOTE_HOST_ALIAS" ]] ; then
   host=$REMOTE_HOST_ALIAS
 else
   host=$HOSTNAME
 fi
 
-echo -n $COLOR$host$NO_COLOR
+color=$GREEN
+
+if [[ "$host" =~ (dev|test|git|pet|prod) ]] ; then
+  pattern=${BASH_REMATCH[1]}
+  case $pattern in
+    dev)    color=$GREY ;;
+    test)   color=$BLUE ;;
+    git)    color=$ORANGE ;;
+    pet)    color=$PURPLE ;;
+    prod)   color=$RED ;;
+    docker) color=$PINK ;;
+  esac
+fi
+
+echo -n $color$host$NO_COLOR
 
 ### fatpacked app bashrc-helper-login-name #####################################
 

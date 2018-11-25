@@ -992,11 +992,13 @@ source bash-helpers
 file="$@"
 bak=$(filestamp $file)
 
-if [ -d $file ] ; then
-    cp -va $file $bak
+if [[ -d $file ]] ; then
+  cp -a "$file" "$bak"
 else
-    cp -v $file $bak
+  cp "$file" "$bak"
 fi
+
+echo $bak
 
 ### fatpacked app bash-background-jobs-count ###################################
 
@@ -3350,21 +3352,18 @@ filename=$(filename $file)
 basename=$(basename $filename)
 extension=$(extension $file)
 
-echo $extension
-
-if [[ $filename =~ (.+)(@[[:digit:]]{8}_[[:digit:]]{6}$) ]] ; then
+if [[ $filename =~ (.+)(_v[[:digit:]]{8}_[[:digit:]]{6}$) ]] ; then
   filename=${BASH_REMATCH[1]}
   filename=$(filename $filename)
 fi
 
 # echo ${BASH_REMATCH[*]}
 
-postfix=@$(date +%Y%m%d_%H%M%S)
+postfix=_v$(date +%Y%m%d_%H%M%S)
 
 bak=$filename$extension$postfix$extension
 
 echo $bak
-exit 1
 
 ### fatpacked app find-and #####################################################
 

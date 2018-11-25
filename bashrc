@@ -3348,6 +3348,7 @@ if [[ ! "$file" ]] ; then
   DIE "Specify filename"
 fi
 
+dirname=$(dirname $file)/
 filename=$(filename $file)
 basename=$(basename $filename)
 extension=$(extension $file)
@@ -3361,7 +3362,7 @@ fi
 
 postfix=_v$(date +%Y%m%d_%H%M%S)
 
-bak=$filename$extension$postfix$extension
+bak=$dirname$filename$extension$postfix$extension
 
 echo $bak
 

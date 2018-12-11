@@ -2705,7 +2705,7 @@ $readme->spew("$preamble\n\n");
 foreach my $app (sort(path(".")->children)) {
 
     next if $app->is_dir;
-    next if $app->basename =~ /^readme$|^package.*json$|^authorized_keys$/i;
+    next if $app->basename =~ /^\.|^readme$|^package.*json$|^authorized_keys$/i;
 
     my ($description) = $app->slurp =~ /^=head1 NAME\s+(.+)/m;
     ($description) = $app->slurp =~ /^# (.+?)\n/m if !$description;
@@ -3865,8 +3865,8 @@ LINE: while (<$h>) {
 # Print file contens before a specified regex first matches
 
 while (<STDIN>) {
-    print;
     exit 0 if /@ARGV/i;
+    print;
 }
 
 exit 1;

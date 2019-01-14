@@ -187,7 +187,8 @@ export LS_COLORS='no=00:fi=00:di=36:ln=35:pi=30;44:so=35;44:do=35;44:bd=33;44:cd
 alias f=find-and
 alias g=find-or-grep
 
-alias cdt='cd $REMOTE_HOME/tmp'
+alias cdt='mkdir -p $REMOTE_HOME && cd $REMOTE_HOME/tmp'
+function cdm() { mkdir -p "$@" && cd "$@" ; }
 function cdh() { cd $(cd-history $@) ; } 
 function cdf() { cd $(cd-find $@) ; } 
 
@@ -3482,42 +3483,6 @@ else
 fi
 
 
-### fatpacked app git ##########################################################
-
-#!/bin/bash
-
-# Default options for git commands
-
-if [ -z PS1 ] ; then
-    exec alternative-run $0 "$@"
-fi
-
-source bash-helpers
-
-if [[ $1 == "status" ]] ; then
-    shift
-    exec alternative-run $0 status -uall "${@:2}" "$@"
-fi
-
-if [[ $1 == "branch"  && ! "$2" ]] ; then
-    exec alternative-run $0 branch --list -vva
-fi
-
-if [[ $1 == "commit" ]] ; then
-    alternative-run $0 config --global user.name 2>/dev/null && DIE "Global git user.name is set"
-    alternative-run $0 config --global user.email 2>/dev/null && DIE "Global git user.email is set"
-fi
-
-if [[ $1 == "diff" ]] ; then
-  if [[ $2 == '' ]] ; then
-    exec alternative-run $0 diff -- ':(exclude)package-lock.json' .
-  fi
-  exec alternative-run $0 diff -- ':(exclude)package-lock.json' "$@"
-fi
-
-exec alternative-run $0 "$@"
-
-
 ### fatpacked app git-env-validate #############################################
 
 #!/bin/bash
@@ -3650,6 +3615,31 @@ git rev-parse --show-toplevel 2>/dev/null || abs .
 
 git config --global push.default simple
 # git config --global pull.rebase true
+
+### fatpacked app git.branch ###################################################
+
+#!/bin/bash
+
+# Default options for git branch
+
+exec git branch --list -vva
+
+### fatpacked app git.status ###################################################
+
+#!/bin/bash
+
+# Default options for git status
+
+exec git status -uall "${@:2}" "$@"
+
+### fatpacked app git.user.check ###############################################
+
+#!/bin/bash
+
+# Check if global user is set
+
+git config --global user.name 2>/dev/null && DIE "Global git user.name is set"
+git config --global user.email 2>/dev/null && DIE "Global git user.email is set"
 
 ### fatpacked app gnome-send-to-mail-images ####################################
 
@@ -8464,6 +8454,7 @@ sub normalize {
     return $_ . lc($ext);
 }
 
+haha
 
 ### fatpacked app xtitle #######################################################
 

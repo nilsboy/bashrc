@@ -1,5 +1,8 @@
 ### START
 
+# for debugging
+# set -o history
+
 USE_CURRENT_DIR_AS_HOME=$1
 
 ### Set remote user stuff
@@ -147,7 +150,7 @@ bind 'set completion-query-items -1'
 # don't show completions in pager
 bind 'set page-completions off'
 
-# don't expand tilde - disables e-key?!?
+# don't expand tilde - disables e-key...
 # bind 'tilde-expand off'
 
 # expand hi to underscores
@@ -918,7 +921,7 @@ else
     # lame -h "$tmp" "$file.$dst_type"
 
     # avconv -i "$file" -c:a libmp3lame -b:a 192k -id3v2_version 3 -write_id3v1 1 "$file.$dst_type"
-    # the -map_metadata is used to copy the tag!?!:
+    # the -map_metadata is used to copy the tag...:
     # https://stackoverflow.com/questions/21489719/avconv-flac-to-ogg-conversion-with-metadata-kept
     avconv -loglevel quiet -i "$file" -vn -c:a libmp3lame -b:a 192k -map_metadata 0:s:0 "$out_file"
 fi
@@ -1801,7 +1804,7 @@ RETURN $USER
 
 # Install and run specified installer_command
 
-# Can not be run from within ~/.bin!?!
+# Can not be run from within ~/.bin...
 
 source bash-helpers
 

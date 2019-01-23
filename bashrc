@@ -3421,9 +3421,9 @@ find \
     $path \
     -mount \
     -type f \
-    | perl -ne 'print if ! m#'$path'.*/\..*#' \
-    | perl -ne 'print if ! m#'$path'.*/(node_modules|bower_components|classes)/.*#' \
-    | grep-and -e $@ \
+    | perl -ne 'print if ! m#'$path'\..*#' \
+    | perl -ne 'print if ! m#'$path'(node_modules|bower_components|classes|coverage)/.*#' \
+    | grep-and -i "$path" -e $@ \
     | head -101 \
     | sort-by-path-depth \
     | $head_warn
@@ -3819,6 +3819,7 @@ my $opts = {
     "p|prefix-file-name" => \my $prefix,
     "e|allow-empty"      => \my $allow_empty,
     "no-color"           => \my $show_no_color,
+    "i|ignore=s"           => \my $ignore,
 };
 GetOptions(%$opts) or die "Usage:\n$0 " . join("\n", sort keys %$opts) . "\n";
 
@@ -3838,6 +3839,9 @@ if ($file) {
 }
 
 LINE: while (<$h>) {
+    my $org = $_;
+
+    s/$ignore//g;
 
     if (!@patterns && $allow_empty) {
         print;
@@ -3851,10 +3855,10 @@ LINE: while (<$h>) {
     }
 
     if ($prefix) {
-        printf("%s:%5s: %s", $file, $., $_);
+        printf("%s:%5s: %s", $file, $., $org);
     }
     else {
-        print;
+        print $org;
     }
 }
 

@@ -790,38 +790,6 @@ dpkg --get-selections $package_name
 echo $package_name install | sudo dpkg --set-selections
 dpkg --get-selections $package_name
 
-### fatpacked app archive ######################################################
-
-#!/bin/bash
-
-# Copy a file to ~/backups/ appending a timestamp
-
-set -e
-
-source bash-helpers
-
-file="$@"
-bak=$(filestamp $file)
-bak=$REMOTE_HOME/backup/"$bak"
-
-cp -va "$file" "$bak"
-
-### fatpacked app archive-mv-to ################################################
-
-#!/bin/bash
-
-# Move a file to ~/backups/ appending a timestamp
-
-set -e
-
-source bash-helpers
-
-file="$@"
-bak=$(filestamp $file)
-bak=$REMOTE_HOME/backup/"$bak"
-
-mv -v "$file" "$bak"
-
 ### fatpacked app audio-file-prefix-track-number ###############################
 
 #!/usr/bin/env node
@@ -993,6 +961,38 @@ INFO "Done"
 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAgEAtdUl549e+o3OTc/PJJs2YeYK4iWKm98IshZCzOzmTUazIG8xUNgcFclbC9YgAdIqQMkabGd9kJYO32jQv08ylP0cDam11KKGLppYz64VOtNYEiQAQN2EPRbGvYfheXvQtfdHt4r7JG6c+5e1XBXkLILiqiXgdg0V3VHPuc//SGpRLCU3V18629jihXz4AgcyEqInm3mAgEDyEVViZAc7zu4HyaBrBWxDAh0ue5KQWkDdxh6vEyPFOTVxslMhEtimtoU3wuzjojSQgJnGa2NGuMGTMyc5KeBb4xfAeXnir+TDqj0lkU2TlDOf1rlDWFRRZiYVWvCvuixx4RfSSmr41h0txrJjiXRApRz/cEOym62GEvVGyu4P9jCvnNufJkV1Du8p1ghELn2+U5YwOLUCnZ+xEetYQyvfmspJXtb5w6ZBm5trlSie7ippWd08BdwTFJLtXVboquIJ1FVuOxg+xesWcmONgVlcmyODwJjDKOeUc8rY0ZPkwEsbb3QZnCFXbsNnTetos7cSriOeFuNGkTrynERt1F23jFu6z+Bv/Im6kjU1tRfFc+kvWLu/jrWQ3i7/hvDfzSD7n0O1LrG5dDgtJGexf54Ogcn7rmPsYMBEjrtWAhrsyuB06Kn4hBvPn/O5xRLp0R49VnLdeJY/53M8xO24Cysa/DQ4XgLIWlE= Nils Boysen
 
 ### fatpacked app bak ##########################################################
+
+#!/bin/bash
+
+# Copy a file to ~/backups/ appending a timestamp
+
+set -e
+
+source bash-helpers
+
+file="$@"
+bak=$(filename $(filestamp $file))
+bak=$REMOTE_HOME/backup/"$bak"
+
+cp -va "$file" "$bak"
+
+### fatpacked app bakm #########################################################
+
+#!/bin/bash
+
+# Move a file to ~/backups/ appending a timestamp
+
+set -e
+
+source bash-helpers
+
+file="$@"
+bak=$(filename $(filestamp $file))
+bak=$REMOTE_HOME/backup/"$bak"
+
+mv -v "$file" "$bak"
+
+### fatpacked app bakp #########################################################
 
 #!/bin/bash
 

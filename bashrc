@@ -3811,6 +3811,7 @@ fi
 
 use strict;
 use warnings;
+no warnings 'uninitialized';
 
 use Getopt::Long;
 Getopt::Long::Configure("bundling");

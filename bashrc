@@ -3582,7 +3582,7 @@ set -e
 
 source bash-helpers
 
-git reset HEAD .
+git reset --hard HEAD
 git clean -df
 git checkout .
 
@@ -3612,7 +3612,7 @@ set -e
 
 source bash-helpers
 
-git reset origin/master .
+git reset --hard origin/master
 git clean -df
 git checkout .
 

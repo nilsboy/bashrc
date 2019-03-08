@@ -252,7 +252,7 @@ function csvview() { command csvview "$@" | LESS= less -S ; }
 ### Vim and less
 
 # git commit needs absolute path
-EDITOR=$REMOTE_HOME/.bin/vi
+EDITOR=vi
 if [[ $REMOTE_HOST ]] ; then
     EDITOR="DISPLAY= $EDITOR"
 fi
@@ -7771,40 +7771,6 @@ if [[ ! $(id $user 2> /dev/null) ]] ; then
 fi
 
 ssh $user@localhost
-
-
-### fatpacked app vi ###########################################################
-
-#!/bin/bash
-
-# Setup and run vim
-
-set -e
-
-export VIM_HOME=$REMOTE_HOME/.vim
-
-if [[ -e $VIM_HOME/vimrc ]] ; then
-    args=" -u $VIM_HOME/vimrc"
-else
-    args=" -i $REMOTE_HOME/._viminfo"
-fi
-
-# Theres no buildin way to check if arguments exists other than files
-if [[ $@ ]] ; then
-    export VIM_HAS_ARGS=1
-fi
-
-if [[ $1 =~ @ ]] && [[ $1 =~ : ]] ; then
-    args="$args "$(vim-url $1)
-fi
-
-if [[ $(type -p nvim) ]] ; then
-  # :set guicursor prevents 001b from appearing when setting cursorshape for
-  # incompatible terminals
-  exec nvim --cmd ':set guicursor=' $args "$@"
-fi
-
-exec vim $args "$@"
 
 
 ### fatpacked app vi-choose-file-from-list #####################################

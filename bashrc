@@ -300,6 +300,7 @@ fi
 ### SSH
 
 alias ssh=ssh-alias
+alias scp='rsync --archive --xattrs --acls --progress --partial --partial-dir=rsync-partial --rsh="ssh"'
 
 function _ssh_completion() {
     perl -ne 'print "$1 " if /^Host (.+)$/' $REMOTE_HOME/.ssh/config
@@ -3582,7 +3583,7 @@ set -e
 
 source bash-helpers
 
-git reset --hard HEAD
+git reset HEAD .
 git clean -df
 git checkout .
 
@@ -3612,7 +3613,7 @@ set -e
 
 source bash-helpers
 
-git reset --hard origin/master
+git reset origin/master .
 git clean -df
 git checkout .
 
@@ -4765,7 +4766,7 @@ sudo apt-get install neovim
 
 sudo apt-get install python-dev python-pip python3-dev python3-pip
 
-pip3 install --user neovim
+sudo pip3 install neovim
 
 ### fatpacked app net-find-free-port ###########################################
 
@@ -7771,6 +7772,40 @@ if [[ ! $(id $user 2> /dev/null) ]] ; then
 fi
 
 ssh $user@localhost
+
+
+### fatpacked app vi ###########################################################
+
+#!/bin/bash
+
+# Setup and run vim
+
+set -e
+
+export VIM_HOME=$REMOTE_HOME/.vim
+
+if [[ -e $VIM_HOME/vimrc ]] ; then
+    args=" -u $VIM_HOME/vimrc"
+else
+    args=" -i $REMOTE_HOME/._viminfo"
+fi
+
+# Theres no buildin way to check if arguments exists other than files
+if [[ $@ ]] ; then
+    export VIM_HAS_ARGS=1
+fi
+
+if [[ $1 =~ @ ]] && [[ $1 =~ : ]] ; then
+    args="$args "$(vim-url $1)
+fi
+
+if [[ $(type -p nvim) ]] ; then
+  # :set guicursor prevents 001b from appearing when setting cursorshape for
+  # incompatible terminals
+  exec nvim --cmd ':set guicursor=' $args "$@"
+fi
+
+exec vim $args "$@"
 
 
 ### fatpacked app vi-choose-file-from-list #####################################

@@ -2775,7 +2775,7 @@ rsync -nrclD --delete --exclude /.git --info COPY,DEL,NAME,SYMSAFE $src/ $dst/
 
 # Install diff-so-fancy
 
-exec bashrc-install "$0" npm install -g diff-so-fancy
+exec npx diff-so-fancy
 
 
 ### fatpacked app dir-name-prettifier ##########################################
@@ -4351,9 +4351,9 @@ else {
 
 #!/usr/bin/env bash
 
-# Install json2yaml
+# Install and run json2yaml
 
-exec bashrc-install "$0" npm install -g json2yaml
+exec npx json2yaml
 
 ### fatpacked app keyboard-disable-caps-lock-console ###########################
 
@@ -5921,11 +5921,6 @@ source bash-helpers
 name=${1?Specify server dir}
 port=$(net-find-free-port)
 
-if [[ ! $(type -p json-server) ]] ; then
-    INFO "Installing json-server npm module..."
-    npm -g install json-server
-fi
-
 INFO "Starting rest server - documentation: https://www.npmjs.com/package/json-server"
 
 mkdir -p "$name/public"
@@ -5939,7 +5934,7 @@ if [ ! -e $db ] ; then
     echo '<b>'"$name"'</b> - rest service' > public/index.html
 fi
 
-json-server --port $port --watch $db
+npx json-server --port $port --watch $db
 
 ### fatpacked app run-and-capture ##############################################
 

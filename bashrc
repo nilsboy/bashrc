@@ -1854,7 +1854,7 @@ unalias crontab
 
 // Attach scripts to the bashrc skeleton
 
-const LogDwim = require(`log-dwim`)
+const LogDwim = require(`@nilsboy/log-dwim`)
 const logger = new LogDwim()
 const { TRACE, DEBUG, INFO, WARN, ERROR, DIE, DUMP } = logger
 
@@ -2740,7 +2740,7 @@ foreach my $app (sort(path(".")->children)) {
     $readme->append("$app:\n$description\n");
 }
 
-### fatpacked app df ###########################################################
+### fatpacked app df. ##########################################################
 
 #!/bin/bash
 
@@ -2748,12 +2748,7 @@ foreach my $app (sort(path(".")->children)) {
 
 source bash-helpers
 
-if [[ $@ ]] ; then
-    alternative-run $0 "$@"
-    EXIT
-fi
-
-alternative-run $0 -h \
+df -h "$@" \
     | perl -ne 'print if $_ !~ /\/snap\//' \
     | perl -0777 -pe 's/Mounted on/Mounted_on/gm' \
     | perl -0777 -pe 's/^(\S+)\n/$1/gm' \
@@ -5245,9 +5240,9 @@ print $fileh $data;
   "description": "bin",
   "main": "index.js",
   "dependencies": {
+    "@nilsboy/log-dwim": "^1.0.0",
     "glob": "^7.1.2",
-    "lodash": "^4.17.4",
-    "log-dwim": "github:nilsboy/log-dwim"
+    "lodash": "^4.17.4"
   },
   "devDependencies": {},
   "scripts": {

@@ -4355,6 +4355,23 @@ else {
 
 exec npx json2yaml
 
+### fatpacked app keyboard-backlight-permanently-off ###########################
+
+#!/usr/bin/env bash
+
+# Turn keyboard backlight off permanently
+
+source bash-helpers
+
+gotroot
+
+sudo apt install sysfsutils
+
+cat << EOF >> /etc/sysfs.conf
+devices/platform/dell-laptop/leds/dell\:\:kbd_backlight/brightness = 0
+EOF
+
+
 ### fatpacked app keyboard-disable-caps-lock-console ###########################
 
 #!/bin/bash

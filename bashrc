@@ -4769,6 +4769,9 @@ rsync \
   --exclude /tmp \
   $src/ $dst_current/
 
+INFO "Backup done."
+
+
 ### fatpacked app mysql ########################################################
 
 #!/bin/bash

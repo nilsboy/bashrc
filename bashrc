@@ -7443,7 +7443,7 @@ sub file_prefix {
         $dir_fork .= " ";
     }
 
-    return $dir_fork . $fork . $graph_line;
+    return $dir_fork . $fork . $graph_line . " ";
 }
 
 sub dir_prefix {
@@ -7453,7 +7453,7 @@ sub dir_prefix {
 
     my $fork = $is_last_entry ? $graph_l : $graph_t;
 
-    return $fork . $graph_line;
+    return $fork . $graph_line . " ";
 }
 
 sub new {

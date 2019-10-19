@@ -6478,6 +6478,32 @@ if [ -e $fifo ] ; then
 #    rm -f $fifo
 fi
 
+### fatpacked app sleepuntil ###################################################
+
+#!/usr/bin/env bash
+
+# Sleep until a specific date and time
+
+source bash-helpers
+
+time_spec=${1:?Specify timespec as e.g. 12:30 or 2019-10-19 11:05 or 'tomorrow 10'}
+
+now_seconds=$(date +%s)
+then_seconds=$(date -d "$time_spec" +%s)
+
+sleep_seconds=$(($then_seconds - $now_seconds))
+target_date=$(date -d "$time_spec" '+%F %T')
+
+INFO "Sleeping for $sleep_seconds seconds until $target_date."
+
+if [[ $sleep_seconds -lt 0 ]] ; then
+  WARN "No time to sleep."
+  sleep_seconds=0
+fi
+
+sleep $sleep_seconds
+INFO "Waking up from sleep."
+
 ### fatpacked app sort-by-file-modification ####################################
 
 #!/usr/bin/env bash

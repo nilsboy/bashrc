@@ -6486,7 +6486,8 @@ fi
 
 source bash-helpers
 
-time_spec=${1:?Specify date and time as e.g. 12:30 or '2019-10-19 11:05' or 'tomorrow 10'}
+arg1=${1:?Specify date and time as e.g. 12:30 or 2019-10-19 11:05 or 10 tomorrow}
+time_spec="$@"
 
 now_seconds=$(date +%s)
 then_seconds=$(date -d "$time_spec" +%s)

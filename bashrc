@@ -4102,7 +4102,7 @@ print HTML::Strip->new()->parse( <> );
 
 ### fatpacked app http-echo-server #############################################
 
-// Test HTTP server that response with the request
+# Test HTTP server that response with the request
 
 npx @nilsboy/http-echo-server
 

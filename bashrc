@@ -4104,7 +4104,7 @@ print HTML::Strip->new()->parse( <> );
 
 # Test HTTP server that response with the request
 
-npx @nilsboy/http-echo-server
+npx --ignore-existing @nilsboy/http-echo-server "$@"
 
 ### fatpacked app internalip ###################################################
 

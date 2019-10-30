@@ -5623,7 +5623,7 @@ pm2 set pm2-logrotate:compress true
 pm2 set pm2-logrotate:workerInterval 600
 
 
-### fatpacked app projects-start ###############################################
+### fatpacked app projects-start. ##############################################
 
 #!/usr/bin/env bash
 
@@ -5633,12 +5633,15 @@ source bash-helpers
 
 for dir in ~/projects/* ; do
   project=$(basename $dir)
+  if [ ! -d $dir ] ; then
+    continue
+  fi
   INFO "Found project: $project"
-  cd $dir
   exe=$dir/bin/project-start
   
   if [ -x $exe ] ; then
     INFO "Starting $project via $exe"
+    cd $dir
     ./bin/project-start || ERROR "Could not start: $exe"
   else
     WARN "Cannot start project: $project - no start file: $exe"

@@ -4492,8 +4492,8 @@ if [[ -e /root/.forward ]] ; then
   bakmp /root/.forward
 fi
 
-if [[ -e /$forwardRootTo/.forward ]] ; then
-  bakmp /$forwardRootTo/.forward
+if [[ -e /home/$forwardRootTo/.forward ]] ; then
+  bakmp /home/$forwardRootTo/.forward
 fi
 
 ### fatpacked app man-cheatsh ##################################################

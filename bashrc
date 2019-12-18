@@ -997,6 +997,19 @@ bak=$REMOTE_HOME/backup/"$bak"
 
 mv -v "$file" "$bak"
 
+### fatpacked app bakmp ########################################################
+
+#!/bin/bash
+
+# Move a file appending a timestamp
+
+source bash-helpers
+
+file="$@"
+bak=$(filestamp $file)
+
+mv -v "$file" "$bak"
+
 ### fatpacked app bakp #########################################################
 
 #!/bin/bash
@@ -4450,6 +4463,39 @@ date=$(sudo debugfs -R "stat <$inode>" $filesystem 2>/dev/null \
 formatted_date=$(date -d "$date" +"%F %T %a")
 echo $formatted_date $file
 
+### fatpacked app mail-setup-local-delivery ####################################
+
+#!/usr/bin/env bash
+
+# Setup local mail delivery on ubuntu 18.04
+
+source bash-helpers
+
+gotroot
+
+forwardRootTo=${1:?Specify username to forward root mail to.}
+
+apt-get install postfix
+
+bak /etc/aliases
+
+cat << EOF > /etc/aliases
+# See man 5 aliases for format
+postmaster:    root
+root: $forwardRootTo@localhost
+EOF
+
+newaliases
+service postfix restart
+
+if [[ -e /root/.forward ]] ; then
+  bakmp /root/.forward
+fi
+
+if [[ -e /$forwardRootTo/.forward ]] ; then
+  bakmp /$forwardRootTo/.forward
+fi
+
 ### fatpacked app man-cheatsh ##################################################
 
 #!/usr/bin/env bash
@@ -7004,1521 +7050,12 @@ wcat https://raw.githubusercontent.com/nilsboy/dotfiles/master/tmux.conf > ~/.tm
 
 tmux set-window-option synchronize-panes
 
-### fatpacked app top-mem ######################################################
-
-# View top ordered by memory usage
-
-exec top -c -o '%MEM'
-
-### fatpacked app trash ########################################################
-
-#!/bin/bash
-
-# Move a file to a trash dir at the files location
-
-source bash-helpers
-
-file="$@"
-
-if [[ ! "$file" ]] ; then
-    DIE "Specify file"
-fi
-
-dir=$(dirname "$file")
-trash="$dir/.trash"
-mkdir -p "$trash"
-
-mv "$file" "$trash/"
-
-### fatpacked app tree #########################################################
-
-#!/usr/bin/env perl
-
-# List a directory as a tree
-
-use strict;
-use warnings;
-no warnings 'uninitialized';
-
-use Data::Dumper;
-$Data::Dumper::Sortkeys = 1;
-
-use File::stat;
-
-binmode STDOUT, ":encoding(UTF-8)";
-use File::Basename;
-use Cwd qw(abs_path getcwd);
-use File::Spec;
-
-use Getopt::Long;
-Getopt::Long::Configure("bundling");
-my %o                  = ();
-my @option_definitions = (
-    "directories-only|d", "summary",
-    "all|a",              "colors!",
-    "ascii",              "eval|e=s",
-    "exec|execute|x=s",   "include=s",
-    "grep|g=s",           "exclude=s",
-    "empty!",             "v|verbose",
-    "info|i",             "warnings!",
-    "mounted!",           "stats",
-    "age",                "size|s",
-    "entry-count",        "html",
-    "abs",                "scm-exclude|C"
-);
-
-GetOptions(\%o, @option_definitions)
-    or die "Usage:\n" . join("\n", sort @option_definitions) . "\n";
-
-$o{empty}    = 1 if !defined $o{empty};
-$o{warnings} = 1 if !defined $o{warnings};
-$o{mounted}  = 0 if !defined $o{mounted};
-$o{colors}   = 1 if !defined $o{colors};
-if ($o{"scm-exclude"} && !$o{a}) {
-    $o{exclude} = qr/\/((\.(git|cvs|svn))|node_modules|bower_components)/;
-}
-
-if ($ENV{LANG} !~ /utf/i) {
-    $o{ascii} = 1;
-}
-
-if ($o{info}) {
-    $o{age}           = 1;
-    $o{size}          = 1;
-    $o{'entry-count'} = 1;
-}
-
-if ($o{grep}) {
-    $o{include} = ".*" . $o{grep} . ".*";
-    $o{empty}   = 0;
-}
-if ($o{include}) {
-    $o{all} = 1;
-}
-
-$ARGV[0] ||= getcwd;
-
-my $root_dev;
-
-foreach my $root_dir (@ARGV) {
-
-    $root_dir = File::Spec->rel2abs($root_dir);
-    $root_dev = stat($root_dir)->dev;
-    $root_dir =~ s/\/$//g;
-
-    if ($o{v}) {
-        print STDERR "Using options: \n", Dumper \%o;
-    }
-
-    Path->new(
-        name        => basename($root_dir),
-        parent_name => dirname($root_dir),
-        is_root     => 1,
-        multiple    => @ARGV > 1,
-    )->print;
-}
-
-package Path;
-
-use Data::Dumper;
-use File::stat;
-
-my ($blue, $green, $red, $gray, $no_color);
-my ($graph_vertical, $graph_t, $graph_l, $graph_line);
-my %warnings;
-my %stats;
-
-sub init {
-    if ($o{colors}) {
-        $blue     = "\x1b[38;5;4m";
-        $green    = "\x1b[38;5;2m";
-        $red      = "\x1b[38;5;1m";
-        $gray     = "\x1b[38;5;7m";
-        $no_color = "\x1b[33;5;0m";
-    }
-
-    if ($o{html}) {
-        $blue     = q{<font color="blue">};
-        $green    = q{<font color="green">};
-        $red      = q{<font color="red">};
-        $gray     = q{<font color="gray">};
-        $no_color = q{</font>};
-    }
-
-    $graph_vertical = "\x{2502}";
-    $graph_t        = "\x{251c}";
-    $graph_l        = "\x{2514}";
-    $graph_line     = "\x{2500}";
-
-    if ($o{ascii}) {
-        $graph_vertical = "|";
-        $graph_t        = "+";
-        $graph_l        = "+";
-        $graph_line     = "-";
-    }
-}
-
-sub print {
-    my ($self) = @_;
-
-    %warnings = ();
-    %stats    = ();
-
-    $self->add_children;
-    $self->add_warnings;
-
-    if ($o{html}) {
-        print "<pre>\n";
-    }
-
-    $self->_print;
-    $self->print_warnings;
-    $self->print_stats;
-
-    if ($o{html}) {
-        print "</pre>\n";
-        print "<hr noshade>\n" if $self->multiple;
-    }
-}
-
-sub _print {
-    my ($self, $parent, $is_parent_last_entry, $prefix) = @_;
-
-    $self->prefix($prefix);
-
-    my $name = $self->name;
-    $name = $self->abs if $o{abs} && $self->is_root;
-
-    print $self->prefix
-        . $self->dir_prefix($is_parent_last_entry)
-        . $self->color
-        . $name
-        . $self->link_info
-        . $no_color
-        . ($o{warnings} ? $self->warnings : "")
-        . $self->info . "\n";
-
-    my $next_prefix = $is_parent_last_entry ? "  " : $graph_vertical . " ";
-    $next_prefix = $self->prefix . $next_prefix;
-    $next_prefix = "" if $self->is_root;
-
-    my $entry_count         = keys %{ $self->entries };
-    my $current_entry_count = 0;
-    foreach my $path_name (sort keys %{ $self->entries }) {
-
-        $current_entry_count++;
-        my $is_last_entry = $current_entry_count == $entry_count;
-
-        my $path = $self->entries->{$path_name};
-
-        if ($path->is_dir) {
-            $path->_print($self, $is_last_entry, $next_prefix);
-            next;
-        }
-
-        my $name = $path->name;
-        if ($path->count > 1) {
-            $name =
-                  $red
-                . $path->count . "x "
-                . ($path->is_dir() ? $blue : $green)
-                . $path->normalized_marking
-                . $no_color;
-        }
-
-        print $self->prefix
-            . $self->file_prefix($is_parent_last_entry, $is_last_entry)
-            . $path->color
-            . $name
-            . $path->link_info
-            . ($o{warnings} ? $path->warnings : "")
-            . $path->info
-            . $no_color . "\n";
-    }
-}
-
-sub link_info {
-    my ($self) = @_;
-    return if !$self->is_link;
-    return "$red -> " . readlink($self->abs) . $no_color;
-}
-
-sub print_warnings {
-
-    return if !%warnings;
-    return if !$o{warnings};
-
-    print "\n${red}Warnings:${no_color}\n", dumps(\%warnings, $red), "\n";
-}
-
-sub print_stats {
-
-    return if !%stats;
-    return if !$o{stats};
-
-    print "\nStats:\n", dumps(\%stats), "\n";
-}
-
-sub dumps {
-    my ($ref, $color) = @_;
-
-    $Data::Dumper::Sortkeys = 1;
-    $Data::Dumper::Terse    = 1;
-    $Data::Dumper::Indent   = 1;
-    $Data::Dumper::Pair     = ": ";
-
-    my $s = Dumper $ref;
-    $s =~ s/['{}]*//g;
-    $s =~ s/,$//gm;
-    $s =~ s/\s+$//gms;
-    $s =~ s/\n\n//gm;
-    $s =~ s/^\n//gm;
-    $s =~ s/^/$color/gms;
-    $s =~ s/$/$no_color/gms;
-
-    # $s = $color . $s . $no_color;
-    $s .= "\n";
-    return $s;
-}
-
-sub humanize_secs {
-    my ($secs) = @_;
-
-    my $m = 60;
-    my $h = $m * 60;
-    my $d = $h * 24;
-    my $w = $d * 7;
-    my $y = $d * 365;
-
-    my $m99 = $m * 99;
-    my $h99 = $h * 99;
-    my $d99 = $d * 99;
-
-    my $human;
-
-    if ($secs >= $y) {
-        $human = sprintf("%.1fy", $secs / $y);
-    }
-    elsif ($secs >= $d99) {
-        $human = sprintf("%0dw", $secs / $w);
-    }
-    elsif ($secs >= $h99) {
-        $human = sprintf("%0dd", $secs / $d);
-    }
-    elsif ($secs >= $m99) {
-        $human = sprintf("%0dh", $secs / $h);
-    }
-    elsif ($secs >= $m) {
-        $human = sprintf("%0dm", $secs / $m);
-    }
-    else {
-        $human = $secs . "s";
-    }
-
-    $human =~ s/\.0(\D)/$1/g;
-
-    return $human;
-}
-
-sub humanize_bytes {
-    my ($bytes) = @_;
-
-    my $k = 1024;
-    my $m = $k * 1024;
-    my $g = $m * 1024;
-    my $t = $g * 1024;
-
-    my $human;
-
-    if ($bytes >= $t) {
-        $human = sprintf("%.1fT", $bytes / $t);
-    }
-    elsif ($bytes >= $g) {
-        $human = sprintf("%.1fG", $bytes / $g);
-    }
-    elsif ($bytes >= $m) {
-        $human = sprintf("%.1fM", $bytes / $m);
-    }
-    elsif ($bytes >= $k) {
-        $human = sprintf("%.1fK", $bytes / $k);
-    }
-    elsif ($bytes == 0) {
-        $human = $bytes;
-    }
-    else {
-        $human = $bytes;
-    }
-
-    return $human;
-}
-
-BEGIN {
-    for my $accessor (qw( color prefix name parent_name is_root count multiple))
-    {
-        no strict 'refs';
-        *{$accessor} = sub {
-            my $self = shift;
-            return $self->{$accessor} if !@_;
-            $self->{$accessor} = shift;
-        };
-    }
-}
-
-sub warnings {
-    my ($self) = @_;
-    return if !$self->{warnings};
-    return
-          " "
-        . $red
-        . join("$no_color, $red", @{ $self->{warnings} })
-        . $no_color;
-}
-
-sub info {
-    my ($self) = @_;
-
-    my @info;
-
-    if ($o{'entry-count'}) {
-        push(@info, "Entries: " . (keys %{ $self->entries } || 0))
-            if $self->is_dir;
-    }
-
-    if ($o{age}) {
-        push(@info, $self->age);
-    }
-
-    if ($o{size}) {
-        push(@info, $self->size);
-    }
-
-    if ($o{eval}) {
-        $_ = $self->abs;
-        my $eval = eval { $o{eval} };
-        die $@ if $@;
-        push(@info, $eval);
-    }
-
-    if ($o{exec}) {
-        my $exec = $o{exec};
-        my $abs  = $self->abs;
-        $exec =~ s/\{\}/'$abs'/g;
-        print STDERR "Executing in the shell: $exec\n" if $o{v};
-        $exec = `$exec`;
-        $exec =~ s/\n+$//g;
-        $exec =~ s/\n/ | /g;
-        $exec =~ s/^ +//g;
-        push(@info, $exec);
-    }
-
-    return if !@info;
-    return " " . $gray . join(", ", @info) . $no_color;
-}
-
-sub file_prefix {
-    my ($self, $is_last_dir_entry, $is_last_entry) = @_;
-
-    my $fork     = $is_last_entry     ? $graph_l : $graph_t;
-    my $dir_fork = $is_last_dir_entry ? " "      : $graph_vertical;
-    if ($self->is_root) {
-        $dir_fork = "";
-    }
-    else {
-        $dir_fork .= " ";
-    }
-
-    return $dir_fork . $fork . $graph_line . " ";
-}
-
-sub dir_prefix {
-    my ($self, $is_last_entry) = @_;
-
-    return if $self->is_root;
-
-    my $fork = $is_last_entry ? $graph_l : $graph_t;
-
-    return $fork . $graph_line . " ";
-}
-
-sub new {
-    init;
-    my $class = shift;
-    my %p     = @_;
-    return bless { %p, color => $blue }, $class;
-}
-
-sub has_entries {
-    my ($self) = @_;
-    keys %{ $self->{entries} } != 0;
-}
-
-sub entries {
-    my ($self) = @_;
-    $self->{entries} ||= {};
-    return $self->{entries};
-}
-
-sub is_mounted {
-    my ($self) = @_;
-
-    my $dev = stat($self->abs)->dev;
-
-    if ($dev != $root_dev) {
-        return 1;
-    }
-
-    return 0;
-}
-
-sub add {
-    my ($self, $path) = @_;
-
-    if (!$path->is_dir && $o{include}) {
-        return 0 if $path->abs !~ /$o{include}/i;
-    }
-
-    return 0 if $path->abs =~ /$o{exclude}/i;
-
-    $path->add_warnings;
-
-    if ($path->is_dir) {
-
-        $path->color($blue);
-        $stats{Directories}++;
-
-        if ($path->name =~ /^\.(git|svn)/) {
-        }
-        elsif (!stat($path->abs)) {
-        }
-        elsif ($path->is_mounted) {
-        }
-        elsif (!$path->is_link) {
-            $path->add_children;
-        }
-
-        $path->add_to_global_warnings;
-
-        if ($path->name =~ /^\./) {
-            return if !$o{all};
-        }
-
-        if (!$path->has_entries && !$o{empty}) {
-            return;
-        }
-
-        $self->entries->{ $path->name } = $path;
-        return;
-    }
-
-    if ($o{'directories-only'}) {
-        return;
-    }
-
-    $path->color($green);
-
-    $path->add_to_global_warnings;
-
-    if ($path->name =~ /^\./) {
-        return if !$o{all};
-    }
-
-    my ($extension) = $path->name =~ /\.([^\.]+)$/;
-    $extension = "" if $path->name !~ /\./;
-    $extension = "" if $extension =~ /^\d+$/;
-
-    $stats{Files}++;
-    $stats{'File extensions'}{$extension}++;
-
-    my $path_key = $path->name;
-
-    if ($o{summary}) {
-        $path_key = $path->normalized;
-        $path->count(1);
-    }
-
-    if (exists $self->entries->{$path_key}) {
-        $self->entries->{$path_key}{count}++;
-    }
-    else {
-        $self->entries->{$path_key} = $path;
-    }
-}
-
-sub add_warning {
-    my ($self, $warning) = @_;
-    push(@{ $self->{warnings} }, $warning);
-}
-
-sub add_warnings {
-    my ($self) = @_;
-
-    if ($self->name =~ /^\./) {
-        $self->add_warning('DOTFILE');
-    }
-
-    $self->add_warning("PRECEDING SPACE") if $self->name =~ /^\ /;
-    $self->add_warning("TRAILING SPACE")  if $self->name =~ /\ $/;
-
-    if ($self->name =~ /^\.(git|svn)/) {
-        $self->add_warning("SCM DIR");
-    }
-
-    if (!stat $self->abs) {
-        $self->add_warning("READ ERROR");
-    }
-    else {
-
-        if ($self->is_mounted) {
-            $self->add_warning("MOUNTED");
-        }
-
-        if ($self->is_link) {
-            $self->add_warning("LINK");
-        }
-    }
-
-}
-
-sub add_to_global_warnings {
-    my ($self) = @_;
-
-    foreach my $warning (@{ $self->{warnings} }) {
-        $warnings{$warning}++;
-    }
-}
-
-sub add_children {
-    my ($self) = @_;
-
-    my $dirh;
-    if (!opendir($dirh, $self->abs)) {
-        $self->add_warning("ERROR: " . $!);
-        return;
-    }
-
-    while (my $entry = readdir($dirh)) {
-
-        next if $entry =~ /^\.{1,2}$/;
-
-        my $path = Path->new(parent_name => $self->abs, name => $entry,);
-
-        $self->add($path);
-    }
-    closedir($dirh) || die $!;
-}
-
-sub is_dir {
-    my ($self) = @_;
-    return -d $self->abs;
-}
-
-sub is_link {
-    my ($self) = @_;
-    return -l $self->abs;
-}
-
-sub abs {
-    my ($self) = @_;
-
-    return $self->name if !$self->parent_name;
-    return $self->parent_name . "/" . $self->name;
-}
-
-sub normalized {
-    my ($self) = @_;
-
-    my $normalized = $self->name;
-    $normalized =~ s/[0-9a-f\W\d\s_]{2,}//gi;
-    return $normalized;
-}
-
-sub normalized_marking {
-    my ($self) = @_;
-
-    my $entry_color = $self->is_dir() ? $blue : $green;
-
-    my $normalized = $self->name;
-    $normalized =~ s/([0-9a-f\-]{2,}|[\W\d\s_]{2,})/${red}$^N$entry_color/gi;
-    return $normalized;
-}
-
-sub age {
-    my ($self) = @_;
-
-    my $stat = stat($self->abs) || return;
-
-    my $age   = time - $stat->mtime;
-    my $h_age = humanize_secs($age);
-    $h_age = $red . $h_age . $no_color if $h_age =~ /[sm]/;
-    return "Changed: $h_age";
-}
-
-sub size {
-    my ($self) = @_;
-
-    return if $self->is_dir;
-
-    my $stat = stat($self->abs) || return;
-
-    my $size       = $stat->size;
-    my $blocks     = $stat->blocks;
-    my $block_size = $stat->blksize;
-
-    my $alloc = $blocks * 512;
-    my $done  = 100;
-    $done = $alloc / ($size / 100) if $size != 0;
-    $done = int($done);
-
-    my $info = $gray . "Size: " . humanize_bytes($size);
-
-    return $info if $done >= 100;
-
-    $self->add_warning("INCOMPLETE");
-
-    return
-          $gray
-        . "Size: "
-        . humanize_bytes($alloc) . "/"
-        . humanize_bytes($size)
-        . " - ${red}$done\%"
-        . $gray;
-}
-
-
-
-### fatpacked app tree-diff ####################################################
-
-#!/bin/bash
-
-# Diff two directory structures
-
-left=$1 ; shift
-right=$1 ; shift
-
-diff=diff
-
-if [[ $(type -p colordiff) ]] ; then
-    diff=colordiff
-fi
-
-$diff -y \
-    <(tree --no-colors --ascii $@ "$left") \
-    <(tree --no-colors --ascii $@ "$right") \
-    | less
-
-### fatpacked app ubuntu-setup #################################################
-
-#!/bin/bash
-
-# Stuff to do after a new ubuntu installation
-
-source bash-helpers
-
-gotroot
-
-INFO "Turning off crash reports..."
-echo enabled=0 >> /etc/default/apport
-
-INFO "Removing outdated flash plugin (flashplugin-installer)..."
-dpkg -P flashplugin-installer
-
-INFO "Add user group editor - to be started via the ubuntu menu"
-sudo apt-get install gnome-system-tools
-
-ubuntu-setup-automatic-updates
-
-### fatpacked app ubuntu-setup-automatic-updates ###############################
-
-#!/bin/bash
-
-# Make sure update and backports soures are activated
-
-# Updates - should be activated otherwise regular updates might fail because
-#    of missing/outdated dependencies
-# Backports - should be activated - by default only installed manually
-# Proposed - don't activate - aproved packages move to updates anyway
-
-source bash-helpers
-
-INFO "Including updates and backports in sources list..."
-
-gotroot
-
-bak /etc/apt/sources.list
-
-file-add-line-if-new /etc/apt/sources.list '^deb http://\S+\s+'$DISTRIB_CODENAME'-updates.*$'   'deb http://archive.ubuntu.com/ubuntu '$DISTRIB_CODENAME'-updates   main restricted universe multiverse'
-file-add-line-if-new /etc/apt/sources.list '^deb http://\S+\s+'$DISTRIB_CODENAME'-backports.*$' 'deb http://archive.ubuntu.com/ubuntu '$DISTRIB_CODENAME'-backports main restricted universe multiverse'
-
-apt-get update
-
-### fatpacked app ubuntu-unity-set-time-format #################################
-
-#!/bin/bash
-
-# Set time format of ubuntu unity desktop clock
-
-dconf write /com/canonical/indicator/datetime/time-format "'custom'"
-dconf write /com/canonical/indicator/datetime/custom-time-format "'KW%V | %a | %F | %R'"
-
-### fatpacked app uniq-unsorted ################################################
-
-#!/usr/bin/env perl
-
-# uniq replacement without the need for sorted input
-use strict;
-use warnings;
-
-my %seen;
-
-while (<STDIN>) {
-    print if !exists $seen{$_};
-    $seen{$_} = 1;
-}
-
-### fatpacked app unix2dos #####################################################
-
-#!/bin/bash
-
-# Convert line endings from unix to dos
-
-perl -i -pe 's/\n/\r\n/' "$@"
-
-### fatpacked app url ##########################################################
-
-#!/usr/bin/env perl
-
-# Print absolute SSH url of a file or directory
-
-use strict;
-use warnings FATAL => 'all';
-
-my $hostname = `hostname` || die "Error getting hostname";
-$hostname =~ s/\n//g;
-
-my $rel = qx{rel "@ARGV"};
-$rel =~ s/\n$//g;
-$rel = "\"$rel\"" if $rel =~ /\s|;/;
-print "$ENV{USER}\@" . $hostname . ":$rel\n"
-
-### fatpacked app url-decode ###################################################
-
-#!/bin/bash
-
-# Decode a string from URL notation
-# https://stackoverflow.com/questions/296536/how-to-urlencode-data-for-curl-command
-
-echo -n "$@" | perl -pe 's/\%(\w\w)/chr hex $1/ge'
-
-### fatpacked app url-encode ###################################################
-
-#!/bin/bash
-
-# Encode a string to URL notation
-# https://stackoverflow.com/questions/296536/how-to-urlencode-data-for-curl-command
-
-echo -n "$@" | perl -pe 's/(\W)/sprintf("%%%02X", ord($1))/ge'
-
-### fatpacked app user-add #####################################################
-
-#!/bin/bash
-
-# Add a new user to the system without hassle
-
-source bash-helpers
-
-user=${1?Specify user name}
-shift
-
-if [[ ! $(id $user 2> /dev/null) ]] ; then
-    sudo adduser --disabled-password --quiet --gecos "" $user "$@"
-
-    sudo mkdir -p /home/$user/.ssh/
-    sudo cp ~/.ssh/authorized_keys /home/$user/.ssh/
-    sudo cp ~/.bashrc /home/$user/
-    sudo chown -R $user:$user /home/$user
-fi
-
-ssh $user@localhost
-
-
-### fatpacked app vi-choose-file-from-list #####################################
-
-# Edit a file from a list on STDIN
-
-set -e
-
-line=$1
-
-if [[ ! $line ]] ; then
-    cat | nl
-    exit 0
-fi
-
-file=$(cat | perl -ne 'print if $. == '$line)
-
-# close STDIN by connecting it back to the terminal
-exec < $BASHRC_TTY
-
-command eval $EDITOR $file
-
-### fatpacked app vi-from-find #################################################
-
-# Recursively search for a file and open it in vim - TODO
-
-search=$(perl -e '$_ = "'"$@"'" ; s#\:\:#/#g; print')
-
-entry=$(find-and "$search" | head -1)
-
-if [[ ! "$entry" ]] ; then
-    exit 1
-fi
-
-command eval $EDITOR "$entry"
-
-### fatpacked app vi-from-history ##############################################
-
-# Search eternal history for an existing file an open it in vi
-
-set -e
-file=$(bash-eternal-history-search --file -c 1 "$@")
-command eval $EDITOR "$file"
-
-### fatpacked app vi-from-path #################################################
-
-#!/bin/bash
-
-# Find an executable in the path and edit it
-
-set -e
-
-file=$(type -p $@)
-
-command eval $EDITOR "$file"
-
-### fatpacked app vi-from-perl-inc #############################################
-
-#!/bin/bash
-
-# Find an executable in the perl %INC and edit it
-
-set -e
-
-file=$(perldoc -lm "$@")
-
-command eval $EDITOR "$file"
-
-### fatpacked app video-dvd-install-decss ######################################
-
-# Install decss for encrypted dvd playback
-
-# https://help.ubuntu.com/community/RestrictedFormats/PlayingDVDs
-
-sudo apt-get install libdvdread4
-sudo /usr/share/doc/libdvdread4/install-css.sh
-
-### fatpacked app video-dvd-rip ################################################
-
-# Rip and transcode a video dvd
-
-# Use `lsdvd -a` to inspect dvd to choose titles and audio tracks.
-
-# TODO: title tracks need to be specified starting from 0
-# TODO: audio tracks need to be specified starting from 0
-
-source bash-helpers
-
-tracks="$@"
-
-if [[ ! $tracks ]] ; then
-    tracks=x
-fi
-
-for track in $tracks ; do
-
-    if [[ $track = x ]] ; then
-        track=""
-    fi
-
-    INFO "Ripping track: $track..."
-    mpv --dvd-device /dev/sr1 dvdnav://$track --stream-dump dvd-$track.vob || true
-    # mpv dvd://$track --stream-dump dvd-$track.vob || true
-    INFO "Done ripping track: $track"
-done
-
-# eject /dev/dvd || WARN "Cannot eject dvd - skipping"
-
-INFO "Encoding..."
-
-for track in $@ ; do
-    INFO "Transcoding track: $track"
-    video-transcode dvd-$track.vob
-    INFO "Done transcoding track: $track"
-done
-
-INFO "All done"
-
-### fatpacked app video-transcode ##############################################
-
-# Transcode a media file to x264 preserving all video, audio and subtitle tracks
-
-# To copy a single audio track use: audio_track=3 video-transcode file
-#
-# Codec options:
-# https://www.ffmpeg.org/ffmpeg-codecs.html
-# ac3 is the best quality audio encoder directly included in libav - see:
-# https://trac.ffmpeg.org/wiki/Encode/HighQualityAudio
-
-# fix aspect "flag" - make 4:3 to display as 16:9 for NTSC:
-# mkvpropedit *.mkv --edit track:v1 --set display-width=853
-
-source bash-helpers
-
-if [[ "$audio_tracks" ]] ; then
-    for track in $audio_tracks ; do
-        audio_option=$audio_option" -map 0:a:$track"
-    done
-else
-    audio_option="-map 0:a$audio_track"
-fi
-
-for file in $@ ; do
-
-    INFO "Encoding $file..."
-
-    # only set copy subtitles option if input file contains any
-    # avconv dies otherwise
-    (avconv -analyzeduration 1000000k -probesize 1000000k -i $file 2>&1 ; true) \
-        | grep -i subtitle && subtitle_option=" -map 0:s -c:s copy "
-
-# TODO copy meta data:
-#   avconv -i in.ogg -map_metadata 0:s:0 out.mp3
-# TODO extra option to convert all audio to ogg
-#   avconv -i INPUT -map 0 -c copy -c:v:1 libx264 -c:a:137 libvorbis OUTPUT
-#       will copy all the streams except the second video, which will be
-#       encoded with libx264, and the 138th audio, which will be encoded
-#       with libvorbis.
-# -acodec libvorbis \
-
-# "hi-fi transparency demands data rates of at least 128 kbit/s (VBR). The
-# MPEG-2 audio tests showed that AAC meets the requirements referred to as
-# "transparent" for the ITU at 128 kbit/s for stereo, and 320 kbit/s for 5.1 audio."
-# (https://en.wikipedia.org/wiki/Advanced_Audio_Coding)
-#
-# vbr 3 = ~50kbit/channel should be fine
-#        -c:a libfdk_aac -vbr 3 -cutoff 20000 \
-#        -cutoff 20000 # needs to be set to turn off the default cutoff at 14000Hz (libfdk_aac only)
-#
-# crf: 
-# A change of ±6 should result in about half/double the file size, although your results might vary.
-# lower values would result in better quality (at the expense of higher file sizes).
-# http://slhck.info/articles/crf
-# default crf: 23
-
-# even though apparently all dvds are interlaced - results seem to be better without deinterlacing
-
-    # deinterlacer="-vf yadif"
-
-    if [[ "$deinterlacer" ]] ; then
-        WARN '#################################### Deinterlacing!'
-    fi
-
-    avconv \
-        $_doc_check_for_subtitle_streams_that_start_later \
-        -analyzeduration 1000000k -probesize 1000000k \
-        -i $file \
-        -map 0:v \
-        $deinterlacer \
-        -c:v libx264 \
-        $_doc_x264_quality_level \
-        -crf 23 \
-        $_doc_how_much_time_to_invest \
-        $audio_option \
-        -c:a copy \
-        $subtitle_option \
-        $file.mkv
-
-    INFO "Done: $file"
-
-done
-
-if [[ "$deinterlacer" ]] ; then
-    WARN '#################################### Deinterlacing!'
-fi
-
-exit
-        -c:a ac3 -b:a 448k \
-
-### fatpacked app vim-firefox ##################################################
-
-#!/bin/bash
-# Vim to use from firefox addon its-all-text
-
-export REMOTE_HOME=$HOME
-
-exec gnome-terminal -x ~/.bin/vi "$@"
-
-### fatpacked app vim-setup ####################################################
-
-#!/bin/bash
-
-# Setup vim environment
-
-source bash-helpers
-
-INFO "Setting up vim config..."
-
-VIM_DIR=$REMOTE_HOME/.vim/
-mkdir -p $VIM_DIR
-cd $VIM_DIR
-
-if [[ -e .git ]] ; then
-  INFO "Updating existing setup..."
-  git-reset-origin
-  git pull
-else
-  INFO "Cloning git dotvim repo..."
-  git clone --depth 1 https://github.com/nilsboy/dotvim.git .
-fi
-
-INFO "Starting vim to download plugins..."
-
-exec vi
-
-### fatpacked app vim-url ######################################################
-
-#!/usr/bin/env perl
-
-# Print absolute SSH url of a file or directory in vim syntax
-
-use strict;
-use warnings FATAL => 'all';
-
-my $url = qx{url "@ARGV"};
-$url =~ s/\n//g;
-
-$url =~ s/\:/\//;
-$url =~ s/^/scp:\/\//g;
-
-print "$url\n";
-
-### fatpacked app vipe #########################################################
-
-#!/bin/bash
-
-# Edit stdin in a pipe using vim
-# Based on https://old.reddit.com/r/vim/comments/3oo156/whats_your_best_vim_related_shell_script/
-
-function cleanup() { test -e "$TOVIMTMP" && rm "$TOVIMTMP" ; }
-trap cleanup ERR EXIT
-
-set -e
-
-TOVIMTMP=/tmp/tovim_tmp_`date +%Y-%m-%d_%H-%M-%S`.`uuid`.txt
-cat > $TOVIMTMP 
-vi $TOVIMTMP < /dev/tty > /dev/tty
-cat $TOVIMTMP 
-
-
-### fatpacked app vnc-server-setup-upstart-script ##############################
-
-#!/bin/bash
-
-# Setup remote desktop access via ssh and vnc right from the login screen of
-# lightdm.
-
-set -e
-
-sudo apt-get install x11vnc
-
-sudo tee /etc/init/lightdm-vnc.conf >/dev/null <<'EOF'
-# to reload: sudo initctl emit login-session-start
-start on login-session-start
-script
-set +e
-killall -9 x11vnc
-set -e
-/usr/bin/x11vnc \
-    -norc \
-    -localhost \
-    -forever \
-    -solid \
-    -nopw \
-    -nocursor \
-    -wireframe \
-    -wirecopyrect \
-    -xkb \
-    -auth /var/run/lightdm/root/:0 \
-    -noxrecord \
-    -noxfixes \
-    -noxdamage \
-    -rfbport 5900 \
-    -scale 3/4:nb \
-    -o /var/log/lightdm-vnc.log \
-    -bg
-end script
-EOF
-
-    sudo tee -a /etc/lightdm/lightdm.conf >/dev/null <<-'EOF'
-
-[VNCServer]
-enabled=true
-EOF
-
-sudo initctl reload-configuration
-sudo initctl emit login-session-start
-
-echo "check if vino is running!"
-
-### fatpacked app vnc-start-vino ###############################################
-
-# Start vino vnc server
-
-/usr/lib/vino/vino-server --display :0 &
-
-### fatpacked app vnc-vino-preferences #########################################
-
-# Set vino preferences
-
-vino-preferences
-
-### fatpacked app vncviewer ####################################################
-
-#!/bin/bash
-
-# vncviewer preconfigured to use ssh
-
-host=$1
-port=${2:-0}
-
-export VNC_VIA_CMD="/usr/bin/ssh -C -f -L %L:%H:%R %G sleep 20"
-
-$(type -pf vncviewer) -encoding tight \
-    -compresslevel 9 -quality 5 -x11cursor -via $host localhost:$port
-
-### fatpacked app wcat #########################################################
-
-#!/usr/bin/env perl
-
-# Easily dump a web site
-
-use strict;
-use warnings;
-no warnings 'uninitialized';
-use Data::Dumper;
-use File::Copy;
-use Getopt::Long;
-Getopt::Long::Configure("bundling");
-
-my $opts = {
-    "h|only-show-response-headers" => \my $show_headers,
-    "s|strip-tags"                 => \my $strip_tags,
-    "f|save-to-file"               => \my $to_file,
-    "r|replace"                    => \my $overwrite,
-    "o|out-file=s"                 => \my $file,
-};
-GetOptions(%$opts) or die "Usage:\n" . join( "\n", sort keys %$opts ) . "\n";
-
-my $url = $ARGV[0] || die "Specify URL.";
-
-if ( $url !~ m#^(.+?)://# ) {
-    $url = "http://$url";
-}
-
-if ($to_file) {
-    if ( !$file ) {
-        ($file) = $url =~ m#^.+?://.*?/([^\/]+)$#;
-    }
-    die "Error creating file name from url." if !$file;
-    die "File exists: $file" if -f $file && !$overwrite;
-}
-
-my $options = "--no-check-certificate ";
-if ($show_headers) {
-    $options .= "-S ";
-}
-
-my $content = `wget $options -qqO- "$url"` || die "Request failed. $!";
-
-exit 0 if $show_headers;
-
-die "Empty response from $url." if !$content;
-
-if ($strip_tags) {
-    $content =~ s#<\s*script.+?>.+?</script>##imsg;
-    $content =~ s#<\s*head.+?>.+?</head>##imsg;
-    $content =~ s#\n+##igms;
-    $content =~ s#<(br)/*>#\n#igms;
-    $content =~ s#<(li).*?>#\* #igms;
-    $content =~ s#</(li).*?>#\n#igms;
-    $content =~ s#</(p|div).*?>#\n\n#igms;
-    $content =~ s#</h\d+.*?>#\n\n#igms;
-    $content =~ s#<.+?/>\n*##igms;
-    $content =~ s#<td.*?>#\t#igms;
-    $content =~ s#</tr.*?>#\n#igms;
-
-    $content =~ s#<.+?>##igms;
-
-    $content =~ s#&minus;#-#igms;
-    $content =~ s#&gt;#>#igms;
-    $content =~ s#&lt;#<#igms;
-    $content =~ s#&\w+;# #igms;
-    $content =~ s/&#\d+;/ /igms;
-}
-
-if ( $to_file || $file ) {
-    my $tmp_file = "/tmp/wcat.$$.$file";
-    open( F, ">", $tmp_file ) || die "Cannot write to file: $tmp_file: $!";
-    print F $content;
-    close(F);
-    move( $tmp_file, $file ) || die "Cannot move to file $file: $!";
-}
-else {
-    print $content;
-}
-
-### fatpacked app webserver-file-manager #######################################
+### fatpacked app tmux-xpanes ##################################################
 
 #!/usr/bin/env bash
 
-# Serve a file manager for the current directory via http
+# Awesome tmux-based terminal divider
 
-source bash-helpers
-
-dir=$(pwd)
-INFO "Serving current directory: $dir"
-npm install -g node-file-manager
-npx node-file-manager -p 5002 -d $dir
-
-### fatpacked app webserver-serve-current-directory ############################
-
-#!/usr/bin/env bash
-
-# Serve current directory files via http
-
-source bash-helpers
-
-npm install -g serve
-serve --port 5001 .
-
-### fatpacked app webserver-serve-current-directory.pl #########################
-
-#!/bin/bash
-
-# Serve current directory files via http - perl version
-
-perl-install-module App::HTTPThis
-http_this
-
-### fatpacked app wikipedia-via-dns ############################################
-
-#!/bin/bash
-
-# Query wikipedia via DNS
-
-dig +short txt "$@".wp.dg.cx | perl -0777 -pe 'exit 1 if ! $_ ; s/\\//g'
-
-### fatpacked app window-blink #################################################
-
-#!/usr/bin/env bash
-
-# Blink current window
-
-source bash-helpers
-
-[[ ! "$DISPLAY" ]] || exit 0
-[[ ! "$WINDOWID" ]] || exit 0
-
-wmctrl -i -r $WINDOWID -b "add,DEMANDS_ATTENTION"
-
-### fatpacked app x2x-east #####################################################
-
-# Share input devices with another host
-
-ssh -X $1 x2x -east -to $DISPLAY
-
-### fatpacked app xdg-cache-home ###############################################
-
-#!/usr/bin/env bash
-
-# Return xdg cache home
-
-source bash-helpers
-
-subdir="$1"
-subdir=$(echo $subdir | perl -pe 's/^.*\/(.+)/$1/')
-
-if [[ ! $XDG_CACHE_HOME ]] ; then
-  XDG_CACHE_HOME=$REMOTE_HOME/.cache
-fi
-
-if [[ $subdir ]] ; then
-  XDG_CACHE_HOME=$XDG_CACHE_HOME/$subdir/
-fi
-
-mkdir -p $XDG_CACHE_HOME
-
-RETURN $XDG_CACHE_HOME
-
-### fatpacked app xmv ##########################################################
-
-#!/usr/bin/env perl
-
-# Rename files by perl expression
-# Protects against duplicate resulting file names.
-
-use strict;
-use warnings;
-no warnings 'uninitialized';
-
-use File::Basename;
-use File::Copy qw(mv);
-use File::stat;
-
-use File::Path qw(make_path);
-use Getopt::Long;
-Getopt::Long::Configure('bundling');
-
-my $dry = 1;
-
-my $opts = {
-    'x|execute' => sub { $dry = 0 },
-    'd|include-directories' => \my $include_directories,
-    'n|normalize'           => \my $normalize,
-    'e|execute-perl=s'      => \my $op,
-    'S|dont-split-off-dir'  => \my $dont_split_off_dir,
-};
-GetOptions(%$opts) or die "Usage:\n" . join( "\n", sort keys %$opts ) . "\n";
-
-if ( join( " ", @ARGV ) eq "-" ) {
-    @ARGV = map {/(.+)\n/} <STDIN>;
-}
-
-if ( !@ARGV ) {
-    die "Usage: xmv [-x] [-d] [-n] [-l file] [-S] [-e perlexpr] [filenames]\n";
-}
-
-my %will                  = ();
-my %was                   = ();
-my $abort                 = 0;
-my $COUNT                 = 0;
-my $empty_file_name_count = 0;
-
-for (@ARGV) {
-
-    next if /^\.{1,2}$/;
-
-    my $abs  = $_;
-    my $dir  = dirname($_);
-    my $file = basename($_);
-
-    if ($dont_split_off_dir) {
-        $dir  = "";
-        $file = $_;
-    }
-
-    $dir = "" if $dir eq ".";
-    $dir .= "/" if $dir;
-
-    $abs = $dir . $file;
-    my $was = $file;
-    $_ = $file;
-
-    $_ = normalize($abs) if $normalize;
-
-    # vars to use in perlexpr
-    $COUNT++;
-    $COUNT = sprintf( "%0" . length( scalar(@ARGV) ) . "d", $COUNT );
-    my $DIR  = dirname($abs);
-    my $FILE = basename($abs);
-
-    if ($op) {
-        eval $op;
-        die $@ if $@;
-    }
-
-    my $will = $dir . $_;
-
-    if ( !-e $abs ) {
-        warn "no such file: '$was'";
-        $abort = 1;
-        next;
-    }
-
-    if ( -d $abs && !$include_directories ) {
-        next;
-    }
-
-    my $other = $will{$will} if exists $will{$will};
-    if ($other) {
-        warn "name '$will' for '$abs' already taken by '$other'.";
-        $abort = 1;
-        next;
-    }
-
-    next if $will eq $abs;
-
-    if ( -e $will ) {
-        warn "file '$will' already exists.";
-        $abort = 1;
-        next;
-    }
-
-    $will{$will} = $abs;
-    $was{$abs}   = $will;
-}
-
-exit 1 if $abort;
-
-foreach my $was ( sort keys %was ) {
-
-    my $will = $was{$was};
-
-    print "moving '$was' -> '$will'\n";
-
-    next if $dry;
-
-    # system("mv", $was, $will) && die $!;
-    my $stat = stat($was) || die $!;
-    my $dir = dirname($will);
-
-    if ( !-d $dir ) {
-        make_path($dir) || die "Error creating directory: $dir";
-    }
-
-    mv( $was, $will ) || die $!;
-    utime( $stat->atime, $stat->mtime, $will ) || die $!;
-}
-
-sub normalize {
-    my ($abs) = @_;
-
-    my $file = basename($abs);
-    my $ext  = "";
-
-    if ( !-d $abs && $file =~ /^(.+)(\..+?)$/ ) {
-        ( $file, $ext ) = ( $1, $2 );
-    }
-
-    $_ = $file;
-
-    s/&/and/g;
-    s/['`´]+//g;
-    s/[\._\W]+/_/g;
-    s/.*?www_[^_]+_[^_]+_//gi;
-    s/^_*//g;
-    s/_*$//g;
-
-    if ( !$_ ) {
-        $empty_file_name_count++;
-        $_ = "_empty_file_name." . $empty_file_name_count;
-    }
-
-    return $_ . lc($ext);
-}
-
-### fatpacked app xpanes #######################################################
-
-#!/usr/bin/env bash
 readonly XP_SHELL="/usr/bin/env bash"
 
 # @Author Yamada, Yasuhiro
@@ -10575,6 +9112,1518 @@ xpns_main() {
 # Entry Point
 ## --------------------------------
 xpns_main ${1+"$@"}
+
+### fatpacked app top-mem ######################################################
+
+# View top ordered by memory usage
+
+exec top -c -o '%MEM'
+
+### fatpacked app trash ########################################################
+
+#!/bin/bash
+
+# Move a file to a trash dir at the files location
+
+source bash-helpers
+
+file="$@"
+
+if [[ ! "$file" ]] ; then
+    DIE "Specify file"
+fi
+
+dir=$(dirname "$file")
+trash="$dir/.trash"
+mkdir -p "$trash"
+
+mv "$file" "$trash/"
+
+### fatpacked app tree #########################################################
+
+#!/usr/bin/env perl
+
+# List a directory as a tree
+
+use strict;
+use warnings;
+no warnings 'uninitialized';
+
+use Data::Dumper;
+$Data::Dumper::Sortkeys = 1;
+
+use File::stat;
+
+binmode STDOUT, ":encoding(UTF-8)";
+use File::Basename;
+use Cwd qw(abs_path getcwd);
+use File::Spec;
+
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+my %o                  = ();
+my @option_definitions = (
+    "directories-only|d", "summary",
+    "all|a",              "colors!",
+    "ascii",              "eval|e=s",
+    "exec|execute|x=s",   "include=s",
+    "grep|g=s",           "exclude=s",
+    "empty!",             "v|verbose",
+    "info|i",             "warnings!",
+    "mounted!",           "stats",
+    "age",                "size|s",
+    "entry-count",        "html",
+    "abs",                "scm-exclude|C"
+);
+
+GetOptions(\%o, @option_definitions)
+    or die "Usage:\n" . join("\n", sort @option_definitions) . "\n";
+
+$o{empty}    = 1 if !defined $o{empty};
+$o{warnings} = 1 if !defined $o{warnings};
+$o{mounted}  = 0 if !defined $o{mounted};
+$o{colors}   = 1 if !defined $o{colors};
+if ($o{"scm-exclude"} && !$o{a}) {
+    $o{exclude} = qr/\/((\.(git|cvs|svn))|node_modules|bower_components)/;
+}
+
+if ($ENV{LANG} !~ /utf/i) {
+    $o{ascii} = 1;
+}
+
+if ($o{info}) {
+    $o{age}           = 1;
+    $o{size}          = 1;
+    $o{'entry-count'} = 1;
+}
+
+if ($o{grep}) {
+    $o{include} = ".*" . $o{grep} . ".*";
+    $o{empty}   = 0;
+}
+if ($o{include}) {
+    $o{all} = 1;
+}
+
+$ARGV[0] ||= getcwd;
+
+my $root_dev;
+
+foreach my $root_dir (@ARGV) {
+
+    $root_dir = File::Spec->rel2abs($root_dir);
+    $root_dev = stat($root_dir)->dev;
+    $root_dir =~ s/\/$//g;
+
+    if ($o{v}) {
+        print STDERR "Using options: \n", Dumper \%o;
+    }
+
+    Path->new(
+        name        => basename($root_dir),
+        parent_name => dirname($root_dir),
+        is_root     => 1,
+        multiple    => @ARGV > 1,
+    )->print;
+}
+
+package Path;
+
+use Data::Dumper;
+use File::stat;
+
+my ($blue, $green, $red, $gray, $no_color);
+my ($graph_vertical, $graph_t, $graph_l, $graph_line);
+my %warnings;
+my %stats;
+
+sub init {
+    if ($o{colors}) {
+        $blue     = "\x1b[38;5;4m";
+        $green    = "\x1b[38;5;2m";
+        $red      = "\x1b[38;5;1m";
+        $gray     = "\x1b[38;5;7m";
+        $no_color = "\x1b[33;5;0m";
+    }
+
+    if ($o{html}) {
+        $blue     = q{<font color="blue">};
+        $green    = q{<font color="green">};
+        $red      = q{<font color="red">};
+        $gray     = q{<font color="gray">};
+        $no_color = q{</font>};
+    }
+
+    $graph_vertical = "\x{2502}";
+    $graph_t        = "\x{251c}";
+    $graph_l        = "\x{2514}";
+    $graph_line     = "\x{2500}";
+
+    if ($o{ascii}) {
+        $graph_vertical = "|";
+        $graph_t        = "+";
+        $graph_l        = "+";
+        $graph_line     = "-";
+    }
+}
+
+sub print {
+    my ($self) = @_;
+
+    %warnings = ();
+    %stats    = ();
+
+    $self->add_children;
+    $self->add_warnings;
+
+    if ($o{html}) {
+        print "<pre>\n";
+    }
+
+    $self->_print;
+    $self->print_warnings;
+    $self->print_stats;
+
+    if ($o{html}) {
+        print "</pre>\n";
+        print "<hr noshade>\n" if $self->multiple;
+    }
+}
+
+sub _print {
+    my ($self, $parent, $is_parent_last_entry, $prefix) = @_;
+
+    $self->prefix($prefix);
+
+    my $name = $self->name;
+    $name = $self->abs if $o{abs} && $self->is_root;
+
+    print $self->prefix
+        . $self->dir_prefix($is_parent_last_entry)
+        . $self->color
+        . $name
+        . $self->link_info
+        . $no_color
+        . ($o{warnings} ? $self->warnings : "")
+        . $self->info . "\n";
+
+    my $next_prefix = $is_parent_last_entry ? "  " : $graph_vertical . " ";
+    $next_prefix = $self->prefix . $next_prefix;
+    $next_prefix = "" if $self->is_root;
+
+    my $entry_count         = keys %{ $self->entries };
+    my $current_entry_count = 0;
+    foreach my $path_name (sort keys %{ $self->entries }) {
+
+        $current_entry_count++;
+        my $is_last_entry = $current_entry_count == $entry_count;
+
+        my $path = $self->entries->{$path_name};
+
+        if ($path->is_dir) {
+            $path->_print($self, $is_last_entry, $next_prefix);
+            next;
+        }
+
+        my $name = $path->name;
+        if ($path->count > 1) {
+            $name =
+                  $red
+                . $path->count . "x "
+                . ($path->is_dir() ? $blue : $green)
+                . $path->normalized_marking
+                . $no_color;
+        }
+
+        print $self->prefix
+            . $self->file_prefix($is_parent_last_entry, $is_last_entry)
+            . $path->color
+            . $name
+            . $path->link_info
+            . ($o{warnings} ? $path->warnings : "")
+            . $path->info
+            . $no_color . "\n";
+    }
+}
+
+sub link_info {
+    my ($self) = @_;
+    return if !$self->is_link;
+    return "$red -> " . readlink($self->abs) . $no_color;
+}
+
+sub print_warnings {
+
+    return if !%warnings;
+    return if !$o{warnings};
+
+    print "\n${red}Warnings:${no_color}\n", dumps(\%warnings, $red), "\n";
+}
+
+sub print_stats {
+
+    return if !%stats;
+    return if !$o{stats};
+
+    print "\nStats:\n", dumps(\%stats), "\n";
+}
+
+sub dumps {
+    my ($ref, $color) = @_;
+
+    $Data::Dumper::Sortkeys = 1;
+    $Data::Dumper::Terse    = 1;
+    $Data::Dumper::Indent   = 1;
+    $Data::Dumper::Pair     = ": ";
+
+    my $s = Dumper $ref;
+    $s =~ s/['{}]*//g;
+    $s =~ s/,$//gm;
+    $s =~ s/\s+$//gms;
+    $s =~ s/\n\n//gm;
+    $s =~ s/^\n//gm;
+    $s =~ s/^/$color/gms;
+    $s =~ s/$/$no_color/gms;
+
+    # $s = $color . $s . $no_color;
+    $s .= "\n";
+    return $s;
+}
+
+sub humanize_secs {
+    my ($secs) = @_;
+
+    my $m = 60;
+    my $h = $m * 60;
+    my $d = $h * 24;
+    my $w = $d * 7;
+    my $y = $d * 365;
+
+    my $m99 = $m * 99;
+    my $h99 = $h * 99;
+    my $d99 = $d * 99;
+
+    my $human;
+
+    if ($secs >= $y) {
+        $human = sprintf("%.1fy", $secs / $y);
+    }
+    elsif ($secs >= $d99) {
+        $human = sprintf("%0dw", $secs / $w);
+    }
+    elsif ($secs >= $h99) {
+        $human = sprintf("%0dd", $secs / $d);
+    }
+    elsif ($secs >= $m99) {
+        $human = sprintf("%0dh", $secs / $h);
+    }
+    elsif ($secs >= $m) {
+        $human = sprintf("%0dm", $secs / $m);
+    }
+    else {
+        $human = $secs . "s";
+    }
+
+    $human =~ s/\.0(\D)/$1/g;
+
+    return $human;
+}
+
+sub humanize_bytes {
+    my ($bytes) = @_;
+
+    my $k = 1024;
+    my $m = $k * 1024;
+    my $g = $m * 1024;
+    my $t = $g * 1024;
+
+    my $human;
+
+    if ($bytes >= $t) {
+        $human = sprintf("%.1fT", $bytes / $t);
+    }
+    elsif ($bytes >= $g) {
+        $human = sprintf("%.1fG", $bytes / $g);
+    }
+    elsif ($bytes >= $m) {
+        $human = sprintf("%.1fM", $bytes / $m);
+    }
+    elsif ($bytes >= $k) {
+        $human = sprintf("%.1fK", $bytes / $k);
+    }
+    elsif ($bytes == 0) {
+        $human = $bytes;
+    }
+    else {
+        $human = $bytes;
+    }
+
+    return $human;
+}
+
+BEGIN {
+    for my $accessor (qw( color prefix name parent_name is_root count multiple))
+    {
+        no strict 'refs';
+        *{$accessor} = sub {
+            my $self = shift;
+            return $self->{$accessor} if !@_;
+            $self->{$accessor} = shift;
+        };
+    }
+}
+
+sub warnings {
+    my ($self) = @_;
+    return if !$self->{warnings};
+    return
+          " "
+        . $red
+        . join("$no_color, $red", @{ $self->{warnings} })
+        . $no_color;
+}
+
+sub info {
+    my ($self) = @_;
+
+    my @info;
+
+    if ($o{'entry-count'}) {
+        push(@info, "Entries: " . (keys %{ $self->entries } || 0))
+            if $self->is_dir;
+    }
+
+    if ($o{age}) {
+        push(@info, $self->age);
+    }
+
+    if ($o{size}) {
+        push(@info, $self->size);
+    }
+
+    if ($o{eval}) {
+        $_ = $self->abs;
+        my $eval = eval { $o{eval} };
+        die $@ if $@;
+        push(@info, $eval);
+    }
+
+    if ($o{exec}) {
+        my $exec = $o{exec};
+        my $abs  = $self->abs;
+        $exec =~ s/\{\}/'$abs'/g;
+        print STDERR "Executing in the shell: $exec\n" if $o{v};
+        $exec = `$exec`;
+        $exec =~ s/\n+$//g;
+        $exec =~ s/\n/ | /g;
+        $exec =~ s/^ +//g;
+        push(@info, $exec);
+    }
+
+    return if !@info;
+    return " " . $gray . join(", ", @info) . $no_color;
+}
+
+sub file_prefix {
+    my ($self, $is_last_dir_entry, $is_last_entry) = @_;
+
+    my $fork     = $is_last_entry     ? $graph_l : $graph_t;
+    my $dir_fork = $is_last_dir_entry ? " "      : $graph_vertical;
+    if ($self->is_root) {
+        $dir_fork = "";
+    }
+    else {
+        $dir_fork .= " ";
+    }
+
+    return $dir_fork . $fork . $graph_line . " ";
+}
+
+sub dir_prefix {
+    my ($self, $is_last_entry) = @_;
+
+    return if $self->is_root;
+
+    my $fork = $is_last_entry ? $graph_l : $graph_t;
+
+    return $fork . $graph_line . " ";
+}
+
+sub new {
+    init;
+    my $class = shift;
+    my %p     = @_;
+    return bless { %p, color => $blue }, $class;
+}
+
+sub has_entries {
+    my ($self) = @_;
+    keys %{ $self->{entries} } != 0;
+}
+
+sub entries {
+    my ($self) = @_;
+    $self->{entries} ||= {};
+    return $self->{entries};
+}
+
+sub is_mounted {
+    my ($self) = @_;
+
+    my $dev = stat($self->abs)->dev;
+
+    if ($dev != $root_dev) {
+        return 1;
+    }
+
+    return 0;
+}
+
+sub add {
+    my ($self, $path) = @_;
+
+    if (!$path->is_dir && $o{include}) {
+        return 0 if $path->abs !~ /$o{include}/i;
+    }
+
+    return 0 if $path->abs =~ /$o{exclude}/i;
+
+    $path->add_warnings;
+
+    if ($path->is_dir) {
+
+        $path->color($blue);
+        $stats{Directories}++;
+
+        if ($path->name =~ /^\.(git|svn)/) {
+        }
+        elsif (!stat($path->abs)) {
+        }
+        elsif ($path->is_mounted) {
+        }
+        elsif (!$path->is_link) {
+            $path->add_children;
+        }
+
+        $path->add_to_global_warnings;
+
+        if ($path->name =~ /^\./) {
+            return if !$o{all};
+        }
+
+        if (!$path->has_entries && !$o{empty}) {
+            return;
+        }
+
+        $self->entries->{ $path->name } = $path;
+        return;
+    }
+
+    if ($o{'directories-only'}) {
+        return;
+    }
+
+    $path->color($green);
+
+    $path->add_to_global_warnings;
+
+    if ($path->name =~ /^\./) {
+        return if !$o{all};
+    }
+
+    my ($extension) = $path->name =~ /\.([^\.]+)$/;
+    $extension = "" if $path->name !~ /\./;
+    $extension = "" if $extension =~ /^\d+$/;
+
+    $stats{Files}++;
+    $stats{'File extensions'}{$extension}++;
+
+    my $path_key = $path->name;
+
+    if ($o{summary}) {
+        $path_key = $path->normalized;
+        $path->count(1);
+    }
+
+    if (exists $self->entries->{$path_key}) {
+        $self->entries->{$path_key}{count}++;
+    }
+    else {
+        $self->entries->{$path_key} = $path;
+    }
+}
+
+sub add_warning {
+    my ($self, $warning) = @_;
+    push(@{ $self->{warnings} }, $warning);
+}
+
+sub add_warnings {
+    my ($self) = @_;
+
+    if ($self->name =~ /^\./) {
+        $self->add_warning('DOTFILE');
+    }
+
+    $self->add_warning("PRECEDING SPACE") if $self->name =~ /^\ /;
+    $self->add_warning("TRAILING SPACE")  if $self->name =~ /\ $/;
+
+    if ($self->name =~ /^\.(git|svn)/) {
+        $self->add_warning("SCM DIR");
+    }
+
+    if (!stat $self->abs) {
+        $self->add_warning("READ ERROR");
+    }
+    else {
+
+        if ($self->is_mounted) {
+            $self->add_warning("MOUNTED");
+        }
+
+        if ($self->is_link) {
+            $self->add_warning("LINK");
+        }
+    }
+
+}
+
+sub add_to_global_warnings {
+    my ($self) = @_;
+
+    foreach my $warning (@{ $self->{warnings} }) {
+        $warnings{$warning}++;
+    }
+}
+
+sub add_children {
+    my ($self) = @_;
+
+    my $dirh;
+    if (!opendir($dirh, $self->abs)) {
+        $self->add_warning("ERROR: " . $!);
+        return;
+    }
+
+    while (my $entry = readdir($dirh)) {
+
+        next if $entry =~ /^\.{1,2}$/;
+
+        my $path = Path->new(parent_name => $self->abs, name => $entry,);
+
+        $self->add($path);
+    }
+    closedir($dirh) || die $!;
+}
+
+sub is_dir {
+    my ($self) = @_;
+    return -d $self->abs;
+}
+
+sub is_link {
+    my ($self) = @_;
+    return -l $self->abs;
+}
+
+sub abs {
+    my ($self) = @_;
+
+    return $self->name if !$self->parent_name;
+    return $self->parent_name . "/" . $self->name;
+}
+
+sub normalized {
+    my ($self) = @_;
+
+    my $normalized = $self->name;
+    $normalized =~ s/[0-9a-f\W\d\s_]{2,}//gi;
+    return $normalized;
+}
+
+sub normalized_marking {
+    my ($self) = @_;
+
+    my $entry_color = $self->is_dir() ? $blue : $green;
+
+    my $normalized = $self->name;
+    $normalized =~ s/([0-9a-f\-]{2,}|[\W\d\s_]{2,})/${red}$^N$entry_color/gi;
+    return $normalized;
+}
+
+sub age {
+    my ($self) = @_;
+
+    my $stat = stat($self->abs) || return;
+
+    my $age   = time - $stat->mtime;
+    my $h_age = humanize_secs($age);
+    $h_age = $red . $h_age . $no_color if $h_age =~ /[sm]/;
+    return "Changed: $h_age";
+}
+
+sub size {
+    my ($self) = @_;
+
+    return if $self->is_dir;
+
+    my $stat = stat($self->abs) || return;
+
+    my $size       = $stat->size;
+    my $blocks     = $stat->blocks;
+    my $block_size = $stat->blksize;
+
+    my $alloc = $blocks * 512;
+    my $done  = 100;
+    $done = $alloc / ($size / 100) if $size != 0;
+    $done = int($done);
+
+    my $info = $gray . "Size: " . humanize_bytes($size);
+
+    return $info if $done >= 100;
+
+    $self->add_warning("INCOMPLETE");
+
+    return
+          $gray
+        . "Size: "
+        . humanize_bytes($alloc) . "/"
+        . humanize_bytes($size)
+        . " - ${red}$done\%"
+        . $gray;
+}
+
+
+
+### fatpacked app tree-diff ####################################################
+
+#!/bin/bash
+
+# Diff two directory structures
+
+left=$1 ; shift
+right=$1 ; shift
+
+diff=diff
+
+if [[ $(type -p colordiff) ]] ; then
+    diff=colordiff
+fi
+
+$diff -y \
+    <(tree --no-colors --ascii $@ "$left") \
+    <(tree --no-colors --ascii $@ "$right") \
+    | less
+
+### fatpacked app ubuntu-setup #################################################
+
+#!/bin/bash
+
+# Stuff to do after a new ubuntu installation
+
+source bash-helpers
+
+gotroot
+
+INFO "Turning off crash reports..."
+echo enabled=0 >> /etc/default/apport
+
+INFO "Removing outdated flash plugin (flashplugin-installer)..."
+dpkg -P flashplugin-installer
+
+INFO "Add user group editor - to be started via the ubuntu menu"
+sudo apt-get install gnome-system-tools
+
+ubuntu-setup-automatic-updates
+
+### fatpacked app ubuntu-setup-automatic-updates ###############################
+
+#!/bin/bash
+
+# Make sure update and backports soures are activated
+
+# Updates - should be activated otherwise regular updates might fail because
+#    of missing/outdated dependencies
+# Backports - should be activated - by default only installed manually
+# Proposed - don't activate - aproved packages move to updates anyway
+
+source bash-helpers
+
+INFO "Including updates and backports in sources list..."
+
+gotroot
+
+bak /etc/apt/sources.list
+
+file-add-line-if-new /etc/apt/sources.list '^deb http://\S+\s+'$DISTRIB_CODENAME'-updates.*$'   'deb http://archive.ubuntu.com/ubuntu '$DISTRIB_CODENAME'-updates   main restricted universe multiverse'
+file-add-line-if-new /etc/apt/sources.list '^deb http://\S+\s+'$DISTRIB_CODENAME'-backports.*$' 'deb http://archive.ubuntu.com/ubuntu '$DISTRIB_CODENAME'-backports main restricted universe multiverse'
+
+apt-get update
+
+### fatpacked app ubuntu-unity-set-time-format #################################
+
+#!/bin/bash
+
+# Set time format of ubuntu unity desktop clock
+
+dconf write /com/canonical/indicator/datetime/time-format "'custom'"
+dconf write /com/canonical/indicator/datetime/custom-time-format "'KW%V | %a | %F | %R'"
+
+### fatpacked app uniq-unsorted ################################################
+
+#!/usr/bin/env perl
+
+# uniq replacement without the need for sorted input
+use strict;
+use warnings;
+
+my %seen;
+
+while (<STDIN>) {
+    print if !exists $seen{$_};
+    $seen{$_} = 1;
+}
+
+### fatpacked app unix2dos #####################################################
+
+#!/bin/bash
+
+# Convert line endings from unix to dos
+
+perl -i -pe 's/\n/\r\n/' "$@"
+
+### fatpacked app url ##########################################################
+
+#!/usr/bin/env perl
+
+# Print absolute SSH url of a file or directory
+
+use strict;
+use warnings FATAL => 'all';
+
+my $hostname = `hostname` || die "Error getting hostname";
+$hostname =~ s/\n//g;
+
+my $rel = qx{rel "@ARGV"};
+$rel =~ s/\n$//g;
+$rel = "\"$rel\"" if $rel =~ /\s|;/;
+print "$ENV{USER}\@" . $hostname . ":$rel\n"
+
+### fatpacked app url-decode ###################################################
+
+#!/bin/bash
+
+# Decode a string from URL notation
+# https://stackoverflow.com/questions/296536/how-to-urlencode-data-for-curl-command
+
+echo -n "$@" | perl -pe 's/\%(\w\w)/chr hex $1/ge'
+
+### fatpacked app url-encode ###################################################
+
+#!/bin/bash
+
+# Encode a string to URL notation
+# https://stackoverflow.com/questions/296536/how-to-urlencode-data-for-curl-command
+
+echo -n "$@" | perl -pe 's/(\W)/sprintf("%%%02X", ord($1))/ge'
+
+### fatpacked app user-add #####################################################
+
+#!/bin/bash
+
+# Add a new user to the system without hassle
+
+source bash-helpers
+
+user=${1?Specify user name}
+shift
+
+if [[ ! $(id $user 2> /dev/null) ]] ; then
+    sudo adduser --disabled-password --quiet --gecos "" $user "$@"
+
+    sudo mkdir -p /home/$user/.ssh/
+    sudo cp ~/.ssh/authorized_keys /home/$user/.ssh/
+    sudo cp ~/.bashrc /home/$user/
+    sudo chown -R $user:$user /home/$user
+fi
+
+ssh $user@localhost
+
+
+### fatpacked app vi-choose-file-from-list #####################################
+
+# Edit a file from a list on STDIN
+
+set -e
+
+line=$1
+
+if [[ ! $line ]] ; then
+    cat | nl
+    exit 0
+fi
+
+file=$(cat | perl -ne 'print if $. == '$line)
+
+# close STDIN by connecting it back to the terminal
+exec < $BASHRC_TTY
+
+command eval $EDITOR $file
+
+### fatpacked app vi-from-find #################################################
+
+# Recursively search for a file and open it in vim - TODO
+
+search=$(perl -e '$_ = "'"$@"'" ; s#\:\:#/#g; print')
+
+entry=$(find-and "$search" | head -1)
+
+if [[ ! "$entry" ]] ; then
+    exit 1
+fi
+
+command eval $EDITOR "$entry"
+
+### fatpacked app vi-from-history ##############################################
+
+# Search eternal history for an existing file an open it in vi
+
+set -e
+file=$(bash-eternal-history-search --file -c 1 "$@")
+command eval $EDITOR "$file"
+
+### fatpacked app vi-from-path #################################################
+
+#!/bin/bash
+
+# Find an executable in the path and edit it
+
+set -e
+
+file=$(type -p $@)
+
+command eval $EDITOR "$file"
+
+### fatpacked app vi-from-perl-inc #############################################
+
+#!/bin/bash
+
+# Find an executable in the perl %INC and edit it
+
+set -e
+
+file=$(perldoc -lm "$@")
+
+command eval $EDITOR "$file"
+
+### fatpacked app video-dvd-install-decss ######################################
+
+# Install decss for encrypted dvd playback
+
+# https://help.ubuntu.com/community/RestrictedFormats/PlayingDVDs
+
+sudo apt-get install libdvdread4
+sudo /usr/share/doc/libdvdread4/install-css.sh
+
+### fatpacked app video-dvd-rip ################################################
+
+# Rip and transcode a video dvd
+
+# Use `lsdvd -a` to inspect dvd to choose titles and audio tracks.
+
+# TODO: title tracks need to be specified starting from 0
+# TODO: audio tracks need to be specified starting from 0
+
+source bash-helpers
+
+tracks="$@"
+
+if [[ ! $tracks ]] ; then
+    tracks=x
+fi
+
+for track in $tracks ; do
+
+    if [[ $track = x ]] ; then
+        track=""
+    fi
+
+    INFO "Ripping track: $track..."
+    mpv --dvd-device /dev/sr1 dvdnav://$track --stream-dump dvd-$track.vob || true
+    # mpv dvd://$track --stream-dump dvd-$track.vob || true
+    INFO "Done ripping track: $track"
+done
+
+# eject /dev/dvd || WARN "Cannot eject dvd - skipping"
+
+INFO "Encoding..."
+
+for track in $@ ; do
+    INFO "Transcoding track: $track"
+    video-transcode dvd-$track.vob
+    INFO "Done transcoding track: $track"
+done
+
+INFO "All done"
+
+### fatpacked app video-transcode ##############################################
+
+# Transcode a media file to x264 preserving all video, audio and subtitle tracks
+
+# To copy a single audio track use: audio_track=3 video-transcode file
+#
+# Codec options:
+# https://www.ffmpeg.org/ffmpeg-codecs.html
+# ac3 is the best quality audio encoder directly included in libav - see:
+# https://trac.ffmpeg.org/wiki/Encode/HighQualityAudio
+
+# fix aspect "flag" - make 4:3 to display as 16:9 for NTSC:
+# mkvpropedit *.mkv --edit track:v1 --set display-width=853
+
+source bash-helpers
+
+if [[ "$audio_tracks" ]] ; then
+    for track in $audio_tracks ; do
+        audio_option=$audio_option" -map 0:a:$track"
+    done
+else
+    audio_option="-map 0:a$audio_track"
+fi
+
+for file in $@ ; do
+
+    INFO "Encoding $file..."
+
+    # only set copy subtitles option if input file contains any
+    # avconv dies otherwise
+    (avconv -analyzeduration 1000000k -probesize 1000000k -i $file 2>&1 ; true) \
+        | grep -i subtitle && subtitle_option=" -map 0:s -c:s copy "
+
+# TODO copy meta data:
+#   avconv -i in.ogg -map_metadata 0:s:0 out.mp3
+# TODO extra option to convert all audio to ogg
+#   avconv -i INPUT -map 0 -c copy -c:v:1 libx264 -c:a:137 libvorbis OUTPUT
+#       will copy all the streams except the second video, which will be
+#       encoded with libx264, and the 138th audio, which will be encoded
+#       with libvorbis.
+# -acodec libvorbis \
+
+# "hi-fi transparency demands data rates of at least 128 kbit/s (VBR). The
+# MPEG-2 audio tests showed that AAC meets the requirements referred to as
+# "transparent" for the ITU at 128 kbit/s for stereo, and 320 kbit/s for 5.1 audio."
+# (https://en.wikipedia.org/wiki/Advanced_Audio_Coding)
+#
+# vbr 3 = ~50kbit/channel should be fine
+#        -c:a libfdk_aac -vbr 3 -cutoff 20000 \
+#        -cutoff 20000 # needs to be set to turn off the default cutoff at 14000Hz (libfdk_aac only)
+#
+# crf: 
+# A change of ±6 should result in about half/double the file size, although your results might vary.
+# lower values would result in better quality (at the expense of higher file sizes).
+# http://slhck.info/articles/crf
+# default crf: 23
+
+# even though apparently all dvds are interlaced - results seem to be better without deinterlacing
+
+    # deinterlacer="-vf yadif"
+
+    if [[ "$deinterlacer" ]] ; then
+        WARN '#################################### Deinterlacing!'
+    fi
+
+    avconv \
+        $_doc_check_for_subtitle_streams_that_start_later \
+        -analyzeduration 1000000k -probesize 1000000k \
+        -i $file \
+        -map 0:v \
+        $deinterlacer \
+        -c:v libx264 \
+        $_doc_x264_quality_level \
+        -crf 23 \
+        $_doc_how_much_time_to_invest \
+        $audio_option \
+        -c:a copy \
+        $subtitle_option \
+        $file.mkv
+
+    INFO "Done: $file"
+
+done
+
+if [[ "$deinterlacer" ]] ; then
+    WARN '#################################### Deinterlacing!'
+fi
+
+exit
+        -c:a ac3 -b:a 448k \
+
+### fatpacked app vim-firefox ##################################################
+
+#!/bin/bash
+# Vim to use from firefox addon its-all-text
+
+export REMOTE_HOME=$HOME
+
+exec gnome-terminal -x ~/.bin/vi "$@"
+
+### fatpacked app vim-setup ####################################################
+
+#!/bin/bash
+
+# Setup vim environment
+
+source bash-helpers
+
+INFO "Setting up vim config..."
+
+VIM_DIR=$REMOTE_HOME/.vim/
+mkdir -p $VIM_DIR
+cd $VIM_DIR
+
+if [[ -e .git ]] ; then
+  INFO "Updating existing setup..."
+  git-reset-origin
+  git pull
+else
+  INFO "Cloning git dotvim repo..."
+  git clone --depth 1 https://github.com/nilsboy/dotvim.git .
+fi
+
+INFO "Starting vim to download plugins..."
+
+exec vi
+
+### fatpacked app vim-url ######################################################
+
+#!/usr/bin/env perl
+
+# Print absolute SSH url of a file or directory in vim syntax
+
+use strict;
+use warnings FATAL => 'all';
+
+my $url = qx{url "@ARGV"};
+$url =~ s/\n//g;
+
+$url =~ s/\:/\//;
+$url =~ s/^/scp:\/\//g;
+
+print "$url\n";
+
+### fatpacked app vipe #########################################################
+
+#!/bin/bash
+
+# Edit stdin in a pipe using vim
+# Based on https://old.reddit.com/r/vim/comments/3oo156/whats_your_best_vim_related_shell_script/
+
+function cleanup() { test -e "$TOVIMTMP" && rm "$TOVIMTMP" ; }
+trap cleanup ERR EXIT
+
+set -e
+
+TOVIMTMP=/tmp/tovim_tmp_`date +%Y-%m-%d_%H-%M-%S`.`uuid`.txt
+cat > $TOVIMTMP 
+vi $TOVIMTMP < /dev/tty > /dev/tty
+cat $TOVIMTMP 
+
+
+### fatpacked app vnc-server-setup-upstart-script ##############################
+
+#!/bin/bash
+
+# Setup remote desktop access via ssh and vnc right from the login screen of
+# lightdm.
+
+set -e
+
+sudo apt-get install x11vnc
+
+sudo tee /etc/init/lightdm-vnc.conf >/dev/null <<'EOF'
+# to reload: sudo initctl emit login-session-start
+start on login-session-start
+script
+set +e
+killall -9 x11vnc
+set -e
+/usr/bin/x11vnc \
+    -norc \
+    -localhost \
+    -forever \
+    -solid \
+    -nopw \
+    -nocursor \
+    -wireframe \
+    -wirecopyrect \
+    -xkb \
+    -auth /var/run/lightdm/root/:0 \
+    -noxrecord \
+    -noxfixes \
+    -noxdamage \
+    -rfbport 5900 \
+    -scale 3/4:nb \
+    -o /var/log/lightdm-vnc.log \
+    -bg
+end script
+EOF
+
+    sudo tee -a /etc/lightdm/lightdm.conf >/dev/null <<-'EOF'
+
+[VNCServer]
+enabled=true
+EOF
+
+sudo initctl reload-configuration
+sudo initctl emit login-session-start
+
+echo "check if vino is running!"
+
+### fatpacked app vnc-start-vino ###############################################
+
+# Start vino vnc server
+
+/usr/lib/vino/vino-server --display :0 &
+
+### fatpacked app vnc-vino-preferences #########################################
+
+# Set vino preferences
+
+vino-preferences
+
+### fatpacked app vncviewer ####################################################
+
+#!/bin/bash
+
+# vncviewer preconfigured to use ssh
+
+host=$1
+port=${2:-0}
+
+export VNC_VIA_CMD="/usr/bin/ssh -C -f -L %L:%H:%R %G sleep 20"
+
+$(type -pf vncviewer) -encoding tight \
+    -compresslevel 9 -quality 5 -x11cursor -via $host localhost:$port
+
+### fatpacked app wcat #########################################################
+
+#!/usr/bin/env perl
+
+# Easily dump a web site
+
+use strict;
+use warnings;
+no warnings 'uninitialized';
+use Data::Dumper;
+use File::Copy;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+
+my $opts = {
+    "h|only-show-response-headers" => \my $show_headers,
+    "s|strip-tags"                 => \my $strip_tags,
+    "f|save-to-file"               => \my $to_file,
+    "r|replace"                    => \my $overwrite,
+    "o|out-file=s"                 => \my $file,
+};
+GetOptions(%$opts) or die "Usage:\n" . join( "\n", sort keys %$opts ) . "\n";
+
+my $url = $ARGV[0] || die "Specify URL.";
+
+if ( $url !~ m#^(.+?)://# ) {
+    $url = "http://$url";
+}
+
+if ($to_file) {
+    if ( !$file ) {
+        ($file) = $url =~ m#^.+?://.*?/([^\/]+)$#;
+    }
+    die "Error creating file name from url." if !$file;
+    die "File exists: $file" if -f $file && !$overwrite;
+}
+
+my $options = "--no-check-certificate ";
+if ($show_headers) {
+    $options .= "-S ";
+}
+
+my $content = `wget $options -qqO- "$url"` || die "Request failed. $!";
+
+exit 0 if $show_headers;
+
+die "Empty response from $url." if !$content;
+
+if ($strip_tags) {
+    $content =~ s#<\s*script.+?>.+?</script>##imsg;
+    $content =~ s#<\s*head.+?>.+?</head>##imsg;
+    $content =~ s#\n+##igms;
+    $content =~ s#<(br)/*>#\n#igms;
+    $content =~ s#<(li).*?>#\* #igms;
+    $content =~ s#</(li).*?>#\n#igms;
+    $content =~ s#</(p|div).*?>#\n\n#igms;
+    $content =~ s#</h\d+.*?>#\n\n#igms;
+    $content =~ s#<.+?/>\n*##igms;
+    $content =~ s#<td.*?>#\t#igms;
+    $content =~ s#</tr.*?>#\n#igms;
+
+    $content =~ s#<.+?>##igms;
+
+    $content =~ s#&minus;#-#igms;
+    $content =~ s#&gt;#>#igms;
+    $content =~ s#&lt;#<#igms;
+    $content =~ s#&\w+;# #igms;
+    $content =~ s/&#\d+;/ /igms;
+}
+
+if ( $to_file || $file ) {
+    my $tmp_file = "/tmp/wcat.$$.$file";
+    open( F, ">", $tmp_file ) || die "Cannot write to file: $tmp_file: $!";
+    print F $content;
+    close(F);
+    move( $tmp_file, $file ) || die "Cannot move to file $file: $!";
+}
+else {
+    print $content;
+}
+
+### fatpacked app webserver-file-manager #######################################
+
+#!/usr/bin/env bash
+
+# Serve a file manager for the current directory via http
+
+source bash-helpers
+
+dir=$(pwd)
+INFO "Serving current directory: $dir"
+npm install -g node-file-manager
+npx node-file-manager -p 5002 -d $dir
+
+### fatpacked app webserver-serve-current-directory ############################
+
+#!/usr/bin/env bash
+
+# Serve current directory files via http
+
+source bash-helpers
+
+npm install -g serve
+serve --port 5001 .
+
+### fatpacked app webserver-serve-current-directory.pl #########################
+
+#!/bin/bash
+
+# Serve current directory files via http - perl version
+
+perl-install-module App::HTTPThis
+http_this
+
+### fatpacked app wikipedia-via-dns ############################################
+
+#!/bin/bash
+
+# Query wikipedia via DNS
+
+dig +short txt "$@".wp.dg.cx | perl -0777 -pe 'exit 1 if ! $_ ; s/\\//g'
+
+### fatpacked app window-blink #################################################
+
+#!/usr/bin/env bash
+
+# Blink current window
+
+source bash-helpers
+
+[[ ! "$DISPLAY" ]] || exit 0
+[[ ! "$WINDOWID" ]] || exit 0
+
+wmctrl -i -r $WINDOWID -b "add,DEMANDS_ATTENTION"
+
+### fatpacked app x2x-east #####################################################
+
+# Share input devices with another host
+
+ssh -X $1 x2x -east -to $DISPLAY
+
+### fatpacked app xdg-cache-home ###############################################
+
+#!/usr/bin/env bash
+
+# Return xdg cache home
+
+source bash-helpers
+
+subdir="$1"
+subdir=$(echo $subdir | perl -pe 's/^.*\/(.+)/$1/')
+
+if [[ ! $XDG_CACHE_HOME ]] ; then
+  XDG_CACHE_HOME=$REMOTE_HOME/.cache
+fi
+
+if [[ $subdir ]] ; then
+  XDG_CACHE_HOME=$XDG_CACHE_HOME/$subdir/
+fi
+
+mkdir -p $XDG_CACHE_HOME
+
+RETURN $XDG_CACHE_HOME
+
+### fatpacked app xmv ##########################################################
+
+#!/usr/bin/env perl
+
+# Rename files by perl expression
+# Protects against duplicate resulting file names.
+
+use strict;
+use warnings;
+no warnings 'uninitialized';
+
+use File::Basename;
+use File::Copy qw(mv);
+use File::stat;
+
+use File::Path qw(make_path);
+use Getopt::Long;
+Getopt::Long::Configure('bundling');
+
+my $dry = 1;
+
+my $opts = {
+    'x|execute' => sub { $dry = 0 },
+    'd|include-directories' => \my $include_directories,
+    'n|normalize'           => \my $normalize,
+    'e|execute-perl=s'      => \my $op,
+    'S|dont-split-off-dir'  => \my $dont_split_off_dir,
+};
+GetOptions(%$opts) or die "Usage:\n" . join( "\n", sort keys %$opts ) . "\n";
+
+if ( join( " ", @ARGV ) eq "-" ) {
+    @ARGV = map {/(.+)\n/} <STDIN>;
+}
+
+if ( !@ARGV ) {
+    die "Usage: xmv [-x] [-d] [-n] [-l file] [-S] [-e perlexpr] [filenames]\n";
+}
+
+my %will                  = ();
+my %was                   = ();
+my $abort                 = 0;
+my $COUNT                 = 0;
+my $empty_file_name_count = 0;
+
+for (@ARGV) {
+
+    next if /^\.{1,2}$/;
+
+    my $abs  = $_;
+    my $dir  = dirname($_);
+    my $file = basename($_);
+
+    if ($dont_split_off_dir) {
+        $dir  = "";
+        $file = $_;
+    }
+
+    $dir = "" if $dir eq ".";
+    $dir .= "/" if $dir;
+
+    $abs = $dir . $file;
+    my $was = $file;
+    $_ = $file;
+
+    $_ = normalize($abs) if $normalize;
+
+    # vars to use in perlexpr
+    $COUNT++;
+    $COUNT = sprintf( "%0" . length( scalar(@ARGV) ) . "d", $COUNT );
+    my $DIR  = dirname($abs);
+    my $FILE = basename($abs);
+
+    if ($op) {
+        eval $op;
+        die $@ if $@;
+    }
+
+    my $will = $dir . $_;
+
+    if ( !-e $abs ) {
+        warn "no such file: '$was'";
+        $abort = 1;
+        next;
+    }
+
+    if ( -d $abs && !$include_directories ) {
+        next;
+    }
+
+    my $other = $will{$will} if exists $will{$will};
+    if ($other) {
+        warn "name '$will' for '$abs' already taken by '$other'.";
+        $abort = 1;
+        next;
+    }
+
+    next if $will eq $abs;
+
+    if ( -e $will ) {
+        warn "file '$will' already exists.";
+        $abort = 1;
+        next;
+    }
+
+    $will{$will} = $abs;
+    $was{$abs}   = $will;
+}
+
+exit 1 if $abort;
+
+foreach my $was ( sort keys %was ) {
+
+    my $will = $was{$was};
+
+    print "moving '$was' -> '$will'\n";
+
+    next if $dry;
+
+    # system("mv", $was, $will) && die $!;
+    my $stat = stat($was) || die $!;
+    my $dir = dirname($will);
+
+    if ( !-d $dir ) {
+        make_path($dir) || die "Error creating directory: $dir";
+    }
+
+    mv( $was, $will ) || die $!;
+    utime( $stat->atime, $stat->mtime, $will ) || die $!;
+}
+
+sub normalize {
+    my ($abs) = @_;
+
+    my $file = basename($abs);
+    my $ext  = "";
+
+    if ( !-d $abs && $file =~ /^(.+)(\..+?)$/ ) {
+        ( $file, $ext ) = ( $1, $2 );
+    }
+
+    $_ = $file;
+
+    s/&/and/g;
+    s/['`´]+//g;
+    s/[\._\W]+/_/g;
+    s/.*?www_[^_]+_[^_]+_//gi;
+    s/^_*//g;
+    s/_*$//g;
+
+    if ( !$_ ) {
+        $empty_file_name_count++;
+        $_ = "_empty_file_name." . $empty_file_name_count;
+    }
+
+    return $_ . lc($ext);
+}
 
 ### fatpacked app xtitle #######################################################
 

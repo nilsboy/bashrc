@@ -4475,7 +4475,7 @@ gotroot
 
 forwardRootTo=${1:?Specify username to forward root mail to.}
 
-apt-get install postfix
+apt-get install postfix mailutils mutt
 
 bak /etc/aliases
 
@@ -4719,6 +4719,11 @@ smem "$@"
 # create a backup
 
 source bash-helpers
+
+# if run from cron
+if [[ -z $USER ]] ; then
+  USER=$LOGNAME
+fi
 
 drives=/media/$USER/*backup*
 

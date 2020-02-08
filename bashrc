@@ -5037,7 +5037,7 @@ less $0"s.md"
 
 ## Setup Firewall
 
-`ufw-setup`
+`ubuntu-setup-firewall`
 
 ## Turn off crash reports
 

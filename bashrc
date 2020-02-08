@@ -3109,8 +3109,7 @@ SHOW "64-bit-CPU?" $(grep flags /proc/cpuinfo | perl -0777 -ne 'print /\blm\b/ ?
 ubuntu_version=$(cat /etc/issue | perl -ne 'print $1 if /ubuntu (\d+\.\d+)/i')
 
 if [[ $ubuntu_version ]] ; then
-    release=$(note ubuntu | perl -ne 'print $_ if /^\s+'$ubuntu_version'\s+(.+?)\s+\d+/')
-    SHOW Ubuntu $release
+    SHOW Ubuntu $ubuntu_version
 else
     SHOW Linux $(cat /etc/issue.net)
 fi
@@ -5028,185 +5027,133 @@ INFO "Done."
 
 #!/bin/bash
 
-# File of notes and a way to query them
+# View quick notes in notes.md file
 
-search=$1
+less $0"s.md"
 
-if [[ ! $search ]] ; then
-    perl -ne 'print " * $1\n" if /^# NOTES ON (.*)/' \
-        $0| sort
-    exit
-fi
+### fatpacked app notes.md #####################################################
 
-perl -0777 -ne \
-  'foreach(/^(# NOTES ON '$search'.+?\n\n)/imsg){ s/# //g; print "\n$_" }' \
-    $0
+# Ubuntu Setup
 
-# NOTES ON ssh
-# * tunnel (reverse/port forwarding):
-#     * forward: ssh -v -L 3333:localhost:443 host
-#     * reverse:  ssh -nNT [via host] -R [local src port]:[dst host]:[dst port]
-#     * socks proxy: ssh -D 1080 host -p port / tsocks program
-#     * keep tunnel alive: autossh
-# * mount using ssh: sshfs / shfs
-# * cssh = clusterssh
+## Setup Firewall
 
-# NOTES ON perl
-# * call graph: perl -d:DProf <SCRIPTNAME> && dprofpp -T tmon.out (or B::Xref)
-# * Print out each line before it is executed: perl -d:Trace <SCRIPTNAME>
-# * DBI->trace(2 => "/tmp/dbi.trace");
-# * ignore broken system locales in perl programs: PERL_BADLANG=0
-# * corelist - perl core modules
+`ufw-setup`
 
-# NOTES ON apt
-# * apt-cache depends -i 
+## Turn off crash reports
 
-# NOTES ON bash
-# * zenity for dialogs?
-# * Advanced Bash-Scripting Guide:
-#    http://tldp.org/LDP/abs/html/index.html
-# * expand only if files exist: shopt -s nullglob / for x in *.ext ; ...
-# * generate unique ID: uuidgen (not thread safe?)
-# * unaliased version of a program: prefix with slash i.e.: \ls file
+```sh
+echo enabled=0 >> /etc/default/apport
+```
 
-# NOTES ON cron
-# * make cron scripts use bashrc (now path can use ~ too)
-#    SHELL=/bin/bash
-#    BASH_ENV=~/.bashrc
-#    PATH=~/bin:/usr/bin/:/bin
+# SSH
 
-# NOTES ON bios
-# * infos of system: getSystemId
+- tunnel (reverse/port forwarding):
+  - forward: ssh -v -L 3333:localhost:443 host
+  - reverse: ssh -nNT [via host] -R [local src port]:[dst host]:[dst port]
+  - socks proxy: ssh -D 1080 host -p port / tsocks program
+  - keep tunnel alive: autossh
+- mount using ssh: sshfs / shfs
 
-# NOTES on chroot
-# * chroot to fix broken system using live-cd
-#   cd /
-#   mount -t ext4 /dev/sda1 /mnt
-#   mount -t proc proc /mnt/proc
-#   mount -t sysfs sys /mnt/sys
-#   mount -o bind /dev /mnt/dev
-#   cp -L /etc/resolv.conf /mnt/etc/resolv.conf
-#   chroot /mnt /bin/bash
-#   ...
-#   exit
-#   umount /mnt/{proc,sys,dev}
-#   umount /mnt
+# apt
 
-# NOTES ON compiling
-# * basic steps
-#    apt-get install build-essential
-#    sudo apt-get build-dep Paketname
-#    ./configure
-#    sudo checkinstall -D
+- apt-cache depends -i
 
-# NOTES ON console
-# * switch console: chvty
-# * turn off console-blanking: echo -ne "\033[9;0]" > /dev/tty0
-# * lock: ctrl+s / unlock: ctrl+q
+# Bash
 
-# NOTES ON encoding
-# * recode UTF-8..ISO-8859-1 file_name
-# * convmv: filename encoding conversion tool
-# * luit - Locale and ISO 2022 support for Unicode terminals
-#      luit -encoding 'ISO 8859-15' ssh legacy_machine
+- expand only if files exist: shopt -s nullglob / for x in \*.ext ; ...
+- unaliased version of a program: prefix with slash i.e.: \ls file
 
-# NOTES ON man and the like
-# * apropos - search the manual page names and descriptions
+# BIOS
 
-# NOTES ON processes
-# * to kill a long running job
-#    ps -eafl |\
-#       grep -i "dot \-Tsvg" |\ 
-#       perl -ane '($h,$m,$s) = split /:/,$F[13];
-#          if ($m > 30) { print "killing: " . $_; kill(9, $F[3]) };'
-# * disown, (cmd &) - keep jobs running after closing shell
-# * continue a stoped disowned job: sudo kill -SIGCONT $PID
+- infos of system: getSystemId
 
-# NOTES ON networking
-# * fuser
-# * lsof -i -n
+## Chroot to fix broken system using live-cd
 
-# NOTES ON recovery
-# * recover removed but still open file
-#   lsof | grep -i "$file"
-#   cp /proc/$pid/fd/$fd $new_file
-#   (fd = file descriptor)
-# * recover partition: ddrescue
-# * recover deleted files: foremost jpg -o out_dir -i image_file
+```sh
+cd / mount -t ext4 /dev/sda1 /mnt
+mount -t proc proc /mnt/proc
+mount -t sysfs sys /mnt/sys
+mount -o bind /dev /mnt/dev
+cp -L /etc/resolv.conf /mnt/etc/resolv.conf
+chroot /mnt /bin/bash
+...
+exit
+umount /mnt/{proc,sys,dev}
+umount /mnt
+```
 
-# NOTES ON text csv and other files
-# * sort by numeric column: sort -u -t, -k 1 -n file.csv > sort
-# * comm - compare two sorted files line by line with 3 column output
-# * join files horizontally: paste
-# * truncate a file without removing its inode: > file
-# * join csv files: join
-# * edit shell commands in vi with Ctrl-x Ctrl-e
+# Compiling
 
-# NOTES ON sql / mysql
-# * INSERT
-#    * REPLACE INTO x ( f1, f2 ) SELECT ... - replaces on duplicate key
-#    * INSERT IGNORE INTO ... - skips insert on duplicate key
-# * default-storage-engine = innodb
-# * mysql full join: left join union right join
-# * split: SUBSTRING_INDEX(realaccount,'@',-1)
-# * convert string to date: STR_TO_DATE(created, "%d.%m.%y")
-# * NULL does no match regex use: (f IS NULL OR f NOT REGEXP '^regex$')
+- basic steps
 
-# NOTES ON sftp
-# * use specifc key file
-#     sftp -o IdentityFile=~/.ssh/$keyfile $user@$host
-# * use password
-#     ltp -u login,pass sftp://host
+```sh
+apt-get install build-essential
+sudo apt-get build-dep Paketname
+./configure sudo checkinstall -D
+```
 
-# NOTES ON user management
-# * newgrp - log in to a new group
-# * sg - execute command as different group ID
+# Console
 
-# NOTES ON ubuntu
-# 
-# * Releases:
-#      Version    Code name         Release date Supported until
-#      4.10       Warty Warthog     2004-10-20   2006-04-30
-#      5.04       Hoary Hedgehog    2005-04-08   2006-10-31
-#      5.10       Breezy Badger     2005-10-13   2007-04-13
-#      6.06 LTS   Dapper Drake      2006-06-01   2009-07-14
-#      6.10       Edgy Eft          2006-10-26   2008-04-25
-#      7.04       Feisty Fawn       2007-04-19   2008-10-19
-#      7.10       Gutsy Gibbon      2007-10-18   2009-04-18
-#      8.04 LTS   Hardy Heron       2008-04-24   2011-04
-#      8.10       Intrepid Ibex     2008-10-30   2010-04-30
-#      9.04       Jaunty Jackalope  2009-04-23   2010-10-23
-#      9.10       Karmic Koala      2009-10-29   2011-04
-#     10.04 LTS   Lucid Lynx        2010-04-29   2013-04
-#     10.10       Maverick Meerkat  2010-10-10   2012-04
-#     11.04       Natty Narwhal     2011-04-28   2012-10
-#     11.10       Oneiric Ocelot    2011-10-13   2013-04
-#     12.04 LTS   Precise Pangolin  2012-04-26   2017-04
-#     12.10       Quantal Quetzal   2012-10-18   2014-04
-#     13.04       Raring Ringtail   2013-04-25   2014-01
-#     13.10       Saucy Salamander  2013-10-17   2014-07
-#     14.04 LTS   Trusty Tahr       2014-04-17   2019-04
-#     14.10       Utopic Unicorn    2014-10-23   2015-07-23
-#     15.04       Vivid Vervet      2015-04-23   2016-02-04
-#     15.10       Wily Werewolf     2015-10-22   2016-07
-#     16.04 LTS   Xenial Xerus      2016-04-21   2021-04
-#     16.10       Yakkety Yak       2016-10-20   N/A
+- switch console: chvty
+- turn off console-blanking: `echo -ne "\033[9;0]" > /dev/tty0`
+- lock: ctrl+s / unlock: ctrl+q
 
-# NOTES ON vim
-# * :help quickref
-# * :help quickfix
+# Encoding
 
-# NOTES ON x
-# * ssh -X host x2x -west -to :4.0
+- `recode UTF-8..ISO-8859-1 file_name`
+- convmv: filename encoding conversion tool
 
-# NOTES ON init
-# * sudo update-rc.d vncserver defaults 
-# * sudo update-rc.d -f vncserver remove
+## luit - Locale and ISO 2022 support for Unicode terminals
 
-# NOTES ON encryption
-# * fsck encrypted volume
-#    - sudo cryptsetup luksOpen /dev/hda5 mydisk
-#    - fsck /dev/mapper/mydisk
+```sh
+luit -encoding 'ISO 8859-15' ssh legacy_machine
+```
+
+# Processes
+
+- continue a stoped disowned job: sudo kill -SIGCONT \$PID
+
+# Networking
+
+- fuser
+- `lsof -i -n`
+
+# Recovery
+
+## Recover removed but still open file (fd = file descriptor)
+
+```sh
+lsof | grep -i "$file"
+cp /proc/$pid/fd/$fd $new_file
+```
+
+- recover partition: ddrescue
+- recover deleted files: foremost jpg -o out_dir -i image_file
+
+# SFTP
+
+- use specifc key file `sftp -o IdentityFile=~/.ssh/$keyfile $user@\$host`
+- use password `ltp -u login,pass sftp://host`
+
+# User Management
+
+- newgrp - log in with the new group
+- sg - execute command as different group ID
+- Add user group editor - to be started via the ubuntu menu
+  `sudo apt-get install gnome-system-tools`
+
+# Xorg
+
+- `ssh -X host x2x -west -to :4.0`
+
+# Encryption
+
+## fsck encrypted volume
+
+```sh
+sudo cryptsetup luksOpen /dev/hda5 mydisk
+fsck /dev/mapper/mydisk
+```
 
 ### fatpacked app npm-readme ###################################################
 
@@ -9820,27 +9767,6 @@ $diff -y \
     <(tree --no-colors --ascii $@ "$right") \
     | less
 
-### fatpacked app ubuntu-setup #################################################
-
-#!/bin/bash
-
-# Stuff to do after a new ubuntu installation
-
-source bash-helpers
-
-gotroot
-
-INFO "Turning off crash reports..."
-echo enabled=0 >> /etc/default/apport
-
-INFO "Removing outdated flash plugin (flashplugin-installer)..."
-dpkg -P flashplugin-installer
-
-INFO "Add user group editor - to be started via the ubuntu menu"
-sudo apt-get install gnome-system-tools
-
-ubuntu-setup-automatic-updates
-
 ### fatpacked app ubuntu-setup-automatic-updates ###############################
 
 #!/bin/bash
@@ -9854,6 +9780,8 @@ ubuntu-setup-automatic-updates
 
 source bash-helpers
 
+DIE "Deprecated"
+
 INFO "Including updates and backports in sources list..."
 
 gotroot
@@ -9864,6 +9792,26 @@ file-add-line-if-new /etc/apt/sources.list '^deb http://\S+\s+'$DISTRIB_CODENAME
 file-add-line-if-new /etc/apt/sources.list '^deb http://\S+\s+'$DISTRIB_CODENAME'-backports.*$' 'deb http://archive.ubuntu.com/ubuntu '$DISTRIB_CODENAME'-backports main restricted universe multiverse'
 
 apt-get update
+
+### fatpacked app ubuntu-setup-firewall ########################################
+
+#!/usr/bin/env bash
+
+# Setup default firewall and rules
+
+source bash-helpers
+
+gotroot
+
+apt-get install ufw
+ufw allow 22
+ufw enable
+
+INFO "Firewall enabled - please check activated rules."
+INFO "To remove all predefined rules run 'ufw reset' and rerun this script."
+INFO "Activated rules:"
+
+ufw status
 
 ### fatpacked app ubuntu-unity-set-time-format #################################
 

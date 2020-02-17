@@ -875,7 +875,7 @@ if [[ $dst_type = ogg ]] ; then
     if [[ $file_type != flac ]] ; then
         DEBUG "Transcoding $file to flac"
         # sox $file -t flac $tmp
-        avconv -i "$file" $tmp
+        ffmpeg -i "$file" $tmp
         _file="$file"
         file="$tmp"
         tmp="$_file"
@@ -903,7 +903,7 @@ else
     # avconv -i "$file" -c:a libmp3lame -b:a 192k -id3v2_version 3 -write_id3v1 1 "$file.$dst_type"
     # the -map_metadata is used to copy the tag...:
     # https://stackoverflow.com/questions/21489719/avconv-flac-to-ogg-conversion-with-metadata-kept
-    avconv -loglevel quiet -i "$file" -vn -c:a libmp3lame -b:a 192k -map_metadata 0:s:0 "$out_file"
+    ffmpeg -loglevel quiet -i "$file" -vn -c:a libmp3lame -b:a 192k -map_metadata 0:s:0 "$out_file"
 fi
 
 if [[ -e $tmp ]] ; then
@@ -4775,6 +4775,7 @@ touch $id_file
 set -x
 
 rsync \
+  --verbose \
   --archive \
   --partial --partial-dir=rsync-partial \
   --delete \

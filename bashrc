@@ -2865,6 +2865,7 @@ if ! [[ $1 ]] ; then
 fi
 
 image=ubuntu:16.04
+image=docker-snapshot.mobilcom.de/aws-nodejs:latest
 container=ubuntu-test
 remove=--rm
 
@@ -2880,10 +2881,9 @@ fi
 mount=~/tmp/docker-home
 mkdir -p $mount
 
-docker_home=/root/
+docker_home=/docker-home/
 
 sudo docker run $remove --name $container \
-    -v $HOME/.bashrc:$docker_home/.bashrc \
     -v $mount:$docker_home \
     -ti $image "$cmd"
 
@@ -4323,7 +4323,7 @@ else {
 
 # Install and run json2yaml
 
-exec npx json2yaml
+exec npx json2yaml "$@"
 
 ### fatpacked app keyboard-backlight-permanently-off ###########################
 

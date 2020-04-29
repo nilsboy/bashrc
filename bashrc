@@ -3646,6 +3646,16 @@ git config --global push.default simple
 
 exec git branch --list -vva
 
+### fatpacked app git.push.all.branches ########################################
+
+#!/usr/bin/env bash
+
+# Push all git branches
+
+source bash-helpers
+
+exec git push --all -u "$@"
+
 ### fatpacked app git.status ###################################################
 
 #!/bin/bash
@@ -4710,6 +4720,42 @@ INFO "Done"
 # see also http://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
 
 smem "$@"
+
+### fatpacked app mount. #######################################################
+
+#!/usr/bin/env bash
+
+# Show mounts without snap etc
+
+source bash-helpers
+
+mount "$@" | grep -v 'appimage' | grep -v 'snap'
+
+### fatpacked app mount.overlay ################################################
+
+#!/usr/bin/env bash
+
+# Mount a directory over another
+
+source bash-helpers
+
+gotroot
+
+lower=${1:?Specify lower directory}
+upper=${2:?Specify upper directory}
+merged=$upper
+merged=${merged/\//}
+workdir=.$merged.overlay-work
+
+INFO "Mounting $lower + $merged -> $merged"
+
+INFO "Creating temp workdir for overlayfs: $workdir"
+mkdir -p $workdir
+
+sudo mount \
+  -t overlay none \
+  -o "lowerdir=$lower,upperdir=$upper,workdir=$workdir" \
+  $upper
 
 ### fatpacked app mybackup #####################################################
 
@@ -6729,6 +6775,16 @@ fi
 cmd="sudo stunnel -c -d $in -r $out -f"
 INFO "running: $cmd"
 xtitle "ssl-strip $cmd" && $cmd
+
+### fatpacked app sudo. ########################################################
+
+#!/usr/bin/env bash
+
+# Keep path with sudo
+
+cmd=${1:?Specify cmd}
+
+exec sudo env PATH=$PATH "$@"
 
 ### fatpacked app text-context-grep ############################################
 

@@ -3673,6 +3673,23 @@ exec git status -uall "${@:2}" "$@"
 git config --global user.name 2>/dev/null && DIE "Global git user.name is set"
 git config --global user.email 2>/dev/null && DIE "Global git user.email is set"
 
+### fatpacked app github.clone.user ############################################
+
+#!/usr/bin/env bash
+
+# Download all github repos of a user
+
+source bash-helpers
+
+type curl &>/dev/null || pkexec apt install curl
+type jq &>/dev/null || pkexec apt install jq
+
+user=${1:?Specify user}
+
+curl -s "https://api.github.com/users/$user/repos?per_page=1000" \
+  | jq -r ".[].ssh_url" \
+  | xargs -L1 git clone
+
 ### fatpacked app gnome-send-to-mail-images ####################################
 
 #!/usr/bin/perl

@@ -4046,20 +4046,6 @@ sub matches_any {
 
 exec su -l $USER
 
-### fatpacked app H ############################################################
-
-#!/usr/bin/env bash
-
-# Open --help output in vi
-
-source bash-helpers
-
-dir=$(mktemp -d)
-file="$dir/$1.docopt"
-
-"$@" --help > "$file"
-vi "$file"
-
 ### fatpacked app hd-set-spin-timeout ##########################################
 
 #!/bin/bash
@@ -4622,28 +4608,35 @@ COLUMNS=80
 MAN_KEEP_FORMATTING=1 
 
 function _printifok() {
-    local msg=$1 ; shift
-    local quote=$1 ; shift
-    local cmd="$*"
+  local msg=$1 ; shift
+  local cmd="$*"
 
-    local out=$($cmd 2>/dev/null)
-    [[ ${out[@]} ]] || return 1
-    line $msg
-    if [[ $quote = 1 ]] ; then
-        echo "${out[@]}" | perl -pe 's/^/#   /g'
-    else
-        echo "${out[@]}"
-    fi
-    echo
+  local out=$($cmd 2>/dev/null)
+  if [[ -z $out ]] ; then
+    return 1
+  fi
+  line $msg
+  echo "${out[@]}"
+  echo
+}
+
+function _printifany() {
+  local msg=$1
+  local cmd=$2
+  type $cmd &>/dev/null || return
+
+  local out=$($cmd --help 2>&1)
+  # perldoc
+  if [[ -z $out ]] ; then
+    return
+  fi
+
+  line $msg
+  echo "${out[@]}"
+  echo
 }
 
 cmd=$1 ; shift
-
-if [[ $cmd = git ]] ; then
-    cmd=$cmd-$1
-    shift
-fi
-
 arg="$1"
 
 if [[ $arg =~ ^-- ]] ; then
@@ -4657,20 +4650,19 @@ else
 fi
 
 (
-    _printifok options 0 man-explain-options $cmd "$@"
-    _printifok help 0 help -m $cmd
-    _printifok man 0 man -a $cmd
-    _printifok perldoc 0 perldoc -f $cmd
-    _printifok npm-readme 0 npm-readme $cmd
+_printifok options man-explain-options $cmd "$@"
+_printifok help help -m $cmd
+_printifok man man -a $cmd
+_printifany "--help" $cmd
+_printifok README npm-readme $cmd
+_printifok perldoc perldoc -f $cmd
 
-    if [[ ! $SHORT ]] ; then
-        _printifok related 1 man -k $cmd
-        _printifok "apt show" 1 apt-cache show $cmd
-        _printifok "apt search" 1 apt-cache search $cmd
-    fi
-
+if [[ $ALL ]] ; then
+  _printifok related man -k $cmd
+  _printifok "apt show" apt-cache show $cmd
+  _printifok "apt search" apt-cache search $cmd
+fi
 ) | LESS="-inRgSj.5" less "$arg"
-
 
 ### fatpacked app man-online ###################################################
 
@@ -5243,23 +5235,29 @@ fsck /dev/mapper/mydisk
 
 // Find and print README.md of node executable
 
-var fs = require('fs')
-var path = require('path')
-var exec = require('child_process')
-  .execSync
-var _ = require('mout')
+var fs = require("fs")
+var path = require("path")
+var exec = require("child_process").execSync
 
-var cmd = process.argv[2]
+const [, , cmd] = process.argv
 
-var executable = _.string.rtrim(exec('bash -c "cd / && type -p ' + cmd + '"') .toString())
+var executable = exec(`bash -c "cd / && type -p '${cmd}'"`)
+  .toString()
+  .trim()
+
 var executableDir = path.dirname(executable)
+var linkDst = executable
 
-var linkDst = fs.readlinkSync(executable)
+try {
+  linkDst = fs.readlinkSync(executable)
+} catch (e) {
+  // might not be a link
+}
 
 var abs = path.join(executableDir, linkDst)
 
-var modulePath = abs.replace(/(^.+node_modules\/.+?\/).+$/, '$1')
-var readme = modulePath + 'README.md'
+var modulePath = abs.replace(/(^.+node_modules\/.+?\/).+$/, "$1")
+var readme = modulePath + "README.md"
 
 if (!fs.existsSync(readme)) {
   process.exit(0)

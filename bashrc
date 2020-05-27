@@ -10483,9 +10483,15 @@ wmctrl -i -r $WINDOWID -b "add,DEMANDS_ATTENTION"
 
 ### fatpacked app x2x-east #####################################################
 
+#!/usr/bin/env bash
+
 # Share input devices with another host
 
-ssh -X $1 x2x -east -to $DISPLAY
+source bash-helpers
+
+host=${1:?Specify host}
+
+ssh -X $host x2x -east -to $DISPLAY
 
 ### fatpacked app xdg-cache-home ###############################################
 

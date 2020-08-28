@@ -10251,11 +10251,15 @@ fi
 
 source bash-helpers
 
+dir=/tmp/vim-edit
+mkdir -p $dir
+chmod 700 $dir
+
+tmp=$dir/vim-edit.$USER.$(date +%Y%m%d_%H%M%S).txt
+
 xdotool key ctrl+a
 xdotool key ctrl+c
 # xdotool key Left
-
-tmp=/tmp/vim-edit.$USER.$(date +%Y%m%d_%H%M%S).txt
 
 xclip -o > $tmp
 

@@ -10261,8 +10261,6 @@ xclip -o > $tmp
 
 gnome-terminal --maximize --wait -- vi $tmp
 
-cat $tmp
-
 cat $tmp | xclip -selection clip
 
 xdotool key ctrl+v

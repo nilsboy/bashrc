@@ -4791,6 +4791,22 @@ sudo mount \
   -o "lowerdir=$lower,upperdir=$upper,workdir=$workdir" \
   $upper
 
+### fatpacked app mouse-busy ###################################################
+
+#!/usr/bin/env bash
+
+# Keep mouse moving to prevent system idle
+
+source bash-helpers
+
+delay=${1:-60}
+
+while true ; do
+  xdotool mousemove_relative 1 0
+  xdotool mousemove_relative -- -1 0
+  sleep $delay
+done
+
 ### fatpacked app mybackup #####################################################
 
 #!/usr/bin/env bash

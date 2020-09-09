@@ -4791,11 +4791,11 @@ sudo mount \
   -o "lowerdir=$lower,upperdir=$upper,workdir=$workdir" \
   $upper
 
-### fatpacked app mouse-busy ###################################################
+### fatpacked app mouse.jiggle #################################################
 
 #!/usr/bin/env bash
 
-# Keep mouse moving to prevent system idle
+# Jiggle mouse to prevent system idle
 
 source bash-helpers
 

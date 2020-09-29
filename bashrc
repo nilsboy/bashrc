@@ -10249,6 +10249,16 @@ if [[ $STEREO ]] ; then
 fi
 
 
+### fatpacked app vidir. #######################################################
+
+#!/usr/bin/env bash
+
+# more save vidir
+
+source bash-helpers
+
+qmv -R -f do "$@"
+
 ### fatpacked app vim-edit #####################################################
 
 #!/usr/bin/env bash

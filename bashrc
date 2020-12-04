@@ -5865,7 +5865,7 @@ eval $BASHRC_PROMPT_HELPERS
 prefixif $(bashrc-helper-login-name 1)
 prefixif $(dir-name-prettifier $PWD)
 jobs=$jobs bash-background-jobs-count
-echo -n "> "
+echo -n "$GREY>$NO_COLOR "
 
 ### fatpacked app prompt-plain #################################################
 

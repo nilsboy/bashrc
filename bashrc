@@ -5852,7 +5852,7 @@ bashrc-helper-hostname
 echo -n ":"
 dir-name-prettifier $PWD
 jobs=$jobs bash-background-jobs-count
-echo -n "> "
+echo -n "$GREY> $NO_COLOR"
 
 ### fatpacked app prompt-local #################################################
 

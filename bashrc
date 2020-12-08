@@ -5771,13 +5771,13 @@ done
 # Prompt containing only the prettified current directory
 
 dir-name-prettifier $PWD
-echo -n "> "
+echo -n "$GREY> $NO_COLOR"
 
 ### fatpacked app prompt-dir-full ##############################################
 
 # Prompt containing the current directory ony
 
-echo -n "$PWD> "
+echo -n "$PWD$GREY> $NO_COLOR"
 
 ### fatpacked app prompt-helper-git ############################################
 
@@ -5817,23 +5817,25 @@ my ($remote, $remote_branch) = $upstream =~ /(.+)\/(.+)/;
 my ($ahead, $behind)   = $git =~ /^# branch.ab (\+.+) (\-.+)$/gm;
 my ($changes) = $git =~ /^[12\?]/m;
 
-my $project = `git rev-parse --show-toplevel 2>/dev/null`;
-($project) = $project =~ /.*\/([^\/]+)\n/;
+# my $project = `git rev-parse --show-toplevel 2>/dev/null`;
+# ($project) = $project =~ /.*\/([^\/]+)\n/;
 
 my $branch_color = $red if $branch eq '(detached)';
 my $branch_info =  ($remote_branch . $ahead . $behind ne '' || $branch eq '(detached)' ? '@' . $branch_color . $branch . $no_color : '' );
 $branch_info = '' if $branch eq $remote_branch;
 
+my ($branch_prefix) = $branch =~ /^(.{1,4})/;
+
 print ""
   . $grey
-  . "| "
-  . $project
+  # . "| "
+  # . $project
+  . "@" . $branch_color . $branch_prefix . $grey
   . ($changes ? $red . '*' . $grey : '')
-  . $branch_info
   . ($ahead ne '+0' ? $red . $ahead . $grey : '')
   . ($behind ne '-0' ? $red . $behind . $grey : '' )
   . ($remote_branch && $remote_branch ne $branch ? '=>' . $red . $remote_branch . $grey : '' )
-  . " |"
+  # . " |"
   . $no_color
 ;
 
@@ -5847,7 +5849,7 @@ time-humanize-seconds $elapsed
 eval $BASHRC_PROMPT_HELPERS
 echo -n " "
 bashrc-helper-login-name
-echo -n "@"
+echo -n "$GREY@$NO_COLOR"
 bashrc-helper-hostname
 echo -n "$GREY:$NO_COLOR"
 dir-name-prettifier $PWD
@@ -5871,7 +5873,7 @@ echo -n "$GREY>$NO_COLOR "
 
 # Static prompt
 
-echo -n "BASH> "
+echo -n "$(basename $SHELL)> "
 
 ### fatpacked app prompt-spare #################################################
 

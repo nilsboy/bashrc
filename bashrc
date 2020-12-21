@@ -3570,14 +3570,6 @@ wget -qO - $url >> .gitignore
 
 INFO "Appended to .gitignore"
 
-### fatpacked app git-log-compact ##############################################
-
-#!/bin/bash
-
-# Show compact git log
-
-exec git log --oneline --decorate --graph "$@"
-
 ### fatpacked app git-log-file #################################################
 
 #!/bin/bash
@@ -3659,20 +3651,23 @@ git checkout .
 git rev-parse --show-toplevel 2>/dev/null || abs .
 
 
-### fatpacked app git-setup ####################################################
+### fatpacked app git.all ######################################################
 
-# Setup default git configuration
+#!/usr/bin/env bash
 
-git config --global push.default simple
-# git config --global pull.rebase true
+# Add, commit and push in one step
 
-### fatpacked app git.branch ###################################################
+source bash-helpers
 
-#!/bin/bash
+comment="$@"
 
-# Default options for git branch
-
-exec git branch --list -vva
+git add -A .
+if [[ ! "$comment" ]] ; then
+  git.commit
+else
+  git.commit -m "$(cat ~/.gitmessage)$comment"
+fi
+git push
 
 ### fatpacked app git.push.all.branches ########################################
 
@@ -3684,13 +3679,52 @@ source bash-helpers
 
 exec git push --all -u "$@"
 
-### fatpacked app git.status ###################################################
+### fatpacked app git.setup ####################################################
 
-#!/bin/bash
+# Setup git configuration
 
-# Default options for git status
+source bash-helpers
 
-exec git status -uall "${@:2}" "$@"
+bak ~/.gitconfig
+
+cat > ~/.gitconfig <<''EOF
+[core]
+  color = false
+  ; pager = vi
+[pager]
+  branch = cat
+[color]
+  ; log = false
+  ; ui = auto
+  ; diff = auto
+  ; status = auto
+  ; branch = auto
+[pack]
+  threads = 0
+[alias]
+  a = add -A .
+  co = checkout
+  c = commit
+  s = status -uall
+  r = remote -v
+  fetch-all = fetch --all
+  l = "log --graph --decorate --all --date=format:'%F %T' --pretty='%C(auto) %h %d %s %C(#BCBCBC) | %cr | %cd | %an'"
+  ll = "log --graph --decorate --date=format:'%F %T' --pretty='%C(auto) %h %d %s %C(#BCBCBC) | %cr | %cd | %an'"
+  log-patches = log -p
+  log-date-relative = log --date=relative
+  b = branch --list -vva --sort=committerdate
+  d = diff -- ':(exclude)package-lock.json' .
+[push]
+  default = simple
+[commit]
+	verbose = true
+  template = ~/.gitmessage 
+[diff "nodiff"]
+  command = /bin/true
+[user]
+	email = you@example.com
+	name = Your Name
+EOF
 
 ### fatpacked app git.user.check ###############################################
 
@@ -3705,7 +3739,7 @@ git config --global user.email 2>/dev/null && DIE "Global git user.email is set"
 
 #!/usr/bin/env bash
 
-# Download all github repos of a user
+# Clone all github repos of a user
 
 source bash-helpers
 
@@ -5818,7 +5852,8 @@ my ($upstream) = $git =~ /^# branch.upstream (.+)$/gm;
 my ($remote, $remote_branch) = $upstream =~ /(.+)\/(.+)/;
 ($remote_branch) = $upstream if ! $remote_branch;
 my ($ahead, $behind)   = $git =~ /^# branch.ab (\+.+) (\-.+)$/gm;
-my ($changes) = $git =~ /^[12\?]/m;
+# ignored is only shown if specified with git status --ignored
+my ($changes) = $git =~ /^[u12\?\!]/m;
 
 # my $project = `git rev-parse --show-toplevel 2>/dev/null`;
 # ($project) = $project =~ /.*\/([^\/]+)\n/;
@@ -10710,29 +10745,22 @@ foreach my $was ( sort keys %was ) {
 
 sub normalize {
     my ($abs) = @_;
+    $_ = basename($abs);
 
-    my $file = basename($abs);
-    my $ext  = "";
-
-    if ( !-d $abs && $file =~ /^(.+)(\..+?)$/ ) {
-        ( $file, $ext ) = ( $1, $2 );
-    }
-
-    $_ = $file;
-
-    s/&/and/g;
-    s/['`´]+//g;
-    s/[\._\W]+/_/g;
+    s/&/_and_/g;
+    s/[^\w.-]+/_/g;
+    s/_\././g;
+    s/\._/./g;
+    s/_+/_/g;
+    s/\.+/./g;
     s/.*?www_[^_]+_[^_]+_//gi;
-    s/^_*//g;
-    s/_*$//g;
 
     if ( !$_ ) {
         $empty_file_name_count++;
         $_ = "_empty_file_name." . $empty_file_name_count;
     }
 
-    return $_ . lc($ext);
+    return $_
 }
 
 ### fatpacked app xtitle #######################################################

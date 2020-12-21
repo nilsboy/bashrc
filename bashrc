@@ -3570,14 +3570,6 @@ wget -qO - $url >> .gitignore
 
 INFO "Appended to .gitignore"
 
-### fatpacked app git-log-file #################################################
-
-#!/bin/bash
-
-# Show complete changes to a file in git
-
-git log --follow -p -- "$@"
-
 ### fatpacked app git-modified #################################################
 
 #!/bin/sh -e
@@ -3669,16 +3661,6 @@ else
 fi
 git push
 
-### fatpacked app git.push.all.branches ########################################
-
-#!/usr/bin/env bash
-
-# Push all git branches
-
-source bash-helpers
-
-exec git push --all -u "$@"
-
 ### fatpacked app git.setup ####################################################
 
 # Setup git configuration
@@ -3702,6 +3684,7 @@ cat > ~/.gitconfig <<''EOF
 [pack]
   threads = 0
 [alias]
+  all = !git.all
   a = add -A .
   co = checkout
   c = commit
@@ -3712,8 +3695,11 @@ cat > ~/.gitconfig <<''EOF
   ll = "log --graph --decorate --date=format:'%F %T' --pretty='%C(auto) %h %d %s %C(#BCBCBC) | %cr | %cd | %an'"
   log-patches = log -p
   log-date-relative = log --date=relative
+  log-file = log --follow -p --
+  files-all-ever = !git log --pretty=format: --name-only --diff-filter=A | uniq-unsorted | tac
   b = branch --list -vva --sort=committerdate
   d = diff -- ':(exclude)package-lock.json' .
+  push-all-branches = push --all -u
 [push]
   default = simple
 [commit]

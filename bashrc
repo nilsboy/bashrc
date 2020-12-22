@@ -3296,59 +3296,6 @@ bak=$dirname$filename$extension$postfix$extension
 
 echo $bak
 
-### fatpacked app find-and #####################################################
-
-#!/bin/bash 
-
-# Find files excluding dotfiles optionally matching several strings
-
-source bash-helpers
-
-head_warn="head-warn"
-
-path=$(abs .)
-
-if [[ $1 = '--dir' ]] ; then
-    shift
-    path=$1
-    shift
-fi
-
-if [[ $1 = '--project' ]] ; then
-    shift
-
-    set +e
-    git_root=$(git-root)
-    set -e
-
-    if [[ $git_root ]] ; then
-        path=$git_root
-    fi
-fi
-
-if [[ $1 = '--no-limit' ]] ; then
-    shift
-    head_warn=cat
-fi
-
-cd /
-
-set +e
-
-find \
-    -H \
-    $path \
-    -mount \
-    -type f \
-    | perl -ne 'print if ! m#'$path'\..*#' \
-    | perl -ne 'print if ! m#'$path'(node_modules|bower_components|classes|coverage)/.*#' \
-    | grep-and -i "$path" -e $@ \
-    | head -101 \
-    | sort-by-path-depth \
-    | $head_warn
-
-exit 0
-
 ### fatpacked app find-and-limit ###############################################
 
 #!/bin/bash
@@ -3398,19 +3345,6 @@ find -type f -printf "%CF %CH:%CM %h/%f\n" | sort | tac | less
 # Recursively find files oder than days
 
 find . -type f -ctime +$1 | less
-
-### fatpacked app find-or-grep #################################################
-
-#!/bin/bash
-
-# Find a file or grep stdin
-
-if [[ -t 0 ]] ; then
-    find-and --no-limit | while read i; do grep-and -epf "$i" "$@" ; done
-else
-    grep-and -e $@
-fi
-
 
 ### fatpacked app find.relevant. ###############################################
 
@@ -3813,70 +3747,6 @@ if [[ $USER != root ]] ; then
     DIE "Please run as root"
 fi
 
-### fatpacked app grep-and #####################################################
-
-#!/usr/bin/env perl
-
-# Search for lines matching one or more perl regex patterns
-
-use strict;
-use warnings;
-no warnings 'uninitialized';
-
-use Getopt::Long;
-Getopt::Long::Configure("bundling");
-
-my $red      = "\x1b[38;5;124m";
-my $no_color = "\x1b[33;0m";
-
-my $opts = {
-    "f|file=s"           => \my $file,
-    "p|prefix-file-name" => \my $prefix,
-    "e|allow-empty"      => \my $allow_empty,
-    "no-color"           => \my $show_no_color,
-    "i|ignore=s"           => \my $ignore,
-};
-GetOptions(%$opts) or die "Usage:\n$0 " . join("\n", sort keys %$opts) . "\n";
-
-if (!-t STDOUT || $show_no_color) {
-    $red = $no_color = "";
-}
-
-my @patterns = @ARGV;
-
-if (!$allow_empty) {
-    @patterns || die "Specify patterns to search for.";
-}
-
-my $h = *STDIN;
-if ($file) {
-    open($h, $file) || die $!;
-}
-
-LINE: while (<$h>) {
-    my $org = $_;
-
-    s/$ignore//g;
-
-    if (!@patterns && $allow_empty) {
-        print;
-        next;
-    }
-
-    foreach my $pattern (@patterns) {
-        if (!s/($pattern)/$red$1$no_color/gi) {
-            next LINE;
-        }
-    }
-
-    if ($prefix) {
-        printf("%s:%5s: %s", $file, $., $org);
-    }
-    else {
-        print $org;
-    }
-}
-
 ### fatpacked app grep-before ##################################################
 
 #!/usr/bin/env perl
@@ -3884,8 +3754,8 @@ LINE: while (<$h>) {
 # Print file contens before a specified regex first matches
 
 while (<STDIN>) {
-    exit 0 if /@ARGV/i;
-    print;
+  exit 0 if /@ARGV/i;
+  print;
 }
 
 exit 1;
@@ -3942,16 +3812,16 @@ use strict;
 use warnings;
 
 my $matches;
-while ( my $line = <STDIN> ) {
-    foreach my $regex (@ARGV) {
-        next if $line !~ /$regex/i;
-        $matches++;
-        print $line;
-        last;
-    }
+while (my $line = <STDIN>) {
+  foreach my $regex (@ARGV) {
+    next if $line !~ /$regex/i;
+    $matches++;
+    print $line;
+    last;
+  }
 }
 
-exit 1 if ! $matches;
+exit 1 if !$matches;
 
 ### fatpacked app grep-or-with-header ##########################################
 
@@ -3965,55 +3835,88 @@ my @regexes = @ARGV;
 my $matches;
 my $last_blank;
 my $last_header;
-while ( my $line = <STDIN> ) {
+while (my $line = <STDIN>) {
 
-    my $is_header = 0;
-    my $first = $. == 1;
+  my $is_header = 0;
+  my $first     = $. == 1;
 
-    if($line =~ /^\s*$/) {
-        $last_blank = 1;
-    } else {
-        if($last_blank || $first) {
-            $last_blank = 0;
-            $is_header = 1;
-            $last_header = $line;
-        }
+  if ($line =~ /^\s*$/) {
+    $last_blank = 1;
+  }
+  else {
+    if ($last_blank || $first) {
+      $last_blank  = 0;
+      $is_header   = 1;
+      $last_header = $line;
+    }
+  }
+
+  if (matches_any($line)) {
+    $matches++;
+
+    if ($is_header) {
+      $last_header = "";
     }
 
-    if(matches_any($line)) {
-        $matches++;
+    if ($last_header) {
 
-        if($is_header) {
-            $last_header = "";
-        }
-
-        if($last_header) {
-            # Check for pipe
-            if(-t STDOUT && $matches > 1) {
-                print "\n";
-            }
-            print $last_header;
-            $last_header = "";
-        }
-
-        print $line;
-        next;
+      # Check for pipe
+      if (-t STDOUT && $matches > 1) {
+        print "\n";
+      }
+      print $last_header;
+      $last_header = "";
     }
+
+    print $line;
+    next;
+  }
 
 }
 
-exit 1 if ! $matches;
+exit 1 if !$matches;
 
 sub matches_any {
-    my $line = shift;
+  my $line = shift;
 
-    foreach my $regex (@regexes) {
-        return 1 if $line =~ /$regex/i;
-    }
+  foreach my $regex (@regexes) {
+    return 1 if $line =~ /$regex/i;
+  }
 
-    return 0;
+  return 0;
 }
 
+
+### fatpacked app grep.and #####################################################
+
+#!/usr/bin/env perl
+
+# Search for lines matching one or more perl regex patterns
+
+use strict;
+use warnings;
+no warnings 'uninitialized';
+
+my $red      = "\x1b[38;5;124m";
+my $no_color = "\x1b[33;0m";
+
+if (!-t STDOUT) {
+  $red = $no_color = "";
+}
+
+my @patterns = @ARGV;
+
+LINE: while (<STDIN>) {
+  my $org = $_;
+
+  foreach my $pattern (@patterns) {
+    if (!s/($pattern)/$red$1$no_color/gi) {
+      next LINE;
+    }
+  }
+
+  print $org;
+}
 
 ### fatpacked app groups-reload-memberships ####################################
 
@@ -6737,7 +6640,7 @@ use warnings;
 no warnings 'uninitialized';
 
 $/ = undef;
-my $data = <STDIN>;
+my $data    = <STDIN>;
 my $pattern = $ARGV[0];
 
 my $gray     = "\x1b[38;5;243m";
@@ -6747,46 +6650,45 @@ my $no_color = "\x1b[33;0m";
 
 my $positions = match_all_positions($pattern, $data);
 
-my $context = 100;
+my $context   = 100;
 my $max_width = 70;
-my $prefix = "    ";
+my $prefix    = "    ";
 my $separator = "\n$prefix" . "_" x $max_width . "\n\n";
 
 my @wrapped_matches;
 foreach my $pos (@$positions) {
-    my ($start, $end) = @$pos;
+  my ($start, $end) = @$pos;
 
-    my $context_start = $start - $context < 0 ? 0 : $start - $context;
-    my $pre   = substr($data, $context_start, $start - $context_start);
-    my $match = substr($data, $start, $end - $start);
-    my $post  = substr($data, $end, $context);
-    my $all   = $pre . $match . $post;
+  my $context_start = $start - $context < 0 ? 0 : $start - $context;
+  my $pre   = substr($data, $context_start, $start - $context_start);
+  my $match = substr($data, $start,         $end - $start);
+  my $post  = substr($data, $end,           $context);
+  my $all   = $pre . $match . $post;
 
-    my $wrapped = join("\n", unpack("(A$max_width)*", $all));
+  my $wrapped = join("\n", unpack("(A$max_width)*", $all));
 
-    my $pre_wrapped   = substr($wrapped, 0, length($pre));
-    my $match_wrapped = $red
-        . substr($wrapped, length($pre), length($match))
-        . $no_color;
-    my $post_wrapped  = substr($wrapped, length($pre) + length($match));
+  my $pre_wrapped = substr($wrapped, 0, length($pre));
+  my $match_wrapped =
+    $red . substr($wrapped, length($pre), length($match)) . $no_color;
+  my $post_wrapped = substr($wrapped, length($pre) + length($match));
 
-    my $all_wrapped = $pre_wrapped . $match_wrapped . $post_wrapped;
+  my $all_wrapped = $pre_wrapped . $match_wrapped . $post_wrapped;
 
-    $all_wrapped =~ s/^/$prefix/gm;
-    $all_wrapped =~ s/\n+$/\n/gm;
+  $all_wrapped =~ s/^/$prefix/gm;
+  $all_wrapped =~ s/\n+$/\n/gm;
 
-    push(@wrapped_matches, $all_wrapped);
+  push(@wrapped_matches, $all_wrapped);
 }
 
 print $separator . join($separator, @wrapped_matches) . $separator;
 
 sub match_all_positions {
-    my ($regex, $string) = @_;
-    my @ret;
-    while ($string =~ /$regex/igm) {
-        push @ret, [ $-[0], $+[0] ];
-    }
-    return \@ret
+  my ($regex, $string) = @_;
+  my @ret;
+  while ($string =~ /$regex/igm) {
+    push @ret, [ $-[0], $+[0] ];
+  }
+  return \@ret;
 }
 
 ### fatpacked app text-from-any ################################################

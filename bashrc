@@ -231,7 +231,7 @@ alias apt-list-package-contents="dpkg -L"
 alias apt-find-package-containing="dpkg -S"
 alias apt-list-installed="apt list --installed | g"
 
-alias normalizefilenames="xmv -ndx"
+alias normalizefilenames="xmv -nd"
 alias m=man-multi-lookup
 alias srd=tmux-reattach
 
@@ -264,10 +264,7 @@ fi
 export EDITOR
 export VISUAL="$EDITOR"
 
-alias v=vi-choose-file-from-list
-alias vie=vi-from-path
-alias vif=vi-from-find
-alias vih=vi-from-history
+alias vie=vi-executable
 
 export LESS="-j0.5 -inRgS"
 # Make less more friendly for non-text input files, see lesspipe(1)
@@ -607,68 +604,6 @@ $abs .= "/" if -d $file;
 $abs = "'$abs'" if $abs =~ /\s/;
 $abs =~ s/;/\\;/g;
 print "$abs\n";
-
-### fatpacked app alternative ##################################################
-
-#!/bin/bash
-
-# Find an on disk executable alternative
-
-source bash-helpers
-
-app=${1?Specify app}
-
-if ! [[ $app =~ / ]] ; then
-    DIE "Specify absolute path to executable."
-fi
-
-if ! [ -x $app ] ; then
-    DIE "Specify existing executable."
-fi
-
-base=$(basename $app)
-
-INFO "Searching for alternative for $base ($app)"
-
-while read candidate ; do
-
-    if [[ $candidate = $app ]] ; then
-        continue
-    fi
-
-    if [[ $candidate = $REMOTE_HOME/.bin/$base ]] ; then
-        continue
-    fi
-
-    INFO "Found alternative $candidate"
-
-    RETURN $candidate
-
-done <<EOF
-    $(type -ap $base || echo $app)
-EOF
-
-DIE "No alternative found for $base ($app)"
-
-### fatpacked app alternative-run ##############################################
-
-#!/bin/bash
-
-# Find an on disk executable alternative and run it
-
-set -e
-
-source bash-helpers
-
-app=$1 ; shift
-
-if [[ $SHLVL -gt 20 ]] ; then
-    DIE "Recursion depth of $SHLVL detected."
-fi
-
-alternative=$(alternative $app)
-
-exec $alternative "$@"
 
 ### fatpacked app apt-dump-installed-packages ##################################
 
@@ -1827,38 +1762,6 @@ fi
 RETURN $USER
 
 
-### fatpacked app bashrc-install ###############################################
-
-#!/usr/bin/env bash
-
-# Install and run specified installer_command
-
-# Can not be run from within ~/.bin...
-
-source bash-helpers
-
-app=${1?Specify app}
-shift
-nothing=${1?Specify installer_command}
-installer_command="$@"
-
-if [[ $app =~ / ]] ; then
-  app=$(basename $app)
-fi
-
-abs_app="$REMOTE_HOME/.bin/$app"
-
-set +e
-already_exists=$(type -a $app 2>/dev/null | grep -v $abs_app)
-set -e
-
-if [[ "$already_exists" = "" ]] ; then
-  INFO "Installing $app via '$installer_command'..."
-  $installer_command
-fi
-
-exec alternative-run $abs_app
-
 ### fatpacked app bashrc-linux-distribution-fix-suse ###########################
 
 # Script to run when logging into a suse machine
@@ -2187,18 +2090,6 @@ fi
 cp -rnl "$src"/* "$dst"/
 
 
-### fatpacked app cpanm ########################################################
-
-#!/usr/bin/env perl
-
-# Allow cpanm to install modules specified via Path/File.pm
-
-map { s/\//\:\:/g ; s/\.pm$//g } $ARGV[$#ARGV];
-
-my @local_lib = ( "--local-lib", "$ENV{REMOTE_HOME}/perl5" );
-
-system("alternative-run", "$0", "-nq", @local_lib , @ARGV) && exit 1;
-
 ### fatpacked app cpanm-install ################################################
 
 #!/bin/bash
@@ -2325,6 +2216,18 @@ cpanm-list-locally-installed-modules |
     cpanm -nq --reinstall
 
 INFO "Done"
+
+### fatpacked app cpanm. #######################################################
+
+#!/usr/bin/env perl
+
+# Allow cpanm to install modules specified via Path/File.pm
+
+map { s/\//\:\:/g ; s/\.pm$//g } $ARGV[$#ARGV];
+
+my @local_lib = ( "--local-lib", "$ENV{REMOTE_HOME}/perl5" );
+
+system("cpanm", "-nq", @local_lib , @ARGV) && exit 1;
 
 ### fatpacked app crontab-setup ################################################
 
@@ -4936,7 +4839,7 @@ set +x
 INFO "Backup done."
 
 
-### fatpacked app mysql ########################################################
+### fatpacked app mysql. #######################################################
 
 #!/bin/bash
 
@@ -4963,7 +4866,7 @@ mkdir -p $history_dir
 # MYSQL_PS1="\\u@${GREEN}$h${NO_COLOR}:${RED}\\d db${NO_COLOR}> " \
 xtitle "mysql@$host" && \
     MYSQL_PS1="\\u@$host:\\d db> " \
-    MYSQL_HISTFILE=$history_file alternative-run $0 \
+    MYSQL_HISTFILE=$history_file mysql $0 \
         --default-character-set=utf8 \
         --show-warnings --pager="less -FX" "$@"
 
@@ -5651,31 +5554,6 @@ find $(perl -e 'print join (" ", @INC)') -iname "*$@*.pm" 2>/dev/null \
 # Print version of an installed perl module
 
 perl -M"$@" -e 'print $ARGV[0]->VERSION . "\n"' "$@"
-
-### fatpacked app perl-named-process ###########################################
-
-#!/bin/bash
-
-# Set process name of perl process to script name. Usefull when run via /usr/bin/env
-
-# This only works for some tools like pidof because it only changes argv[0] and does
-# not call prctl.
-
-set -e
-
-perl=$(alternative $0)
-
-file=$1
-
-if [[ $file ]] ; then
-    if [[ -f $file ]] ; then
-        file="-a "$(basename $file)
-    else
-        unset file
-    fi
-fi
-
-exec $file $perl "$@"
 
 ### fatpacked app perl-plack-test-server #######################################
 
@@ -10037,29 +9915,7 @@ exec < $BASHRC_TTY
 
 command eval $EDITOR $file
 
-### fatpacked app vi-from-find #################################################
-
-# Recursively search for a file and open it in vim - TODO
-
-search=$(perl -e '$_ = "'"$@"'" ; s#\:\:#/#g; print')
-
-entry=$(find-and "$search" | head -1)
-
-if [[ ! "$entry" ]] ; then
-    exit 1
-fi
-
-command eval $EDITOR "$entry"
-
-### fatpacked app vi-from-history ##############################################
-
-# Search eternal history for an existing file an open it in vi
-
-set -e
-file=$(bash-eternal-history-search --file -c 1 "$@")
-command eval $EDITOR "$file"
-
-### fatpacked app vi-from-path #################################################
+### fatpacked app vi-executable ################################################
 
 #!/bin/bash
 

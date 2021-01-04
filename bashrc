@@ -5452,7 +5452,7 @@ echo export PATH=${PATH} | vipe
 
 # Find an executable in path
 
-compgen -c | sort -u | find-or-grep "$@"
+compgen -c | sort -u | grep -i "$@"
 
 ### fatpacked app path-list ####################################################
 

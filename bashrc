@@ -4973,6 +4973,29 @@ gotroot
 
 echo "options rtl8723be ant_sel=1" > /etc/modprobe.d/rtl8723be.conf
 
+### fatpacked app net.dns.dump #################################################
+
+#!/usr/bin/env bash
+
+# dump all infos on a domain
+
+source bash-helpers
+
+dig "$@" any
+
+INFO type257
+dig "$@" type257
+
+### fatpacked app net.dns.local ################################################
+
+#!/usr/bin/env bash
+
+# Show local DNS status
+
+source bash-helpers
+
+systemd-resolve --status
+
 ### fatpacked app net.firewall.setup.example ###################################
 
 #!/usr/bin/env bash
@@ -6077,6 +6100,8 @@ in your path.
 * [net-remote-shell](./net-remote-shell): Create shell access on a free port
 * [net-scan-private-network](./net-scan-private-network): Scan for hosts in private network
 * [net-wlan-rtl8723be-wrong-antenna-fix](./net-wlan-rtl8723be-wrong-antenna-fix): Fix wrong antenna problem of rtl8723be wlan adaptor
+* [net.dns.dump](./net.dns.dump): dump all infos on a domain
+* [net.dns.local](./net.dns.local): Show local DNS status
 * [net.firewall.setup.example](./net.firewall.setup.example): Firewall setup example
 * [net.serve.dir](./net.serve.dir): Serve current directory files via http
 * [net.serve.file-manager](./net.serve.file-manager): Serve a file manager for the current directory via http

@@ -2830,6 +2830,40 @@ fi
 sudo PATH=$PATH IMAGE=$image CONTAINER=$container $(type -p docker-ubuntu) "$cmd"
 
 
+### fatpacked app dockerfile. ##################################################
+
+#!/bin/bash
+# Build and run a Dockerfile
+
+source bash-helpers
+
+# TODO: test with quotes ie: `sh -c "apt update"`
+cmd=${@:-bash --rcfile /root/.bashrc-my}
+
+image=$(basename $(pwd))
+
+old=.git/Dockerfile
+
+diff -q Dockerfile $old &>/dev/null || changed=1
+if [[ $changed ]] ; then
+  INFO "Building image $image"
+  docker build -t $image .
+  cp Dockerfile $old
+fi
+
+remove=--rm
+
+sudo docker run \
+  $remove \
+  -v $HOME/.bashrc:/root/.bashrc-my \
+  -v $HOME/.bin:/root/.bin \
+  -v $(pwd):/root/pwd \
+  -ti \
+  --entrypoint '' \
+  $image \
+  $cmd
+
+
 ### fatpacked app docopt-convert ###############################################
 
 #!/usr/bin/env perl

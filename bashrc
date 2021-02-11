@@ -2702,6 +2702,14 @@ rsync -nrclD --delete --exclude /.git --info COPY,DEL,NAME,SYMSAFE $src/ $dst/
 exec npx diff-so-fancy
 
 
+### fatpacked app diff. ########################################################
+
+#!/usr/bin/env bash
+
+# Diff side by side with max width
+
+diff -run $0 -y -W $COLUMNS "$@" | less
+
 ### fatpacked app dir-name-prettifier ##########################################
 
 # shorten prompt dir to max 15 chars
@@ -3522,9 +3530,9 @@ comment="$@"
 
 git add -A .
 if [[ ! "$comment" ]] ; then
-  git.commit
+  git commit -v
 else
-  git.commit -m "$(cat ~/.gitmessage)$comment"
+  git commit -v -m "$(cat ~/.gitmessage)$comment"
 fi
 git push
 
@@ -4996,6 +5004,214 @@ fi
 
 nmap -sn 192.168.0.0/16
 
+### fatpacked app net-verify-ports-are-open ####################################
+
+#!/usr/bin/env perl
+
+# Check if a list ports is reachable.
+
+# Needs a file of lines with this format:
+# host : 22, 443, 3306, 8080-8085
+
+use strict;
+use warnings;
+no warnings 'uninitialized';
+use Data::Dumper;
+
+my $hosts_file = $ARGV[0] || die("hosts file?");
+
+my $hosts      = {};
+my $port_count = 0;
+
+my $user_name = get_user_name();
+
+load_hosts_file($hosts_file, $hosts);
+scan_hosts($hosts);
+
+sub get_user_name {
+  my $file_name = "/etc/passwd";
+  return $ENV{USER} if !-e $file_name;
+
+  open(F, $file_name) || die($!);
+
+  my $user_name;
+
+  while (<F>) {
+    my @tmp = split(":");
+    next if $tmp[0] ne $ENV{USER};
+    ($user_name) = split(",", $tmp[4]);
+  }
+
+  close(F);
+
+  return $user_name || $ENV{USER};
+}
+
+sub scan_hosts {
+  my ($hosts) = @_;
+
+  my $open          = 0;
+  my $closed        = 0;
+  my $unknown_host  = 0;
+  my $scanned_count = 0;
+  my $done_count    = 0;
+
+  foreach my $host (sort keys %$hosts) {
+
+    my $last_host;
+    my $ip;
+    my $own_ip;
+    my @closed_ports = ();
+
+    foreach my $port (sort keys %{ $hosts->{$host} }) {
+
+      print "scanning: $host:$port (" . ($done_count + 1) . "/$port_count)\n";
+
+      my $ignore_server_firewalls = 0;
+      if ($port =~ /l$/) {
+        $port =~ s/l$//g;
+        $ignore_server_firewalls = 1;
+      }
+
+      my $result = `tcptraceroute -q 1 -w 1 -m 10 $host $port 2>&1`;
+
+      my @result = split(/\n/, $result);
+
+      if ($result =~ /Bad destination address/) {
+        print STDERR "unknown host: $host\n";
+        $unknown_host++;
+        $done_count += scalar keys %{ $hosts->{$host} };
+        last;
+      }
+
+      $done_count++;
+      $scanned_count++;
+
+      my $state;
+      foreach my $line (@result) {
+
+        # Destination not reached
+        if ($line =~ /Destination not reached/) {
+          $state = "Destination not reached";
+          last;
+        }
+
+        if ($line =~
+          /^Selected device (.+?), address (.+?), port \d+ for outgoing packets/
+          )
+        {
+          $own_ip = $2;
+          next;
+        }
+
+        if ($line =~ /^Tracing.*\((.+?)\)\ on.*$/i) {
+          $ip = $1;
+        }
+
+        # 7  dus1-fw1.mcbone.net (194.97.35.140)  9.614 ms
+        if ($line =~ /^\s+\d+\s+(.*?)\s+\((.*?)\)\s+.*$/) {
+          $last_host = $1;
+        }
+
+        if ($line =~ /^\s+\d+\s+(.*?)\s+\((.*?)\)\s+\[(.*?)\].*$/) {
+          $state = $3;
+        }
+
+        #  7  62.104.23.2 [open]  9.568 ms  9.619 ms  9.533 ms
+        #  8  194.97.15.242 [closed]  9.680 ms  9.505 ms  9.457 ms
+        if ($line =~ /^\s+\d+\s+(.*?)\s+\[(.*?)\].*$/) {
+          $last_host = $1;
+          $state     = $2;
+
+          $last_host = $host if $last_host = $ip;
+        }
+      }
+
+      if ($state ne "open" && $last_host eq $host) {
+        $state = "local firewall";
+        print "locally closed\n";
+      }
+
+      # print "state: $state / last_host: $last_host\n";
+      $hosts->{$host}{$port}{state}     = $state;
+      $hosts->{$host}{$port}{last_host} = $last_host;
+
+      if ($state eq "open"
+        || ($state eq "local firewall" && $ignore_server_firewalls))
+      {
+        $open++;
+      }
+      else {
+        push(@closed_ports, $port);
+        $closed++;
+        print STDERR
+          "$user_name ($own_ip) -> $host ($ip) : $port # unreachable: last hop: $last_host\n"
+          if @closed_ports;
+      }
+    }
+  }
+
+  my $msg =
+      "open: $open / closed: $closed of $scanned_count total = "
+    . int($open / ($scanned_count / 100))
+    . "% success\n"
+    . "unknown hosts: $unknown_host\n";
+
+  if ($closed) {
+    print STDERR $msg;
+  }
+  else {
+    print $msg;
+  }
+}
+
+sub load_hosts_file {
+  my ($file_name, $hosts) = @_;
+
+  open(F, $file_name) || die($!);
+
+  while (my $line = <F>) {
+    next if !$line;
+    next if $line =~ /^#/;
+
+    $line =~ s/\s//g;
+
+    my ($host, $ports) = split(/\:/, $line);
+
+    chomp($host);
+
+    my @port_ranges = split(/,/, $ports);
+
+    my @ports = ();
+    foreach my $port_range (@port_ranges) {
+
+      my $ignore_server_firewalls;
+      if ($port_range =~ /l$/) {
+        $port_range =~ s/l$//g;
+        $ignore_server_firewalls = "l";
+      }
+
+      my @range = split(/-/, $port_range);
+
+      my $range_start = $range[0];
+      my $range_end   = $range[$#range];
+
+      # $hosts->{$host}{range} = "got range: $range_start -> $range_end";
+
+      foreach ($range_start .. $range_end) {
+        $port_count++;
+        push(@ports, $_ . $ignore_server_firewalls);
+      }
+    }
+
+    foreach my $port (@ports) {
+      $hosts->{$host}{$port} = {};
+    }
+  }
+
+  # print Dumper $hosts;
+}
+
 ### fatpacked app net-wlan-rtl8723be-wrong-antenna-fix #########################
 
 #!/usr/bin/env bash
@@ -6462,6 +6678,33 @@ perl -MFile::stat -e 'map { print "$_\n" } sort { stat($a)->mtime <=> stat($b)->
 perl -n -e '$x = $_; $x =~ tr%/%%cd; print length($x), " $_";' \
     | sort -k 1n -k 2 \
     | perl -pe 's/^\S+ //' 
+
+### fatpacked app sort-by-slash ################################################
+
+#!/usr/bin/env perl
+
+# Sort a list by contained delimiter [default: /] count
+
+use strict;
+use warnings;
+no warnings 'uninitialized';
+use Data::Dumper;
+use utf8;
+
+my $delimiter = $ARGV[0] || '/';
+
+my @files = ();
+while (<STDIN>) {
+  push(@files, $_);
+}
+
+@files = sort {
+  my $aLength = split($delimiter, $a) . length();
+  my $bLength = split($delimiter, $b) . length();
+  $aLength cmp $bLength;
+} @files;
+
+print @files;
 
 ### fatpacked app ssh-agent-env-clear ##########################################
 
@@ -10262,6 +10505,31 @@ for track in $@ ; do
 done
 
 INFO "All done"
+
+### fatpacked app video-record-screen ##########################################
+
+#!/usr/bin/env bash
+
+# Record screen
+
+source bash-helpers
+
+tmp=$(mktemp --suffix=.mkv)
+
+INFO "Recording to $tmp..."
+
+ffmpeg \
+  -f x11grab \
+  -show_region 1 \
+  -s hd1080 \
+  -framerate 10 -r 10 \
+  -i :0.0+0+0 \
+  -c:v libx264 \
+  -crf 29 \
+  $tmp
+
+# audio:
+# ffmpeg -video_size 1024x768 -framerate 25 -f x11grab -i :0.0+100,200 -f pulse -ac 2 -i default $tmp
 
 ### fatpacked app video-transcode ##############################################
 

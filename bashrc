@@ -3534,11 +3534,15 @@ source bash-helpers
 
 comment="$@"
 
+tmp=$(mktemp --suffix=.gitmessage)
+
 git add -A .
 if [[ ! "$comment" ]] ; then
   git commit -v
 else
-  git commit -v -m "$(cat ~/.gitmessage)$comment"
+  echo $(head -1 ~/.gitmessage ; echo $comment) >> $tmp
+  tail -n+2 ~/.gitmessage >> $tmp
+  git commit -v -t $tmp
 fi
 git push
 

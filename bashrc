@@ -5628,7 +5628,16 @@ fi
 
 source bash-helpers
 
+INFO "Checking for outdated libs..."
+npm outdated
+
+INFO "To update press enter"
+read
+
+INFO "Upgrading libs..."
 npx -p npm-check-updates ncu -u
+
+INFO "done."
 
 ### fatpacked app nvm-setup ####################################################
 

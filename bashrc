@@ -6107,6 +6107,9 @@ my $branch_info =  ($remote_branch . $ahead . $behind ne '' || $branch eq '(deta
 $branch_info = '' if $branch eq $remote_branch;
 
 my ($branch_prefix) = $branch =~ /^((.*?\/)*.{1,4})/;
+if($branch eq '(detached)') {
+  $branch_prefix = $branch;
+}
 
 print ""
   . $grey
@@ -6475,6 +6478,7 @@ in your path.
 * [trash](./trash): Move a file to a trash dir at the files location
 * [tree](./tree): List a directory as a tree
 * [tree-diff](./tree-diff): Diff two directory structures
+* [ubuntu-dock-disable-tooltip](./ubuntu-dock-disable-tooltip): disable dash to dock tooltip
 * [ubuntu-setup-automatic-updates](./ubuntu-setup-automatic-updates): Make sure update and backports soures are activated
 * [ubuntu-unity-set-time-format](./ubuntu-unity-set-time-format): Set time format of ubuntu unity desktop clock
 * [uniq-unsorted](./uniq-unsorted): uniq replacement without the need for sorted input
@@ -10350,6 +10354,29 @@ $diff -y \
     <(tree --no-colors --ascii $@ "$left") \
     <(tree --no-colors --ascii $@ "$right") \
     | less
+
+### fatpacked app ubuntu-dock-disable-tooltip ##################################
+
+#!/usr/bin/env bash
+
+# disable dash to dock tooltip
+# SEE ALSO: https://github.com/micheleg/dash-to-dock/issues/467
+# SEE ALSO: https://github.com/micheleg/dash-to-dock/issues/1108
+
+source bash-helpers
+
+gotroot
+
+mkdir -p ~/.themes/ubuntu/gnome-shell/
+
+cat << EOF >> /usr/share/gnome-shell/theme/ubuntu.css
+.dash-label {
+  width: 0px;
+  height: 0px;
+  padding: 0px;
+  border: none;
+}
+EOF
 
 ### fatpacked app ubuntu-setup-automatic-updates ###############################
 

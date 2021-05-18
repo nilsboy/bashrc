@@ -4755,7 +4755,7 @@ mounts=$(ls -d $drives 2>/dev/null | wc -l)
 set -e
 
 if [[ $mounts == 0 ]] ; then
-  DIE "No backup drive found - please connect drive."
+  DIE "No backup drive found - please connect a drive with 'backup' in its name."
 fi
 
 if [[ $mounts > 1 ]] ; then
@@ -4799,7 +4799,6 @@ touch $id_file
 set -x
 
 rsync \
-  --verbose \
   --archive \
   --partial --partial-dir=rsync-partial \
   --delete \
@@ -4816,6 +4815,28 @@ set +x
 
 INFO "Backup done."
 
+
+### fatpacked app mybackup-gui #################################################
+
+#!/usr/bin/env bash
+
+# create a backup and wait when done
+
+source bash-helpers
+
+clear
+
+echo
+echo
+echo
+
+mybackup $HOME || true
+
+echo
+echo
+echo
+
+read
 
 ### fatpacked app mysql. #######################################################
 
@@ -6376,6 +6397,7 @@ in your path.
 * [mount.overlay](./mount.overlay): Mount a directory over another
 * [mouse.jiggle](./mouse.jiggle): Jiggle mouse to prevent system idle
 * [mybackup](./mybackup): create a backup
+* [mybackup-gui](./mybackup-gui): create a backup and wait when done
 * [mysql.](./mysql.): Fix mysql prompt to show real hostname - NEVER localhost
 * [mysqldump-structure](./mysqldump-structure): Dump the structure without the data of a mysql database
 * [neovim-setup](./neovim-setup): Setup neovim
@@ -6478,6 +6500,7 @@ in your path.
 * [trash](./trash): Move a file to a trash dir at the files location
 * [tree](./tree): List a directory as a tree
 * [tree-diff](./tree-diff): Diff two directory structures
+* [ubuntu-add-show-desktop-app](./ubuntu-add-show-desktop-app): Add show desktop app for the dock
 * [ubuntu-dock-disable-tooltip](./ubuntu-dock-disable-tooltip): disable dash to dock tooltip
 * [ubuntu-setup-automatic-updates](./ubuntu-setup-automatic-updates): Make sure update and backports soures are activated
 * [ubuntu-unity-set-time-format](./ubuntu-unity-set-time-format): Set time format of ubuntu unity desktop clock
@@ -10354,6 +10377,62 @@ $diff -y \
     <(tree --no-colors --ascii $@ "$left") \
     <(tree --no-colors --ascii $@ "$right") \
     | less
+
+### fatpacked app ubuntu-add-mybackup-app ######################################
+
+#!/usr/bin/env bash
+
+# Add mybackup desktop app for the dock
+
+source bash-helpers
+
+type rsync &>/dev/null || pkexec apt install rsync
+
+cat << EOF > ~/.local/share/applications/mybackup.desktop
+[Desktop Entry]
+Type=Application
+Name=mybackup
+Icon=backups-app
+Exec=$HOME/.bin/mybackup-gui
+Terminal=true
+EOF
+
+INFO "Now open the dash, search for mybackup and add it to the favorites"
+
+
+### fatpacked app ubuntu-add-show-desktop-app ##################################
+
+#!/usr/bin/env bash
+
+# Add show desktop app for the dock
+# https://askubuntu.com/questions/903532/how-can-i-add-show-desktop-to-the-gnome-dash-or-ubuntu-dock
+
+source bash-helpers
+
+type wmctrl &>/dev/null || pkexec apt install wmctrl
+
+cat << ''EOF > ~/.show-desktop.sh
+#!/bin/bash
+status="$(wmctrl -m | grep "showing the desktop" | sed -r 's/(.*)(ON|OFF)/\2/g')"
+
+if [ $status == "ON" ]; then
+    wmctrl -k off
+else
+    wmctrl -k on
+fi
+EOF
+
+chmod +x ~/.show-desktop.sh
+
+cat << EOF > ~/.local/share/applications/show-desktop.desktop
+[Desktop Entry]
+Type=Application
+Name=Show Desktop
+Icon=user-desktop
+Exec=$HOME/.show-desktop.sh
+EOF
+
+INFO "Now open the dash, search for show desktop and add it to the favorites"
 
 ### fatpacked app ubuntu-dock-disable-tooltip ##################################
 

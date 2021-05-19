@@ -10439,23 +10439,15 @@ INFO "Now open the dash, search for show desktop and add it to the favorites"
 #!/usr/bin/env bash
 
 # disable dash to dock tooltip
+
+# NOTE: theme hack does not seam to work for 20.04:
 # SEE ALSO: https://github.com/micheleg/dash-to-dock/issues/467
 # SEE ALSO: https://github.com/micheleg/dash-to-dock/issues/1108
 
 source bash-helpers
 
-gotroot
-
-mkdir -p ~/.themes/ubuntu/gnome-shell/
-
-cat << EOF >> /usr/share/gnome-shell/theme/ubuntu.css
-.dash-label {
-  width: 0px;
-  height: 0px;
-  padding: 0px;
-  border: none;
-}
-EOF
+perl -i -pe 's/(function itemShowLabel\(\)\s*\{)/$1\nreturn\n/gs' \
+  ~/.local/share/gnome-shell/extensions/dash-to-dock@micxgx.gmail.com/appIcons.js
 
 ### fatpacked app ubuntu-setup-automatic-updates ###############################
 

@@ -1770,6 +1770,34 @@ fi
 RETURN $USER
 
 
+### fatpacked app bashrc-helper-note ###########################################
+
+# Display a note inside the prompt
+
+source bash-helpers
+
+color=$GREEN
+
+if [[ "$MY_PROMPT_NOTE" =~ ^\s*$ ]] ; then
+  echo -n
+  exit
+fi
+
+if [[ "$MY_PROMPT_NOTE" =~ (dev|test|git|pet|prod|docker) ]] ; then
+  pattern=${BASH_REMATCH[1]}
+  case $pattern in
+    dev)    color=$GREY ;;
+    test)   color=$BLUE ;;
+    git)    color=$ORANGE ;;
+    pet)    color=$PURPLE ;;
+    prod)   color=$RED ;;
+    docker) color=$PINK ;;
+  esac
+fi
+
+echo -n "$color$MY_PROMPT_NOTE$NO_COLOR"
+
+
 ### fatpacked app bashrc-linux-distribution-fix-suse ###########################
 
 # Script to run when logging into a suse machine
@@ -6132,7 +6160,7 @@ my $branch_color = $red if $branch eq '(detached)';
 my $branch_info =  ($remote_branch . $ahead . $behind ne '' || $branch eq '(detached)' ? '@' . $branch_color . $branch . $no_color : '' );
 $branch_info = '' if $branch eq $remote_branch;
 
-my ($branch_prefix) = $branch =~ /^((.*?\/)*.{1,4})/;
+my ($branch_prefix) = $branch =~ /^((.*?\/)*.{1,8})/;
 if($branch eq '(detached)') {
   $branch_prefix = $branch;
 }
@@ -6158,6 +6186,7 @@ source bash-helpers
 
 time-humanize-seconds $elapsed
 eval $BASHRC_PROMPT_HELPERS
+prefixif $(bashrc-helper-note)
 echo -n " "
 bashrc-helper-login-name
 echo -n "$GREY@$NO_COLOR"
@@ -6175,6 +6204,7 @@ source bash-helpers
 
 time-humanize-seconds "$elapsed"
 eval $BASHRC_PROMPT_HELPERS
+prefixif $(bashrc-helper-note)
 prefixif $(bashrc-helper-login-name 1)
 prefixif $(dir-name-prettifier $PWD)
 jobs=$jobs bash-background-jobs-count

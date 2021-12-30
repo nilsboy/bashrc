@@ -2265,6 +2265,16 @@ my @local_lib = ( "--local-lib", "$ENV{REMOTE_HOME}/perl5" );
 
 system("cpanm", "-nq", @local_lib , @ARGV) && exit 1;
 
+### fatpacked app cron-log #####################################################
+
+#!/usr/bin/env bash
+
+# Display cron log
+
+source bash-helpers
+
+pkexec journalctl -u cron.service
+
 ### fatpacked app crontab-setup ################################################
 
 #!/bin/bash
@@ -6403,6 +6413,7 @@ in your path.
 * [cpanm-list-locally-installed-modules](./cpanm-list-locally-installed-modules): List all cpanm installed perl modules
 * [cpanm-reinstall-local-modules](./cpanm-reinstall-local-modules): Reinstall all cpanm installed perl modules (i.e. to recompile after server move)
 * [cpanm.](./cpanm.): Allow cpanm to install modules specified via Path/File.pm
+* [cron-log](./cron-log): Display cron log
 * [crontab-setup](./crontab-setup): Add default crontab settings to existing crontab
 * [csvview](./csvview): Quick way to view a csv file on the command line
 * [ctags-index-sources](./ctags-index-sources): Create tags for all source directories

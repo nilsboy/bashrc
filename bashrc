@@ -6567,6 +6567,7 @@ in your path.
 * [rest-post-json](./rest-post-json): Send a POST request to a website
 * [run-and-capture](./run-and-capture): Run a program and pretty print all its outputs
 * [screen-reattach](./screen-reattach): Reattach to a screen session
+* [shell-remove-colors](./shell-remove-colors): Remove ANSI color sequences
 * [sleepuntil](./sleepuntil): Sleep until a specific date and time
 * [sort-by-file-modification](./sort-by-file-modification): Sort a list of file names by their modification time
 * [sort-by-path-depth](./sort-by-path-depth): Sort input by depth of path
@@ -6638,6 +6639,7 @@ in your path.
 * [xdg-cache-home](./xdg-cache-home): Return xdg cache home
 * [xmv](./xmv): Rename files by perl expression
 * [xtitle](./xtitle): Change the title of a x window
+* [youtube-list-all-channel-videos](./youtube-list-all-channel-videos): Create HTML list of all videos of a youtube channel in chronological order
 
 ### fatpacked app rel ##########################################################
 
@@ -6801,6 +6803,17 @@ ssh-agent-env-grab
     exit 1
 
 ) && clear
+
+### fatpacked app shell-remove-colors ##########################################
+
+#!/usr/bin/env bash
+
+# Remove ANSI color sequences
+# https://superuser.com/a/380778
+
+source bash-helpers
+
+perl -pe 's/\e\[[0-9;]*m(?:\e\[K)?//g'
 
 ### fatpacked app sleepuntil ###################################################
 
@@ -11388,6 +11401,28 @@ case "$TERM" in
     *)
         ;;
 esac
+
+### fatpacked app youtube-list-all-channel-videos ##############################
+
+#!/usr/bin/env bash
+
+# Create HTML list of all videos of a youtube channel in chronological order
+
+source bash-helpers
+
+name=${1:?Specify name}
+url=${2:?Specify url like https://www.youtube.com/channel/UCSnqXeK94-iNmwqGO__eJ5g/}
+
+youtube-dl --flat-playlist --playlist-reverse -j "$url/videos" \
+  > "$name.json"
+
+cat "$name.json" \
+  | jq ".title, .url" > "$name.txt"
+
+cat "$name.txt" \
+  | perl -007 -ne 'while( /(.+)\n(.+)/gm ) { $title = $1 ; $vid = $2 ; $vid =~ s/"//g ; $title =~ s/"//g ; print "<a href=http://youtube.com/watch?v=$vid>$title</a><br/>\n" }' \
+  > "$name.html"
+
 
 ### fatpacked apps END #########################################################
 

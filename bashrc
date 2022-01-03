@@ -6567,7 +6567,6 @@ in your path.
 * [rest-post-json](./rest-post-json): Send a POST request to a website
 * [run-and-capture](./run-and-capture): Run a program and pretty print all its outputs
 * [screen-reattach](./screen-reattach): Reattach to a screen session
-* [shell-remove-colors](./shell-remove-colors): Remove ANSI color sequences
 * [sleepuntil](./sleepuntil): Sleep until a specific date and time
 * [sort-by-file-modification](./sort-by-file-modification): Sort a list of file names by their modification time
 * [sort-by-path-depth](./sort-by-path-depth): Sort input by depth of path
@@ -6584,6 +6583,7 @@ in your path.
 * [ssh-with-reverse-proxy](./ssh-with-reverse-proxy): Proxy traffic of a remote host through localhost
 * [ssl-create-self-signed-certificate](./ssl-create-self-signed-certificate): Create a self signed certificate
 * [ssl-strip](./ssl-strip): Remove ssl encryption from https and other protocols
+* [stripcolors](./stripcolors): Remove ANSI color sequences
 * [sudo.](./sudo.): Keep path with sudo
 * [term-bg-switch](./term-bg-switch): Switch terminal background color
 * [term-color-test](./term-color-test): most color mappings taken from xterm-colortest
@@ -6803,17 +6803,6 @@ ssh-agent-env-grab
     exit 1
 
 ) && clear
-
-### fatpacked app shell-remove-colors ##########################################
-
-#!/usr/bin/env bash
-
-# Remove ANSI color sequences
-# https://superuser.com/a/380778
-
-source bash-helpers
-
-perl -pe 's/\e\[[0-9;]*m(?:\e\[K)?//g'
 
 ### fatpacked app sleepuntil ###################################################
 
@@ -7115,6 +7104,17 @@ fi
 cmd="sudo stunnel -c -d $in -r $out -f"
 INFO "running: $cmd"
 xtitle "ssl-strip $cmd" && $cmd
+
+### fatpacked app stripcolors ##################################################
+
+#!/usr/bin/env bash
+
+# Remove ANSI color sequences
+# https://superuser.com/a/380778
+
+source bash-helpers
+
+perl -pe 's/\e\[[0-9;]*m(?:\e\[K)?//g'
 
 ### fatpacked app sudo. ########################################################
 

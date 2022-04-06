@@ -4642,7 +4642,8 @@ elif [[ $arg =~ ^- ]] ; then
 elif [[ $arg ]] ; then
    arg="+/$arg"
 else
-   arg='+/^--- .+ -+$'
+   # arg='+/^--- .+ -+$'
+   arg='+/^\w+\([0-9]\).+|^--- .+ -+$'
 fi
 
 (
@@ -6570,6 +6571,7 @@ in your path.
 * [rest-post-json](./rest-post-json): Send a POST request to a website
 * [run-and-capture](./run-and-capture): Run a program and pretty print all its outputs
 * [screen-reattach](./screen-reattach): Reattach to a screen session
+* [simple-scan-set-jpeg-quality](./simple-scan-set-jpeg-quality): Set the JPEG quality level of Gnomes SimpleScan which unfortunately does not provide a gui for that and by default uses 100% which produces huge images/PDFs.
 * [sleepuntil](./sleepuntil): Sleep until a specific date and time
 * [sort-by-file-modification](./sort-by-file-modification): Sort a list of file names by their modification time
 * [sort-by-path-depth](./sort-by-path-depth): Sort input by depth of path
@@ -6806,6 +6808,22 @@ ssh-agent-env-grab
     exit 1
 
 ) && clear
+
+### fatpacked app simple-scan-set-jpeg-quality #################################
+
+#!/usr/bin/env bash
+
+# Set the JPEG quality level of Gnomes SimpleScan which unfortunately does not provide a gui for that and by default uses 100% which produces huge images/PDFs.
+
+# NOTE: SimpleScan aka. Dokument Scanner
+
+source bash-helpers
+
+level=${1:-75}
+
+INFO "Setting jpeg-quality to $level"
+
+gsettings set org.gnome.SimpleScan jpeg-quality $level
 
 ### fatpacked app sleepuntil ###################################################
 

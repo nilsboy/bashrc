@@ -10035,6 +10035,7 @@ sub _print {
                 . $path->count . "x "
                 . ($path->is_dir() ? $blue : $green)
                 . $path->normalized_marking
+                . $no_color
                 . $no_color;
         }
 
@@ -10450,8 +10451,9 @@ sub normalized_marking {
     my $entry_color = $self->is_dir() ? $blue : $green;
 
     my $normalized = $self->name;
-    $normalized =~ s/([0-9a-f\-]{2,}|[\W\d\s_]{2,})/${red}$^N$entry_color/gi;
-    return $normalized;
+    $normalized =~ s/([0-9a-f\-]{2,}|[\W\d\s_]{2,})/${red}$1${no_color}$entry_color/gi;
+    # $normalized =~ s/([0-9a-f\-]{2,}|[\W\d\s_]{2,})/${red}$1${no_color}/gi;
+    return $normalized . ${no_color};
 }
 
 sub age {
@@ -10481,7 +10483,7 @@ sub size {
     $done = $alloc / ($size / 100) if $size != 0;
     $done = int($done);
 
-    my $info = $gray . "Size: " . humanize_bytes($size);
+    my $info = $gray . "Size: " . humanize_bytes($size) . $no_color;
 
     return $info if $done >= 100;
 
@@ -10492,8 +10494,8 @@ sub size {
         . "Size: "
         . humanize_bytes($alloc) . "/"
         . humanize_bytes($size)
-        . " - ${red}$done\%"
-        . $gray;
+        . " - ${red}$done\%"  . $no_color
+        . $no_color;
 }
 
 

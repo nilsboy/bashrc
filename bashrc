@@ -10033,6 +10033,7 @@ sub _print {
             $name =
                   $red
                 . $path->count . "x "
+                . $no_color
                 . ($path->is_dir() ? $blue : $green)
                 . $path->normalized_marking
                 . $no_color
@@ -10451,7 +10452,7 @@ sub normalized_marking {
     my $entry_color = $self->is_dir() ? $blue : $green;
 
     my $normalized = $self->name;
-    $normalized =~ s/([0-9a-f\-]{2,}|[\W\d\s_]{2,})/${red}$1${no_color}$entry_color/gi;
+    $normalized =~ s/([0-9a-f\-]{2,}|[\W\d\s_]{2,})/${no_color}${red}$1${no_color}$entry_color/gi;
     # $normalized =~ s/([0-9a-f\-]{2,}|[\W\d\s_]{2,})/${red}$1${no_color}/gi;
     return $normalized . ${no_color};
 }

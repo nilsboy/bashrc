@@ -5877,11 +5877,18 @@ echo export PATH=${PATH} | vipe
 
 ### fatpacked app path-grep ####################################################
 
-#!/bin/bash
-
+## NOTE: must not start with a bash shebang so the current env can be inspected
 # Find an executable in path
 
-compgen -c | sort -u | grep -i "$@"
+search=${1:-.}
+
+compgen \
+  -A command \
+  -A alias \
+  -A builtin \
+  -A function \
+  -A keyword \
+  | sort -u | grep -i "$search"
 
 ### fatpacked app path-list ####################################################
 
@@ -6571,7 +6578,7 @@ in your path.
 * [rest-post-json](./rest-post-json): Send a POST request to a website
 * [run-and-capture](./run-and-capture): Run a program and pretty print all its outputs
 * [screen-reattach](./screen-reattach): Reattach to a screen session
-* [simple-scan-set-jpeg-quality](./simple-scan-set-jpeg-quality): Set the JPEG quality level of Gnomes SimpleScan which unfortunately does not provide a gui for that and by default uses 100% which produces huge images/PDFs.
+* [simple-scan-set-jpeg-quality](./simple-scan-set-jpeg-quality): Set the JPEG quality level of Gnomes SimpleScan which unfortunately does not provide a gui for that and by default uses 100% which produces huge images/PDFs
 * [sleepuntil](./sleepuntil): Sleep until a specific date and time
 * [sort-by-file-modification](./sort-by-file-modification): Sort a list of file names by their modification time
 * [sort-by-path-depth](./sort-by-path-depth): Sort input by depth of path
@@ -6813,7 +6820,7 @@ ssh-agent-env-grab
 
 #!/usr/bin/env bash
 
-# Set the JPEG quality level of Gnomes SimpleScan which unfortunately does not provide a gui for that and by default uses 100% which produces huge images/PDFs.
+# Set the JPEG quality level of Gnomes SimpleScan which unfortunately does not provide a gui for that and by default uses 100% which produces huge images/PDFs
 
 # NOTE: SimpleScan aka. Dokument Scanner
 

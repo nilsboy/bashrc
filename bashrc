@@ -1678,11 +1678,12 @@ fi
 script=$1
 shift
 
-(
-  echo "set -- $*"
-  tail -n +2 $script
-) \
-  | perl -007pe 's/^\s*#.*\n//gm ; s/^\s*#.*\s+//gm' | exec -a "$script" bash
+tmp=$(tempfile)
+
+perl -007pe 's/^\s*#.*\n//gm ; s/^\s*#.*\s+//gm' < $script > $tmp
+chmod +x $tmp
+exec -a "$script" $tmp "$@"
+
 
 ### fatpacked app bashrc-eternal-history-add-simple ############################
 

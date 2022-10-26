@@ -6627,6 +6627,7 @@ in your path.
 * [ubuntu-dock-disable-tooltip](./ubuntu-dock-disable-tooltip): disable dash to dock tooltip
 * [ubuntu-setup-automatic-updates](./ubuntu-setup-automatic-updates): Make sure update and backports soures are activated
 * [ubuntu-unity-set-time-format](./ubuntu-unity-set-time-format): Set time format of ubuntu unity desktop clock
+* [ubuntu-x11-turnoff-screen-blanking](./ubuntu-x11-turnoff-screen-blanking): Turn off power savings / screen blanking in X11
 * [uniq-unsorted](./uniq-unsorted): uniq replacement without the need for sorted input
 * [unix2dos](./unix2dos): Convert line endings from unix to dos
 * [url](./url): Print absolute SSH url of a file or directory
@@ -10637,6 +10638,23 @@ apt-get update
 
 dconf write /com/canonical/indicator/datetime/time-format "'custom'"
 dconf write /com/canonical/indicator/datetime/custom-time-format "'KW%V | %a | %F | %R'"
+
+### fatpacked app ubuntu-x11-turnoff-screen-blanking ###########################
+
+#!/usr/bin/env bash
+
+# Turn off power savings / screen blanking in X11
+# Sometimes this turns on by itself.
+# Logging out of your X11 session also works.
+# from: https://unix.stackexchange.com/questions/168763/how-to-stop-the-screen-from-blanking-blacking-out
+
+# TODO: test
+
+source bash-helpers
+
+xset dpms 0 0 0 
+xset s noblank
+xset s off
 
 ### fatpacked app uniq-unsorted ################################################
 

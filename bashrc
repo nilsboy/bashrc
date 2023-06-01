@@ -6634,6 +6634,7 @@ in your path.
 * [url-decode](./url-decode): Decode a string from URL notation
 * [url-encode](./url-encode): Encode a string to URL notation
 * [user-add](./user-add): Add a new user to the system without hassle
+* [vi](./vi): Keep path with sudo
 * [vi-executable](./vi-executable): Find an executable in the path and edit it
 * [vi-from-perl-inc](./vi-from-perl-inc): Find an executable in the perl %INC and edit it
 * [video-dvd-install-decss](./video-dvd-install-decss): Install decss for encrypted dvd playback
@@ -7157,7 +7158,8 @@ perl -pe 's/\e\[[0-9;]*m(?:\e\[K)?//g'
 
 cmd=${1:?Specify cmd}
 
-exec sudo env PATH=$PATH "$@"
+# $ORIGIN_USER for use with vim when run as root
+exec sudo env PATH=$PATH ORIGIN_USER=$USER "$@"
 
 ### fatpacked app term-bg-switch ###############################################
 
@@ -10736,6 +10738,17 @@ fi
 
 ssh $user@localhost
 
+
+### fatpacked app vi ###########################################################
+
+# Keep path with sudo
+
+# $ORIGIN_USER set by 'sudo.'
+if [[ ! -z $ORIGIN_USER ]] ; then
+  HOME=/home/$ORIGIN_USER
+  USER=$ORIGIN_USER
+fi
+exec /snap/bin/nvim "$@"
 
 ### fatpacked app vi-executable ################################################
 

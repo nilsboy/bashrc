@@ -7159,7 +7159,7 @@ perl -pe 's/\e\[[0-9;]*m(?:\e\[K)?//g'
 cmd=${1:?Specify cmd}
 
 # $ORIGIN_USER for use with vim when run as root
-exec sudo env PATH=$PATH ORIGIN_USER=$USER "$@"
+exec sudo env PATH=$PATH ORIGIN_USER=$USER TMUX=$TMUX "$@"
 
 ### fatpacked app term-bg-switch ###############################################
 

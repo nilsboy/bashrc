@@ -5778,7 +5778,7 @@ source bash-helpers
 
 node_version=${1:?Specify node_version e.g. v8.1.3 or stable}
 
-wget --no-check-certificate -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
+wget --no-check-certificate -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
 
 mkdir -p ~/.bashrc.d
 
@@ -10741,7 +10741,11 @@ ssh $user@localhost
 
 ### fatpacked app vi ###########################################################
 
+#!/usr/bin/env bash
+
 # Keep path with sudo
+
+source bash-helpers
 
 # $ORIGIN_USER set by 'sudo.'
 if [[ ! -z $ORIGIN_USER ]] ; then

@@ -1998,7 +1998,7 @@ print $human;
 
 search="$@"
 
-dir=$(find-and "$search" | head -1)
+dir=$(find | grep.and "$search" | head -1)
 
 if ! [[ "$dir" ]] ; then
   pwd

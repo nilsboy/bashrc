@@ -5412,6 +5412,18 @@ sudo ufw reload
 sudo ufw enable
 sudo ufw status
 
+### fatpacked app net.forward.port #############################################
+
+#!/usr/bin/env bash
+
+# Forward a local port to public port
+
+source bash-helpers
+
+port=${1:?Specify port}
+
+ssh -R 80:localhost:$port localhost.run
+
 ### fatpacked app net.serve.dir ################################################
 
 #!/usr/bin/env bash
@@ -7092,6 +7104,16 @@ ssh -A -t $host -R $port:localhost:$port \
     FTP_PROXY=ftp://localhost:$port \
     ssh_remote_proxy=localhost:$port \
     bash -i
+
+### fatpacked app ssh.nokeys ###################################################
+
+#!/usr/bin/env bash
+
+# Run ssh without key agent
+
+source bash-helpers
+
+ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no "$@"
 
 ### fatpacked app ssl-create-self-signed-certificate ###########################
 

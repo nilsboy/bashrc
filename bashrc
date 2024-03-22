@@ -5037,20 +5037,6 @@ fi
 netstat  -atn \
     | perl -0777 -ne '@ports = /tcp.*?\:(\d+)\s+/imsg ; for $port ('$ports') {if(!grep(/^$port$/, @ports)) { print $port; last } }'
 
-### fatpacked app net-forward-port #############################################
-
-#!/bin/bash
-
-# Forward an incoming port to a different port
-# Often needed to map a privileged port to an unprivileged one.
-
-source bash-helpers
-
-src=${1?Specify incoming port}
-dst=${2?Specify outgoing port}
-
-sudo iptables -t nat -A PREROUTING -p tcp --dport $src -j REDIRECT --to-port $dst
-
 ### fatpacked app net-ip2name ##################################################
 
 #!/usr/bin/env perl
@@ -5423,7 +5409,8 @@ source bash-helpers
 
 port=${1:?Specify port}
 
-ssh -R 80:localhost:$port localhost.run
+# needs a key to work
+ssh.tempkey -v -R 80:localhost:$port localhost.run
 
 ### fatpacked app net.serve.dir ################################################
 
@@ -7115,6 +7102,20 @@ ssh -A -t $host -R $port:localhost:$port \
 source bash-helpers
 
 ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no "$@"
+
+### fatpacked app ssh.tempkey ##################################################
+
+#!/usr/bin/env bash
+
+# Run ssh without key agent
+
+source bash-helpers
+
+tmp=$(mktemp -u --suffix=.)
+
+ssh-keygen -q -N "" -t rsa -b 4096 -f $tmp
+SSH_AUTH_SOCK= ssh -i $tmp "$@"
+
 
 ### fatpacked app ssl-create-self-signed-certificate ###########################
 

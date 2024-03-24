@@ -2136,7 +2136,7 @@ cp -rnl "$src"/* "$dst"/
 
 set -e
 
-existing_cpanm=$(type -p cpanm)
+existing_cpanm=$(type -p cpanm || true)
 if [[ $existing_cpanm ]] ; then
 
     if [[ $1 != "--force" ]] ; then

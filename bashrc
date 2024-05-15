@@ -189,7 +189,7 @@ alias    ll='ls -lh'
 alias    lr='ls -rt1'
 alias   llr='ls -rtlh'
 alias    lc='ls -rtlhc'
-alias    la='ls -Ah'
+alias    la='ls -1Ah'
 alias   lla='ls -lAh'
 
 function lls() {
@@ -2136,7 +2136,7 @@ cp -rnl "$src"/* "$dst"/
 
 set -e
 
-existing_cpanm=$(type -p cpanm || true)
+existing_cpanm=$(type -p cpanm)
 if [[ $existing_cpanm ]] ; then
 
     if [[ $1 != "--force" ]] ; then

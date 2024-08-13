@@ -3056,6 +3056,23 @@ docopt-convert - Convert a docopt specification
 
 perl -i -pe 's/\r//g' "$@"
 
+### fatpacked app dotenv-cat ###################################################
+
+# load .env files
+
+function cleanup() {
+  test -e "$tmp" && rm "$tmp"
+}
+trap cleanup ERR INT EXIT SIGHUP SIGINT SIGTERM
+
+file=${1:-.env}
+
+tmp=$(mktemp --suffix=.)
+cat $file | perl -pe 's/&/\\&/g ; s/^/export /' > $tmp
+cat $tmp
+echo '# Needs to be source from current shell to take effect.'
+
+
 ### fatpacked app env-grep #####################################################
 
 # Grep environment

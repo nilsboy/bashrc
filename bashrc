@@ -5462,8 +5462,7 @@ ssh.tempkey -v -R 80:localhost:$port localhost.run
 
 source bash-helpers
 
-npm install -g serve
-serve --port 5001 .
+npx serve "$@"
 
 ### fatpacked app net.serve.file-manager #######################################
 
